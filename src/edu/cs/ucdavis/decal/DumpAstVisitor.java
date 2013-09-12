@@ -1,7 +1,7 @@
 package edu.cs.ucdavis.decal;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -93,19 +93,41 @@ import org.eclipse.jdt.core.dom.WildcardType;
 
 public class DumpAstVisitor extends ASTVisitor {
 
-	Set<String> names = new HashSet<String>();
-	CompilationUnit cu;
+	Collection <CompilationUnit> units;
+	CompilationUnit currentUnit;
 	
-	public ASTVisitor setCompilationUnit(CompilationUnit cu) {
-		this.cu = cu;
+	public DumpAstVisitor() {
+		units = new ArrayList<CompilationUnit>();
+		currentUnit = null;
+	}
+	
+	public DumpAstVisitor setCurrentCompilationUnits(Collection<CompilationUnit> units) {
+		this.units = units;
 		return this;
+	}
+	
+	/*
+	public DumpAstVisitor setCurrentCompilationUnit(CompilationUnit unit) {
+		currentUnit = unit;
+		return this;
+	}
+	*/
+	
+	
+	public DumpAstVisitor addCompilationUnit(CompilationUnit unit) {
+		units.add(unit);
+		return this;
+	}
+	
+	private String getNodeInfoLeave(ASTNode node) {
+		return String.format("<<< %s <<<", node.getClass().getName());
 	}
 	
 	private String getNodeInfo2(ASTNode node) {
 		int startPos = node.getStartPosition();
 		int endPos = node.getStartPosition() + node.getLength();
 				
-		return String.format(""
+		return String.format(">>> "
 				+ "toString():\n%s\n"
 				+ "name %s\n"
 				+ "line #%d\n"
@@ -115,10 +137,10 @@ public class DumpAstVisitor extends ASTVisitor {
 				+ "getLocationInParent() %s\n"
 				+ "getNodeType() %d\n"
 				+ "structuralPropertiesForType() %s\n"
-				+ "subtreeType() %d\n",
+				+ "subtreeType() %d >>>\n",
 				node.toString(),
 				node.getClass().getSimpleName(),
-				cu.getLineNumber(startPos),
+				currentUnit.getLineNumber(startPos),
 				node.getFlags(),
 				node.getStartPosition(),
 				node.getLength(),
@@ -133,19 +155,36 @@ public class DumpAstVisitor extends ASTVisitor {
 		int startPos = node.getStartPosition();
 		int endPos = node.getStartPosition() + node.getLength();
 	
-		return String.format("\n%s (%s) #%d %d->%d (%s->%s)",
+		return String.format("\n>>> %s (%s) #%d %d->%d (%s->%s) >>>",
 				node.toString(),                    // node string representation, ex: a
-				node.getClass().getSimpleName(),    // class type, ex: SimpleName 
-				cu.getLineNumber(startPos), 
+				node.getClass().getSimpleName(),    // class type, ex: SimpleName
+				currentUnit.getLineNumber(startPos),
 				startPos, endPos, 
 				Integer.toHexString(startPos), Integer.toHexString(endPos));
+	}
+	
+	private ASTNode getDeclaringNode(IBinding binding) {
+		
+		ASTNode node = null;
+		
+		if (currentUnit != null) {
+			node = currentUnit.findDeclaringNode(binding);
+		}
+		
+		if (node == null) {
+			for (CompilationUnit unit: units) {
+				node = unit.findDeclaringNode(binding);
+				if (node != null) {
+					break;
+				}
+			}
+		}
+		
+		return node;
 	}
 
 	@Override
 	public boolean visit(VariableDeclarationFragment node) {
-		SimpleName name = node.getName();
-		this.names.add(name.getIdentifier());
-		
 		System.out.println(getNodeInfo(node));
 		return false;
 	}
@@ -153,20 +192,16 @@ public class DumpAstVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(SimpleName node) {
 
-		if (this.names.contains(node.getIdentifier())) {
-			System.out.println(getNodeInfo(node));
-			
-			IBinding binding = node.resolveBinding();
-			ASTNode n2 = cu.findDeclaringNode(binding);
-			
-			if (n2 != null) {
-				int startPos = n2.getStartPosition();
-				int endPos = n2.getStartPosition() + n2.getLength();
-				System.out.println(
-					String.format(", %s declared at %d->%d (%s->%s)", node.toString(), startPos, endPos, Integer.toHexString(startPos), Integer.toHexString(endPos))
-				);
-			}
-			
+		System.out.println(getNodeInfo(node));
+	/*	
+		if (node.toString().equals("sayHello")) {
+			System.out.println("in sayHello node");
+		}
+	*/
+		IBinding binding = node.resolveBinding();
+		ASTNode n2 = getDeclaringNode(binding);
+		if (n2 != null) {
+			System.out.println("is declared at " + getNodeInfo(n2) + "\n    XXX\n");
 		}
 		
 		return true;
@@ -174,36 +209,24 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(MethodRef node) {
-		SimpleName name = node.getName();
-		this.names.add(name.getIdentifier());
-		
 		System.out.println(getNodeInfo(node));
 		return true;
 	}
 
 	@Override
 	public boolean visit(MethodRefParameter node) {
-		SimpleName name = node.getName();
-		this.names.add(name.getIdentifier());
-		
 		System.out.println(getNodeInfo(node));
 		return true;
 	}
 
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		SimpleName name = node.getName();
-		this.names.add(name.getIdentifier());
-		
 		System.out.println(getNodeInfo(node));
 		return true;
 	}
 
 	@Override
 	public boolean visit(MethodInvocation node) {
-		SimpleName name = node.getName();
-		this.names.add(name.getIdentifier());
-		
 		System.out.println(getNodeInfo(node));
 		return true;
 	}
@@ -312,6 +335,7 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(CompilationUnit node) {
+		currentUnit = node;
 		System.out.println(getNodeInfo(node));   // Auto-generated
 		return super.visit(node);
 	}
@@ -439,7 +463,8 @@ public class DumpAstVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(MarkerAnnotation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		//return super.visit(node);
+		return false;
 	}
 
 	@Override

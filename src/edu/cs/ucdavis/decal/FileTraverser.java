@@ -1,13 +1,14 @@
 package edu.cs.ucdavis.decal;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.FileASTRequestor;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public class FileTraverser {
 	String sourcePath;
@@ -17,6 +18,40 @@ public class FileTraverser {
 	}
 	
 	public void run() {
+		// setting parser parameters
+		ASTParser parser = ASTParser.newParser(AST.JLS4);
+		// parser.setSource(sourceCode.toString().toCharArray());
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+
+		parser.setEnvironment(null, null, null, true);
+		parser.setUnitName("test");
+		parser.setResolveBindings(true);
+		
+		Collection <CompilationUnit> units = new ArrayList<CompilationUnit>();
+		Collection <Pair <File, CompilationUnit> > filesAndUnits = new ArrayList<Pair <File, CompilationUnit>> ();
+		
+		for (File f: (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true)) {
+			try {
+				String fileContent = FileUtils.readFileToString(f);
+				parser.setSource(fileContent.toCharArray());
+				CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+				units.add(unit);
+				filesAndUnits.add(Pair.of(f, unit));
+			} catch (IOException e) {
+				System.out.println(f.getName() + " reading failed");
+			}
+		}
+		
+		DumpAstVisitor visitor = new DumpAstVisitor();
+		visitor.setCurrentCompilationUnits(units);
+		
+		for (Pair<File, CompilationUnit> p: filesAndUnits) {
+			System.out.println("\n============================= " + p.getLeft().getName());
+			p.getRight().accept(visitor);
+		}
+	}
+	
+	public void run2() {
 				
 		// collect String[] 
 		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true);
@@ -54,9 +89,16 @@ public class FileTraverser {
 		parser.setEnvironment(null, null, null, true);
 		parser.setUnitName("test");
 		parser.setResolveBindings(true);
+	
+
+		Collection <CompilationUnit> units = new ArrayList<CompilationUnit>();
 		
-		FileASTRequestor requestor = new AnnotationASTRequestor();
-		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
+		for(String sourceFilePath: sourceFilePaths) {
+			
+		}
+		
+		//FileASTRequestor requestor = new AnnotationASTRequestor();
+		//parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
   		//CompilationUnit cu = (CompilationUnit) parser.createAST(null);
   		//ASTVisitor visitor = new AnnotationAstVisitor(cu);
  		//cu.accept(visitor);

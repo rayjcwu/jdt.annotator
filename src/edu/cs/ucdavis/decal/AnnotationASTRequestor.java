@@ -15,7 +15,7 @@ public class AnnotationASTRequestor extends FileASTRequestor {
 	public void acceptAST(String sourceFilePath, CompilationUnit ast) {
 		super.acceptAST(sourceFilePath, ast);
 		System.out.println("\n================ " + sourceFilePath);
-		visitor.setCompilationUnit(ast);
+	//	visitor.setCompilationUnit(ast);
 		ast.accept(visitor);
 	}
 
