@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.FileASTRequestor;
 
 public class FileTraverser {
 	String sourcePath;
@@ -17,7 +18,7 @@ public class FileTraverser {
 		this.sourcePath = sourcePath;
 	}
 	
-	public void run() {
+	public void run2() {
 		// setting parser parameters
 		ASTParser parser = ASTParser.newParser(AST.JLS4);
 		// parser.setSource(sourceCode.toString().toCharArray());
@@ -51,8 +52,7 @@ public class FileTraverser {
 		}
 	}
 	
-	public void run2() {
-				
+	public void run() {
 		// collect String[] 
 		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true);
 		String [] sourceFilePaths = new String[filePaths.size()];
@@ -68,7 +68,6 @@ public class FileTraverser {
 
 	public void parse(String[] sourceFilePaths) {
 		ASTParser parser = ASTParser.newParser(AST.JLS4);
-		//parser.setSource(sourceCode.toString().toCharArray());
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
 		
 		//String JDT_PATH = "/Users/jcwu/project/ecj/JDT_DOM/lib";
@@ -93,12 +92,8 @@ public class FileTraverser {
 
 		Collection <CompilationUnit> units = new ArrayList<CompilationUnit>();
 		
-		for(String sourceFilePath: sourceFilePaths) {
-			
-		}
-		
-		//FileASTRequestor requestor = new AnnotationASTRequestor();
-		//parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
+		FileASTRequestor requestor = new AnnotationASTRequestor();
+		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
   		//CompilationUnit cu = (CompilationUnit) parser.createAST(null);
   		//ASTVisitor visitor = new AnnotationAstVisitor(cu);
  		//cu.accept(visitor);

@@ -120,7 +120,7 @@ public class DumpAstVisitor extends ASTVisitor {
 	}
 	
 	private String getNodeInfoLeave(ASTNode node) {
-		return String.format("<<< %s <<<", node.getClass().getName());
+		return String.format("<<< %s <<<", node.getClass().getSimpleName());
 	}
 	
 	private String getNodeInfo2(ASTNode node) {
@@ -186,20 +186,18 @@ public class DumpAstVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(VariableDeclarationFragment node) {
 		System.out.println(getNodeInfo(node));
-		return false;
+		return true;
 	}
 
 	@Override
 	public boolean visit(SimpleName node) {
 
 		System.out.println(getNodeInfo(node));
-	/*	
-		if (node.toString().equals("sayHello")) {
-			System.out.println("in sayHello node");
-		}
-	*/
 		IBinding binding = node.resolveBinding();
 		ASTNode n2 = getDeclaringNode(binding);
+		
+		System.out.println(String.format("## %s %s", binding, n2));
+		
 		if (n2 != null) {
 			System.out.println("is declared at " + getNodeInfo(n2) + "\n    XXX\n");
 		}
@@ -699,6 +697,510 @@ public class DumpAstVisitor extends ASTVisitor {
 	public boolean visit(WildcardType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
 		return super.visit(node);
+	}
+
+	@Override
+	public void endVisit(AnnotationTypeDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(AnnotationTypeMemberDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(AnonymousClassDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ArrayAccess node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ArrayCreation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ArrayInitializer node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ArrayType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(AssertStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(Assignment node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(Block node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(BlockComment node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(BooleanLiteral node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(BreakStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(CastExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(CatchClause node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(CharacterLiteral node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ClassInstanceCreation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(CompilationUnit node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ConditionalExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ConstructorInvocation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ContinueStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(DoStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(EmptyStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(EnhancedForStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(EnumConstantDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(EnumDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ExpressionStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(FieldAccess node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(FieldDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ForStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(IfStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ImportDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(InfixExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(InstanceofExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(Initializer node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(Javadoc node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(LabeledStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(LineComment node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MarkerAnnotation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MemberRef node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MemberValuePair node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MethodRef node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MethodRefParameter node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MethodDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(MethodInvocation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(Modifier node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(NormalAnnotation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(NullLiteral node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(NumberLiteral node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(PackageDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ParameterizedType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ParenthesizedExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(PostfixExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(PrefixExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(PrimitiveType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(QualifiedName node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(QualifiedType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ReturnStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SimpleName node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SimpleType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SingleMemberAnnotation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SingleVariableDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(StringLiteral node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SuperConstructorInvocation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SuperFieldAccess node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SuperMethodInvocation node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SwitchCase node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SwitchStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(SynchronizedStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TagElement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TextElement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ThisExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(ThrowStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TryStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TypeDeclaration node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TypeDeclarationStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TypeLiteral node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(TypeParameter node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(UnionType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(VariableDeclarationExpression node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(VariableDeclarationStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(VariableDeclarationFragment node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(WhileStatement node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
+	}
+
+	@Override
+	public void endVisit(WildcardType node) {
+		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
+		super.endVisit(node);
 	}
 	
 	
