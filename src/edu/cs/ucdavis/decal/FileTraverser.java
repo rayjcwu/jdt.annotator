@@ -18,6 +18,16 @@ public class FileTraverser {
 		this.sourcePath = sourcePath;
 	}
 	
+	private ASTParser parserInit() {
+		ASTParser parser = ASTParser.newParser(AST.JLS4);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);		
+		parser.setEnvironment(null, null, null, true);
+		parser.setUnitName("test");
+		parser.setResolveBindings(true);
+		parser.setBindingsRecovery(true);
+		return parser;
+	}
+	
 	public void run2() {
 		// setting parser parameters
 		ASTParser parser = ASTParser.newParser(AST.JLS4);
@@ -27,6 +37,7 @@ public class FileTraverser {
 		parser.setEnvironment(null, null, null, true);
 		parser.setUnitName("test");
 		parser.setResolveBindings(true);
+		parser.setBindingsRecovery(true);
 		
 		Collection <CompilationUnit> units = new ArrayList<CompilationUnit>();
 		Collection <Pair <File, CompilationUnit> > filesAndUnits = new ArrayList<Pair <File, CompilationUnit>> ();
@@ -62,40 +73,62 @@ public class FileTraverser {
 			sourceFilePaths[i] = f.toString();
 			i++;
 		}
-		
-		parse(sourceFilePaths);
-	}
-
-	public void parse(String[] sourceFilePaths) {
-		ASTParser parser = ASTParser.newParser(AST.JLS4);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		
-		//String JDT_PATH = "/Users/jcwu/project/ecj/JDT_DOM/lib";
-//		String [] classpathEntries = {
-//				JDT_PATH + "/org.eclipse.core.contenttype-3.4.200.v20130326-1255.jar",
-//				JDT_PATH + "/org.eclipse.core.jobs-3.5.300.v20130429-1813.jar",
-//				JDT_PATH + "/org.eclipse.core.resources-3.8.100.v20130521-2026.jar",
-//				JDT_PATH + "/org.eclipse.core.runtime-3.9.0.v20130326-1255.jar",
-//				JDT_PATH + "/org.eclipse.equinox.common-3.6.200.v20130402-1505.jar",
-//				JDT_PATH + "/org.eclipse.equinox.preferences-3.5.100.v20130422-1538.jar",
-//				JDT_PATH + "/org.eclipse.jdt.core-3.9.0.v20130604-1421.jar",
-//				JDT_PATH + "/org.eclipse.osgi-3.9.0.v20130529-1710.jar"
-//				
-//		};
-//		String [] sourcepathEntries = {};
-		//parser.setEnvironment(classpathEntries, sourcepathEntries, null, false);
-		
-		parser.setEnvironment(null, null, null, true);
-		parser.setUnitName("test");
-		parser.setResolveBindings(true);
 	
-
+		ASTParser parser = parserInit();
+		
+		ASTParser p2 = parserInit();
+		
 		Collection <CompilationUnit> units = new ArrayList<CompilationUnit>();
 		
-		FileASTRequestor requestor = new AnnotationASTRequestor();
+		for (File f: filePaths) {
+			try {
+				String fileContent = FileUtils.readFileToString(f);
+				p2.setSource(fileContent.toCharArray());
+				CompilationUnit unit = (CompilationUnit) p2.createAST(null);
+				units.add(unit);
+			} catch (IOException e) {
+				System.err.println("read file error");
+			}
+		}
+		
+		FileASTRequestor requestor = new AnnotationASTRequestor(units);
 		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
   		//CompilationUnit cu = (CompilationUnit) parser.createAST(null);
   		//ASTVisitor visitor = new AnnotationAstVisitor(cu);
  		//cu.accept(visitor);
 	}
+	
+	public void run3() {
+		// collect String[] 
+		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true);
+		String [] sourceFilePaths = new String[filePaths.size()];
+		
+		Collection <CompilationUnit> units = new ArrayList<CompilationUnit>();
+		
+		// create parser
+		ASTParser parser = parserInit();
+
+		int i = 0;
+		for (File f : filePaths) {
+			try {
+				String fileContent = FileUtils.readFileToString(f);
+				parser.setSource(fileContent.toCharArray());
+
+				sourceFilePaths[i] = f.toString();
+				i++;
+				CompilationUnit unit = (CompilationUnit) parser.createAST(null);
+				units.add(unit);
+			} catch (IOException e) {
+				System.err.println("can't read files");
+			}
+		}
+
+		FileASTRequestor requestor = new AnnotationASTRequestor(units);
+		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
+  		//
+  		//ASTVisitor visitor = new AnnotationAstVisitor(cu);
+ 		//cu.accept(visitor);
+	}
+	
+	
 }

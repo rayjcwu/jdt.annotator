@@ -164,6 +164,12 @@ public class DumpAstVisitor extends ASTVisitor {
 	}
 	
 	private ASTNode getDeclaringNode(IBinding binding) {
+		if (binding == null) {
+			return null;
+		}
+		if (binding.getKey().equals("Ldemo/example/hier/C:\\fake_project\\demo\\example\\hier\\Parent~Parent;.sayHello()Ljava/lang/String;")) {
+			System.out.println("Main o. sayHello");
+		}
 		
 		ASTNode node = null;
 		
@@ -172,13 +178,17 @@ public class DumpAstVisitor extends ASTVisitor {
 		}
 		
 		if (node == null) {
+			if (units != null) {
 			for (CompilationUnit unit: units) {
 				node = unit.findDeclaringNode(binding);
 				if (node != null) {
 					break;
 				}
 			}
-		}
+			} else {
+				System.err.println("units is empty");
+			}
+		} 
 		
 		return node;
 	}
@@ -195,8 +205,10 @@ public class DumpAstVisitor extends ASTVisitor {
 		System.out.println(getNodeInfo(node));
 		IBinding binding = node.resolveBinding();
 		ASTNode n2 = getDeclaringNode(binding);
-		
-		System.out.println(String.format("## %s %s", binding, n2));
+	
+		if (binding != null) {
+			System.out.println(String.format("## %s (%s), %s, %s", binding, binding.getKey(), n2, binding.getJavaElement()));
+		}
 		
 		if (n2 != null) {
 			System.out.println("is declared at " + getNodeInfo(n2) + "\n    XXX\n");

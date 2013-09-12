@@ -5,8 +5,7 @@ import org.jboss.logging.Logger;
 public class Main {
 	public static void main(String [] argv) {
 		// HibernateClient hc = new HibernateClient();
-		// hc.run();
-		
+		// hc.run();		
 		Logger logger = Logger.getLogger("annotator");
 		
 		if (argv.length != 1) {
@@ -19,6 +18,7 @@ public class Main {
 				
 			} catch (Exception e) {
 				logger.error(e);
+				e.printStackTrace();
 			}
 		}
 	}
