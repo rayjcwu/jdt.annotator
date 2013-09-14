@@ -2,6 +2,7 @@ package edu.cs.ucdavis.decal;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -94,28 +95,44 @@ import org.eclipse.jdt.core.dom.WildcardType;
 public class DumpAstVisitor extends ASTVisitor {
 
 	Collection <CompilationUnit> units;
+	Collection <String> bindingKeys;
+	
 	CompilationUnit currentUnit;
 	
+	boolean resolve;
+	
 	public DumpAstVisitor() {
-		units = new ArrayList<CompilationUnit>();
+		units = null;
+		bindingKeys = null;		
 		currentUnit = null;
+		resolve = false;
 	}
 	
-	public DumpAstVisitor setCurrentCompilationUnits(Collection<CompilationUnit> units) {
+	public DumpAstVisitor setResolve(boolean resolve) {
+		this.resolve = resolve;
+		return this;
+	}
+	
+	public DumpAstVisitor setCompilationUnits(Collection<CompilationUnit> units) {
 		this.units = units;
 		return this;
 	}
 	
-	/*
-	public DumpAstVisitor setCurrentCompilationUnit(CompilationUnit unit) {
-		currentUnit = unit;
+	public Collection<CompilationUnit> getCompilatoinUnits() {
+		return units;
+	}
+	
+	public DumpAstVisitor setBindingKeys(Collection <String> bindingKeys) {
+		this.bindingKeys = bindingKeys;
 		return this;
 	}
-	*/
 	
+	public Collection <String> getBindingKeys() {
+		return bindingKeys;
+	}
 	
-	public DumpAstVisitor addCompilationUnit(CompilationUnit unit) {
-		units.add(unit);
+	public DumpAstVisitor setCurrentCompilationUnit(CompilationUnit unit) {
+		currentUnit = unit;
 		return this;
 	}
 	
@@ -180,7 +197,7 @@ public class DumpAstVisitor extends ASTVisitor {
 		if (node == null) {
 			if (units != null) {
 			for (CompilationUnit unit: units) {
-				node = unit.findDeclaringNode(binding);
+				node = unit.findDeclaringNode(binding.getKey());
 				if (node != null) {
 					break;
 				}
@@ -207,6 +224,9 @@ public class DumpAstVisitor extends ASTVisitor {
 		ASTNode n2 = getDeclaringNode(binding);
 	
 		if (binding != null) {
+			if (!resolve) {
+				bindingKeys.add(binding.getKey());
+			}
 			System.out.println(String.format("## %s (%s), %s, %s", binding, binding.getKey(), n2, binding.getJavaElement()));
 		}
 		
@@ -345,7 +365,10 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(CompilationUnit node) {
-		currentUnit = node;
+		setCurrentCompilationUnit(node);
+		if (!resolve) {
+			units.add(node);
+		}
 		System.out.println(getNodeInfo(node));   // Auto-generated
 		return super.visit(node);
 	}

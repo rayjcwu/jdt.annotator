@@ -25,20 +25,6 @@ public class FileUtilsTest {
 		
 		for (String s: filePaths) {
 			System.out.println(s);
-		}
-			
-		/*
-		for (File file: (Collection<File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true)) {
-			String fileContent = null;
-			
-			try {
-				fileContent = FileUtils.readFileToString(file);
-			} catch (IOException e) {
-				
-			}
-			
-			System.out.println(fileContent);
-		}
-		*/
+		}			
 	}
 }
