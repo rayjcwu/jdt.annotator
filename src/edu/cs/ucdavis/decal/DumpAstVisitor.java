@@ -184,9 +184,6 @@ public class DumpAstVisitor extends ASTVisitor {
 		if (binding == null) {
 			return null;
 		}
-		if (binding.getKey().equals("Ldemo/example/hier/C:\\fake_project\\demo\\example\\hier\\Parent~Parent;.sayHello()Ljava/lang/String;")) {
-			System.out.println("Main o. sayHello");
-		}
 		
 		ASTNode node = null;
 		
@@ -224,10 +221,11 @@ public class DumpAstVisitor extends ASTVisitor {
 		ASTNode n2 = getDeclaringNode(binding);
 	
 		if (binding != null) {
-			if (!resolve) {
+			System.out.println(String.format("## %s (%s), %s, %s", binding, binding.getKey(), n2, binding.getJavaElement()));
+
+			if (n2 == null && !resolve) {
 				bindingKeys.add(binding.getKey());
 			}
-			System.out.println(String.format("## %s (%s), %s, %s", binding, binding.getKey(), n2, binding.getJavaElement()));
 		}
 		
 		if (n2 != null) {
