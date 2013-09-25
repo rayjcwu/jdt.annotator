@@ -65,4 +65,28 @@ public class FileTraverser {
 		}
 	}
 	
+	public void runZT() {
+		// collect String[] 
+		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true);
+		String [] sourceFilePaths = new String[filePaths.size()];
+		
+		int i = 0;
+		for (File f: filePaths) {
+			sourceFilePaths[i] = f.toString();
+			i++;
+		}
+	
+		ASTParser parser = parserInit();
+		
+
+		ZTASTVisitor visitor = new ZTASTVisitor();
+		
+		ZTAnnotationAstRequestor requestor = new ZTAnnotationAstRequestor();
+		requestor.setVisitor(visitor);
+		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
+		
+		// check visitor
+		System.out.println("print binding keys");
+	
+	}
 }

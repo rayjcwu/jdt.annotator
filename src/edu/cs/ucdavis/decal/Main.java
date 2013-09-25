@@ -14,7 +14,7 @@ public class Main {
 			try {
 				
 				FileTraverser ft = new FileTraverser(argv[0]);
-				ft.run();
+				ft.runZT();
 				
 			} catch (Exception e) {
 				logger.error(e);

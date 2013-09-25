@@ -1,8 +1,6 @@
 package edu.cs.ucdavis.decal;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -262,103 +260,103 @@ public class DumpAstVisitor extends ASTVisitor {
 	@Override
 	public boolean visit(AnnotationTypeDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(AnnotationTypeMemberDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(AnonymousClassDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ArrayAccess node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ArrayCreation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ArrayInitializer node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ArrayType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(AssertStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(Assignment node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(Block node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(BlockComment node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(BooleanLiteral node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(BreakStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(CastExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(CatchClause node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(CharacterLiteral node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
@@ -368,368 +366,368 @@ public class DumpAstVisitor extends ASTVisitor {
 			units.add(node);
 		}
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ConditionalExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ConstructorInvocation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ContinueStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(DoStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(EmptyStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(EnhancedForStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(EnumConstantDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(EnumDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ExpressionStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(FieldAccess node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(FieldDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ForStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(IfStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ImportDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(InfixExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(InstanceofExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(Initializer node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(Javadoc node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(LabeledStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(LineComment node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(MarkerAnnotation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		//return super.visit(node);
+		//return true; // return super.visit(node);
 		return false;
 	}
 
 	@Override
 	public boolean visit(MemberRef node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(MemberValuePair node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(Modifier node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(NormalAnnotation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(NullLiteral node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(NumberLiteral node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(PackageDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ParameterizedType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ParenthesizedExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(PostfixExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(PrefixExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(PrimitiveType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(QualifiedName node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(QualifiedType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ReturnStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SimpleType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SingleMemberAnnotation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SingleVariableDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(StringLiteral node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SuperConstructorInvocation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SuperFieldAccess node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SuperMethodInvocation node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SwitchCase node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SwitchStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(SynchronizedStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TagElement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TextElement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ThisExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(ThrowStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TryStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TypeDeclarationStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TypeLiteral node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(TypeParameter node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(UnionType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(VariableDeclarationExpression node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(VariableDeclarationStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(WhileStatement node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
 	public boolean visit(WildcardType node) {
 		System.out.println(getNodeInfo(node));   // Auto-generated
-		return super.visit(node);
+		return true; // return super.visit(node);
 	}
 
 	@Override
@@ -1235,6 +1233,5 @@ public class DumpAstVisitor extends ASTVisitor {
 		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
 		super.endVisit(node);
 	}
-	
 	
 }
