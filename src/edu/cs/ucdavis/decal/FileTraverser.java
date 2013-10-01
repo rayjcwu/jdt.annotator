@@ -14,7 +14,7 @@ public class FileTraverser {
 	String sourcePath;
 	
 	public FileTraverser(String sourcePath) {
-		this.sourcePath = sourcePath;
+		this.sourcePath = sourcePath;   // TODO: transfer sourcePath to absolute path "~" -> "/Users/id", "." -> current running path
 	}
 	
 	private ASTParser parserInit() {
@@ -31,7 +31,6 @@ public class FileTraverser {
 		// collect String[] 
 		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true);
 		String [] sourceFilePaths = new String[filePaths.size()];
-		
 		int i = 0;
 		for (File f: filePaths) {
 			sourceFilePaths[i] = f.toString();
@@ -39,7 +38,6 @@ public class FileTraverser {
 		}
 	
 		ASTParser parser = parserInit();
-		
 
 		DumpAstVisitor visitor = new DumpAstVisitor();
 		visitor.setBindingKeys(new HashSet<String>());
