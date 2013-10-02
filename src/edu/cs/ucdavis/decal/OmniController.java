@@ -150,4 +150,8 @@ public class OmniController {
 		}		
 		currentFileId = id;
 	}
+	
+	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
+		
+	}
 }

@@ -60,14 +60,24 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		try {
 			stmt = conn.createStatement();
 			
-			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int, name text); "  // add ignore duplicate insertion
+			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int, name text); "
 					                  + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
 					                  + "WHERE (EXISTS (SELECT id FROM nodetype WHERE nodetype.id = NEW.id)) "
 					                  + "DO INSTEAD NOTHING; ";
+			
 			String createFileTable = "CREATE TABLE IF NOT EXISTS file (id serial, name text, project_id int); ";
+			
 			String createProjectTable = "CREATE TABLE IF NOT EXISTS project (id serial, name text); ";
-			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial, start_pos int, length int, "
-								      + "nodetype_id int, file_id int, binding_key text); ";
+			
+			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial, "
+									  + "start_pos int, "
+									  + "length int, "  	  // end_pos = start_pos + length
+								      + "nodetype_id int, "   // foreign key
+								      + "file_id int, "		  // foreign key
+								      + "binding_key text, "  // only some simple name nodes will have this
+								      + "string text, "	      // string representation
+								      + "declared_at int); "  // binding information
+								      ; 
 			
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createFileTable);
@@ -78,7 +88,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 				if (field.getType().equals(int.class)) {
 					stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name) VALUES (%d, '%s');", field.getInt(null), field.getName()));
 				}
-			}			
+			}
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Create table exception");
 		} catch (IllegalAccessException e) {
