@@ -101,24 +101,24 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 	
-	public int retrieveCurrentFileNameId(String currentFileName) {
+	public int retrieveIdFrom(String table, String column, String value) {
 		initIfNot();
 		
 		try {
 			stmt = conn.createStatement();
-			String query = String.format("SELECT id FROM file WHERE name='%s';", currentFileName);
+			String query = String.format("SELECT id FROM %s WHERE %s='%s';", table, column, value);
 			ResultSet result = stmt.executeQuery(query);
 			if(result.next()) {
 				return result.getInt("id");
 			} else {
-				stmt.executeUpdate(String.format("INSERT INTO file (name) VALUES ('%s');", currentFileName));
+				stmt.executeUpdate(String.format("INSERT INTO %s (%s) VALUES ('%s');", table, column, value));
 				ResultSet result2 = stmt.executeQuery(query);
 				if (result2.next()) {
 					return result2.getInt("id");
 				}
 			}
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Retrieve file id");
+			logger.log(Level.SEVERE, String.format("Retrieve %s(%s)=%s id", table, column, value));
 		} finally {
 			try {
 				if (stmt != null) {
@@ -127,11 +127,10 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 			} catch (SQLException e) {
 				logger.log(Level.SEVERE, "Close statement exception");
 			}
-		}
-		
+		}		
 		return -1; // should not happen
 	}
-	
+		
 	public boolean isReady() {
 		return ready;
 	}

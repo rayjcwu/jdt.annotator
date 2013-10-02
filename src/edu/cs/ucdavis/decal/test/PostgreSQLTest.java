@@ -19,9 +19,9 @@ public class PostgreSQLTest {
 		db.init();
 		
 		String filename = "/Users/jcwu/test.c";
-		int i = db.retrieveCurrentFileNameId(filename);
+		int i = db.retrieveIdFrom("file", "name", filename);
 		Assert.assertTrue("create new one", i >= 0);
-		int j = db.retrieveCurrentFileNameId(filename);
+		int j = db.retrieveIdFrom("file", "name", filename);
 		Assert.assertTrue("create new one", i == j);
 	}
 }
