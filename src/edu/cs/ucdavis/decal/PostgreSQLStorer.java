@@ -18,7 +18,6 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 	private Logger logger;
 	
 	private Statement stmt;
-	private ResultSet rs;
 	
 	private OmniController controller;
 	
@@ -30,9 +29,8 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 	public PostgreSQLStorer(String url) {
 		this.ready = false;
 		this.url = url;
-		this.logger = controller.getLogger();		
+		this.logger = Logger.getLogger("annotation");		
 		this.stmt = null;
-		this.rs = null;
 	}
 	
 	public void init() {
@@ -45,8 +43,8 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		try {
 			Class.forName("org.postgresql.Driver"); 
 			conn = DriverManager.getConnection(url);
-			if(conn != null && !conn.isClosed()) {
-				logger.log(Level.INFO, "database connected");
+			if (conn == null || (conn != null && conn.isClosed())) {
+				logger.log(Level.SEVERE, "database is not connected");
 			}		
 		} catch (ClassNotFoundException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -103,7 +101,44 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 	
+	public int retrieveCurrentFileNameId(String currentFileName) {
+		initIfNot();
+		
+		try {
+			stmt = conn.createStatement();
+			String query = String.format("SELECT id FROM file WHERE name='%s';", currentFileName);
+			ResultSet result = stmt.executeQuery(query);
+			if(result.next()) {
+				return result.getInt("id");
+			} else {
+				stmt.executeUpdate(String.format("INSERT INTO file (name) VALUES ('%s');", currentFileName));
+				ResultSet result2 = stmt.executeQuery(query);
+				if (result2.next()) {
+					return result2.getInt("id");
+				}
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Retrieve file id");
+		} finally {
+			try {
+				if (stmt != null) {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				logger.log(Level.SEVERE, "Close statement exception");
+			}
+		}
+		
+		return -1; // should not happen
+	}
+	
 	public boolean isReady() {
 		return ready;
+	}
+	
+	private void initIfNot() {
+		if (!isReady()) {
+			init();
+		}
 	}
 }

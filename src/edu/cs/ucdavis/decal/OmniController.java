@@ -145,5 +145,10 @@ public class OmniController {
 	
 	public Logger getLogger() {
 		return logger;
+	}
+
+	public void retriveCurrentFileNameId(String sourceFilePath) {
+		
+		
 	}	
 }
