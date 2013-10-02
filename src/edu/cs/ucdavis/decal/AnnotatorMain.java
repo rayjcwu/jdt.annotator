@@ -16,6 +16,8 @@ public class AnnotatorMain {
 				(new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation")).register(controller);
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
+				
+				controller.setProjectName("fake_project");
 				controller.run();
 			} catch (Exception e) {
 				logger.log(Level.SEVERE, e.toString());

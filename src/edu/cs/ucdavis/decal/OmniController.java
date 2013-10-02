@@ -17,7 +17,8 @@ public class OmniController {
 	private Logger logger;
 	
 	private String projectName;
-	private String currentFileName;
+	private int projectId;
+	private int currentFileId;
 	
 	private String sourcePath;
 	
@@ -26,9 +27,10 @@ public class OmniController {
 		this.requestor = null;
 		this.database = null;
 		this.logger = null;
-		this.projectName = "fake_project";
-		this.currentFileName = "";
 		this.sourcePath = sourcePath;
+		
+		this.projectId = -1;
+		this.currentFileId = -1;
 	}
 	
 	private ASTParser getParser() {
@@ -53,10 +55,10 @@ public class OmniController {
 	}
 	
 	public void run() {
+		init();
+		
 		String[] sourceFilePaths = collectFilePaths();
 		ASTParser parser = getParser();
-
-		init();		
 		
 		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
 		
@@ -72,8 +74,7 @@ public class OmniController {
 					break;
 				}
 			}
-		}
-		
+		}		
 	}
 
 	@SuppressWarnings("unchecked")
@@ -92,25 +93,7 @@ public class OmniController {
 		// TODO: save node information to database
 	}
 	
-	// getter/setter
-	public OmniController setCurrentFileName(String currentFileName) {
-		this.currentFileName = currentFileName;
-		return this;
-	}
-	
-	public String getCurrentFileName() {
-		return currentFileName;
-	}
-	
-	public OmniController setProjectName(String projectName) {
-		this.projectName = projectName;
-		return this;
-	}
-	
-	public String getProjectName() {
-		return projectName;
-	}
-
+	// getter/setter	
 	public DumpAstVisitor getVisitor() {
 		return visitor;
 	}
@@ -146,9 +129,25 @@ public class OmniController {
 	public Logger getLogger() {
 		return logger;
 	}
+	
+	public void setProjectName(String projectName) {
+		this.projectName = projectName;
+		retriveProjectId(projectName);
+	}
 
+	public void retriveProjectId(String projectName) {
+		int id = database.retrieveIdFrom("project", "name", projectName);
+		if (id == -1) {
+			throw new IllegalStateException("retrieve project id error");
+		}		
+		projectId = id;
+	}
+	
 	public void retriveCurrentFileNameId(String sourceFilePath) {
-		
-		
-	}	
+		int id = database.retrieveIdFrom("file", "name", sourceFilePath);
+		if (id == -1) {
+			throw new IllegalStateException("retrieve file id error");
+		}		
+		currentFileId = id;
+	}
 }

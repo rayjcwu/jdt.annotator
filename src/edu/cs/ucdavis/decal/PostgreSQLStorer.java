@@ -33,12 +33,14 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		this.stmt = null;
 	}
 	
+	@Override
 	public void init() {
 		connect();
 		createTableIfNotExist();
 		ready = true;
 	}
 	
+	@Override
 	public void connect() {
 		try {
 			Class.forName("org.postgresql.Driver"); 
@@ -53,6 +55,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 	
+	@Override
 	public void createTableIfNotExist() {
 		try {
 			stmt = conn.createStatement();
@@ -91,6 +94,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 	
+	@Override
 	public void close() {
 		try {
 			this.conn.close();
@@ -101,6 +105,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 	
+	@Override
 	public int retrieveIdFrom(String table, String column, String value) {
 		initIfNot();
 		
@@ -131,6 +136,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		return -1; // should not happen
 	}
 		
+	@Override
 	public boolean isReady() {
 		return ready;
 	}
