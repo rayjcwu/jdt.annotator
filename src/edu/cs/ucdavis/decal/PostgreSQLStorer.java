@@ -64,10 +64,10 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 					                  + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
 					                  + "WHERE (EXISTS (SELECT id FROM nodetype WHERE nodetype.id = NEW.id)) "
 					                  + "DO INSTEAD NOTHING; ";
-			String createFileTable = "CREATE TABLE IF NOT EXISTS file (id serial, name text); ";
+			String createFileTable = "CREATE TABLE IF NOT EXISTS file (id serial, name text, project_id int); ";
 			String createProjectTable = "CREATE TABLE IF NOT EXISTS project (id serial, name text); ";
 			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial, start_pos int, length int, "
-								      + "nodetype_id int, file_id int, project_id int, binding_key text); ";
+								      + "nodetype_id int, file_id int, binding_key text); ";
 			
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createFileTable);
@@ -106,24 +106,55 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 	}
 	
 	@Override
-	public int retrieveIdFrom(String table, String column, String value) {
+	public int retrieveFileId(String fileName, int projectId) {
 		initIfNot();
 		
 		try {
 			stmt = conn.createStatement();
-			String query = String.format("SELECT id FROM %s WHERE %s='%s';", table, column, value);
+			String query = String.format("SELECT id FROM file WHERE name='%s' AND project_id = %d;", fileName, projectId);
 			ResultSet result = stmt.executeQuery(query);
 			if(result.next()) {
 				return result.getInt("id");
 			} else {
-				stmt.executeUpdate(String.format("INSERT INTO %s (%s) VALUES ('%s');", table, column, value));
+				stmt.executeUpdate(String.format("INSERT INTO file (name, project_id) VALUES ('%s', %s);", fileName, projectId));
 				ResultSet result2 = stmt.executeQuery(query);
 				if (result2.next()) {
 					return result2.getInt("id");
 				}
 			}
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, String.format("Retrieve %s(%s)=%s id", table, column, value));
+			logger.log(Level.SEVERE, String.format("Retrieve file=%s id", fileName));
+		} finally {
+			try {
+				if (stmt != null) {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				logger.log(Level.SEVERE, "Close statement exception");
+			}
+		}		
+		return -1; // should not happen
+	}
+	
+	@Override
+	public int retrieveProjectId(String projectName) {
+		initIfNot();
+		
+		try {
+			stmt = conn.createStatement();
+			String query = String.format("SELECT id FROM project WHERE name='%s';", projectName);
+			ResultSet result = stmt.executeQuery(query);
+			if(result.next()) {
+				return result.getInt("id");
+			} else {
+				stmt.executeUpdate(String.format("INSERT INTO project (name) VALUES ('%s');", projectName));
+				ResultSet result2 = stmt.executeQuery(query);
+				if (result2.next()) {
+					return result2.getInt("id");
+				}
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, String.format("Retrieve project=%s id", projectName));
 		} finally {
 			try {
 				if (stmt != null) {

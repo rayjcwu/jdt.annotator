@@ -136,7 +136,7 @@ public class OmniController {
 	}
 
 	public void retriveProjectId(String projectName) {
-		int id = database.retrieveIdFrom("project", "name", projectName);
+		int id = database.retrieveProjectId(projectName);
 		if (id == -1) {
 			throw new IllegalStateException("retrieve project id error");
 		}		
@@ -144,7 +144,7 @@ public class OmniController {
 	}
 	
 	public void retriveCurrentFileNameId(String sourceFilePath) {
-		int id = database.retrieveIdFrom("file", "name", sourceFilePath);
+		int id = database.retrieveProjectId(sourceFilePath);
 		if (id == -1) {
 			throw new IllegalStateException("retrieve file id error");
 		}		

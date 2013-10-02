@@ -6,6 +6,7 @@ public interface IDatabaseStorer {
 	public void connect();	
 	public void createTableIfNotExist();	
 	public void close();		
-	public int retrieveIdFrom(String table, String column, String value);		
+	public int retrieveFileId(String fileName, int projectId);
+	public int retrieveProjectId(String projectName);
 	public boolean isReady();	
 }
