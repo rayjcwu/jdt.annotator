@@ -20,11 +20,17 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 	private Statement stmt;
 	private ResultSet rs;
 	
+	private OmniController controller;
+	
+	public void register(OmniController controller) {
+		this.controller = controller;
+		controller.setDatabase(this);
+	}
+	
 	public PostgreSQLStorer(String url) {
 		this.ready = false;
 		this.url = url;
-		this.logger = Logger.getLogger("annotator");
-		
+		this.logger = controller.getLogger();		
 		this.stmt = null;
 		this.rs = null;
 	}
@@ -32,6 +38,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 	public void init() {
 		connect();
 		createTableIfNotExist();
+		ready = true;
 	}
 	
 	public void connect() {
@@ -91,6 +98,12 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 			this.conn.close();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Cannot close");
+		} finally {
+			ready = false;
 		}
+	}
+	
+	public boolean isReady() {
+		return ready;
 	}
 }

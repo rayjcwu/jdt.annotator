@@ -98,14 +98,26 @@ public class DumpAstVisitor extends ASTVisitor {
 	Collection <String> bindingKeys;
 	
 	CompilationUnit currentUnit;
+	OmniController controller;
 	
 	boolean resolve;
 	
 	public DumpAstVisitor() {
-		units = null;
-		bindingKeys = null;		
+		units = new HashSet<CompilationUnit>();
+		bindingKeys = new HashSet<String>();		
 		currentUnit = null;
+		controller = null;
 		resolve = false;
+	}
+
+	public void register(OmniController controller) {
+		this.controller = controller;
+		controller.setVisitor(this);;
+	}
+	
+	public DumpAstVisitor setController(OmniController controller) {
+		this.controller = controller;
+		return this;
 	}
 	
 	public DumpAstVisitor setResolve(boolean resolve) {
@@ -1235,6 +1247,4 @@ public class DumpAstVisitor extends ASTVisitor {
 		System.out.println(getNodeInfoLeave(node));  // auto-generate leave
 		super.endVisit(node);
 	}
-	
-	
 }
