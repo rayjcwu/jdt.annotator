@@ -24,6 +24,8 @@ public class AnnotatorMain {
 		options.addOption("s", "src", true, "absolute root path of files");
 		options.addOption("p", "project", true, "project name");
 		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database)");
+		options.addOption("c", "clear", false, "clear all annotated astnode information [need to specify --jdbc]");
+
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
@@ -36,17 +38,22 @@ public class AnnotatorMain {
 			src_path = cmd.getOptionValue("s");
 			project_name = cmd.getOptionValue("p", src_path);
 			jdbc_url = cmd.getOptionValue("d");
-			if (src_path == null || project_name == null || jdbc_url == null) { throw new ParseException(argv.toString()); }
 
-			OmniController controller = new OmniController(src_path);
-			controller.setLogger(logger);
-			(new PostgreSQLStorer(jdbc_url)).resetDatabase().register(controller);
-			(new DumpAstVisitor()).register(controller);
-			(new AnnotationASTRequestor()).register(controller);
-			controller.setProjectName(project_name);
-			controller.run();
-
-			System.out.println("finished");
+			if (cmd.hasOption("c") && jdbc_url != null) {
+				(new PostgreSQLStorer(jdbc_url)).resetDatabase();
+				System.out.println("cleared");
+			} else if (src_path == null || project_name == null || jdbc_url == null) {
+				throw new ParseException(argv.toString());
+			} else {
+				OmniController controller = new OmniController(src_path);
+				controller.setLogger(logger);
+				(new PostgreSQLStorer(jdbc_url)).register(controller);
+				(new DumpAstVisitor()).register(controller);
+				(new AnnotationASTRequestor()).register(controller);
+				controller.setProjectName(project_name);
+				controller.run();
+				System.out.println("finished");
+			}
 		} catch (ParseException e) {
 			formatter.printHelp("annotator.jar", options);
 		} catch (Exception e) {

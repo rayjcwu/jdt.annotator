@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
@@ -184,6 +185,7 @@ public class OmniController {
 	}
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
+
 		String string = node.toString();
 		int nodetype_id = node.getNodeType();
 		int start_pos = node.getStartPosition();
@@ -193,8 +195,10 @@ public class OmniController {
 		String binding_key = "";
 		if (node instanceof Name) {
 			Name n = (Name)node;
-			binding_key = n.resolveBinding().getKey();
-			bindingKeys.add(binding_key);
+			if (n.resolveBinding() != null) {
+				binding_key = n.resolveBinding().getKey();
+				bindingKeys.add(binding_key);
+			}
 		}
 		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId);
 	}
