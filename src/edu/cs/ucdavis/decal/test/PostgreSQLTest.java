@@ -1,6 +1,7 @@
 package edu.cs.ucdavis.decal.test;
 
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -20,24 +21,24 @@ public class PostgreSQLTest {
 		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation");
 		db.init();
 	}
-	
-	
+
+
 	@Test
 	public void testRetrieveProjectFileId() {
 		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation");
 		db.init();
-		
+
 		String projectName = "fake_project";
 		String sourcePath = "/Users/jcwu/";
 		String sourcePath2 = "/Users/jcwu/src";
-		
+
 		int p1 = db.retrieveProjectId(projectName, sourcePath);
 		Assert.assertTrue("create new project id", p1 >= 0);
 		int p2 = db.retrieveProjectId(projectName, sourcePath);
 		Assert.assertTrue("same project id", p1 == p2);
 		int p3 = db.retrieveProjectId(projectName, sourcePath2);
-		Assert.assertTrue("different project id", p3 != p2);		
-		
+		Assert.assertTrue("different project id", p3 != p2);
+
 		String filename = "/Users/jcwu/test.c";
 		int f1 = db.retrieveFileId(filename, p2);
 		Assert.assertTrue("create new file id", f1 >= 0);
@@ -46,14 +47,14 @@ public class PostgreSQLTest {
 		int f3 = db.retrieveFileId(filename, p2+1);
 		Assert.assertTrue("create another new file id", f3 != f2);
 	}
-	
+
 	@Test
 	public void testPreparedStatement() {
 		Logger logger = Logger.getLogger("test");
 		PreparedStatement pre_stmt = null;
 		Statement stmt = null;
 		try {
-			Class.forName("org.postgresql.Driver"); 
+			Class.forName("org.postgresql.Driver");
 			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
 			if (conn == null || (conn != null && conn.isClosed())) {
 				logger.log(Level.SEVERE, "database is not connected");
@@ -62,14 +63,14 @@ public class PostgreSQLTest {
 			pre_stmt = conn.prepareStatement(sql);
 			pre_stmt.setString(1, "'str' ' ' i' \"ng'");
 			pre_stmt.executeUpdate();
-			
+
 			////
 			String query = "SELECT * FROM h;";
 			stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 			while (rs.next()) {
 				System.out.println(rs.getString("string"));
-			}			
+			}
 		} catch (ClassNotFoundException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
 		} catch (SQLException e) {
@@ -79,9 +80,32 @@ public class PostgreSQLTest {
 				try {
 					pre_stmt.close();
 				} catch (SQLException e) {
-					
+
 				}
 			}
+		}
+	}
+
+	@Test
+	public void retrieveAllViewNames() {
+		try {
+			Class.forName("org.postgresql.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
+			DatabaseMetaData meta = conn.getMetaData();
+			  ResultSet res = meta.getTables(null, null, null, new String[] {"VIEW"});
+			  while (res.next()) {
+			     System.out.println(res.getString("TABLE_NAME"));
+			    		 /*
+			        "   "+res.getString("TABLE_CAT")
+			       + ", "+res.getString("TABLE_SCHEM")
+			       + ", "+res.getString("TABLE_NAME")
+			       + ", "+res.getString("TABLE_TYPE")
+			       + ", "+res.getString("REMARKS")
+			       */
+			  }
+		} catch (ClassNotFoundException e) {
+		} catch (SQLException e) {
+		} finally {
 		}
 	}
 }
