@@ -9,8 +9,7 @@ public class AnnotationASTRequestor extends FileASTRequestor {
 
 	@Override
 	public void acceptAST(String sourceFilePath, CompilationUnit ast) {
-		// System.out.println("\n================ " + sourceFilePath);
-		//controller.setCurrentFileName(sourceFilePath);
+		controller.showProgress(sourceFilePath);
 		controller.retriveCurrentFileNameId(sourceFilePath);
 		controller.addCompilationUnitFileName(ast, sourceFilePath);
 		controller.getVisitor().setCurrentCompilationUnit(ast);

@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
@@ -29,6 +28,7 @@ public class OmniController {
 
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
 	private Collection <String> bindingKeys;
+	private int projectSize;
 
 	public OmniController(String sourcePath) {
 		this.visitor = null;
@@ -40,6 +40,7 @@ public class OmniController {
 		this.projectName = "";
 		this.projectId = -1;
 		this.currentFileId = -1;
+		this.projectSize = -1;
 
 		this.compilaionUnitFileNameMap = new HashMap<CompilationUnit, String>();
 		this.bindingKeys = new HashSet<String>();
@@ -82,21 +83,26 @@ public class OmniController {
 		init();
 
 		String[] sourceFilePaths = collectFilePaths();
+		projectSize = sourceFilePaths.length;
 		ASTParser parser = getParser();
 
+		System.out.println("Annotating .java files...");
 		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
 
+		System.out.println("Resolving bindings...");
 		resolveBindings();
 	}
 
 	private void resolveBindings() {
+		int bindingSize = bindingKeys.size();
+		int i = 1;
 		for (String bindingKey: bindingKeys) {
+			System.out.println(String.format("(%d/%d) binding", i, bindingSize));
+			i++;
 			for (Map.Entry<CompilationUnit, String> entry: compilaionUnitFileNameMap.entrySet()) {
 				CompilationUnit unit = entry.getKey();
 				ASTNode node = unit.findDeclaringNode(bindingKey);
 				if (node != null) {
-			//		System.out.println(bindingKey);
-			//		System.out.println(node);
 					retriveCurrentFileNameId(entry.getValue());  // set current file to corresponding id
 					saveForeignAstNode(node, bindingKey);
 
@@ -172,7 +178,6 @@ public class OmniController {
 		if (id == -1) {
 			throw new IllegalStateException("retrieve project id error");
 		}
-		database.clearProjectAstnode(id);
 		projectId = id;
 	}
 
@@ -201,5 +206,15 @@ public class OmniController {
 			}
 		}
 		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId);
+	}
+
+	private static int progressCount = 0;
+	public void showProgress(String sourceFilePath) {
+		OmniController.progressCount ++ ;
+		System.out.println(String.format("(%d/%d) %s", OmniController.progressCount, projectSize, sourceFilePath));
+	}
+
+	public void clearProjectAstNodeInfo() {
+		database.clearProjectAstnode(projectId);
 	}
 }

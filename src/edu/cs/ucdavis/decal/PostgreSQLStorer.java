@@ -81,12 +81,15 @@ public class PostgreSQLStorer {
 								      + "string text, "	      // string representation
 								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
 								      ;
+
+			String createIndex = "CREATE INDEX ON astnode(binding_key);";
 			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
 
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createFileTable);
 			stmt.executeUpdate(createProjectTable);
 			stmt.executeUpdate(createASTNodeTable);
+			stmt.executeUpdate(createIndex);
 
 			// insert nodetype value
 			// TODO: this will throw IllegalAccessException, don't know why
@@ -365,11 +368,12 @@ public class PostgreSQLStorer {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			String clear = "DELETE FROM astnode WHERE astnode.file_id IN ("
-					+ "SELECT file.id AS file_id "
-					+ "FROM file, project "
-					+ "WHERE file.project_id = project.id "
-					+ "AND project.id = 2);";
+			String clear = "DELETE FROM astnode WHERE astnode.id IN ("
+					+ "SELECT astnode_id AS id "
+					+ "FROM astnode_all "
+					+ "WHERE project_id = " + project_id + ");"
+
+					+ "DELETE FROM file WHERE project_id = " + project_id + ";";
 			stmt.executeUpdate(clear);
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear project exception");
