@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
-public class PostgreSQLStorer implements IDatabaseStorer {
+public class PostgreSQLStorer {
 	private boolean ready;
 	private Connection conn;
 	private String url;
@@ -35,7 +35,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		this.logger = Logger.getLogger("annotation");
 	}
 
-	@Override
+
 	public void init() {
 		connect();
 		createTableIfNotExist();
@@ -43,7 +43,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		ready = true;
 	}
 
-	@Override
+
 	public void connect() {
 		try {
 			Class.forName("org.postgresql.Driver");
@@ -58,7 +58,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 
-	@Override
+
 	public void createTableIfNotExist() {
 		Statement stmt = null;
 		try {
@@ -128,7 +128,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		return views;
 	}
 
-	@Override
+
 	public void createViewIfNotExist() {
 		Statement stmt = null;
 		Collection <String> views = collectViewNames();
@@ -215,7 +215,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 
 	}
 
-	@Override
+
 	public void close() {
 		try {
 			this.conn.close();
@@ -226,7 +226,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 
-	@Override
+
 	public int retrieveFileId(String fileName, int projectId) {
 		initIfNot();
 		Statement stmt = null;
@@ -257,7 +257,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		return -1; // should not happen
 	}
 
-	@Override
+
 	public int retrieveProjectId(String projectName, String sourcePath) {
 		initIfNot();
 		PreparedStatement stmt = null;
@@ -294,7 +294,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		return -1; // should not happen
 	}
 
-	@Override
+
 	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id) {
 		PreparedStatement pstmt = null;
 		try {
@@ -323,7 +323,7 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 
 
 
-	@Override
+
 	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
 		PreparedStatement stmt = null;
 		try {
@@ -365,9 +365,6 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 
-
-
-	@Override
 	public void clearProjectAstnode(int project_id) {
 		Statement stmt = null;
 		try {
@@ -392,7 +389,27 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 
 	}
 
-	@Override
+	public void resetDatabase() {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			stmt.execute("DROP TABLE astnode CASCADE;"
+					+ "DROP TABLE project CASCADE;"
+					+ "DROP TABLE file CASCADE;"
+					+ "DROP TABLE nodetype CASCADE;");
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Clear database error");
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					;
+				}
+			}
+		}
+	}
+
 	public boolean isReady() {
 		return ready;
 	}

@@ -1,7 +1,6 @@
 package edu.cs.ucdavis.decal;
 
 import java.io.File;
-import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -18,7 +17,7 @@ import org.eclipse.jdt.core.dom.Name;
 public class OmniController {
 	private DumpAstVisitor visitor;
 	private AnnotationASTRequestor requestor;
-	private IDatabaseStorer database;
+	private PostgreSQLStorer database;
 	private Logger logger;
 
 	private String projectName;
@@ -150,11 +149,11 @@ public class OmniController {
 		return this;
 	}
 
-	public IDatabaseStorer getDatabase() {
+	public PostgreSQLStorer getDatabase() {
 		return database;
 	}
 
-	public OmniController setDatabase(IDatabaseStorer database) {
+	public OmniController setDatabase(PostgreSQLStorer database) {
 		this.database = database;
 		return this;
 	}
