@@ -23,7 +23,7 @@ public class AnnotatorMain {
 		Options options = new Options();
 		options.addOption("s", "src", true, "absolute root path of files");
 		options.addOption("p", "project", true, "project name");
-		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/schema)");
+		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database)");
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
