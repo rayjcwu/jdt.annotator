@@ -186,7 +186,7 @@ public class PostgreSQLStorer {
 					+ "file.name AS file_name, "
 					+ "project.id AS project_id, "
 					+ "project.name AS project_name, "
-					+ "project.path AS project_path"
+					+ "project.path AS project_path, "
 					+ "string, "
 					+ "binding_key, "
 					+ "declared_at_astnode_id "
