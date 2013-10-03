@@ -72,12 +72,14 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial, "
 									  + "start_pos int, "
 									  + "length int, "  	  // end_pos = start_pos + length
+									  + "line_number int, "   // #-th line in file
 								      + "nodetype_id int, "   // foreign key
 								      + "file_id int, "		  // foreign key
 								      + "binding_key text, "  // only some simple name nodes will have this
 								      + "string text, "	      // string representation
-								      + "declared_at int); "  // binding information
-								      ; 
+								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
+								      ;
+			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
 			
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createFileTable);
@@ -175,6 +177,27 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 			}
 		}		
 		return -1; // should not happen
+	}
+	
+	@Override
+	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id) {
+		String update = String.format("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, binding_key, string, file_id) "
+				+ "VALUES (%d, %d, %d, %d, '%s', '%s', %d)",
+				start_pos, length, line_number, nodetype_id, binding_key, string, file_id);
+		try {
+			stmt = conn.createStatement();			
+			stmt.executeUpdate(update);
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, String.format("Save ASTNode=%s \n%s", string, update));
+		} finally {
+			try {
+				if (stmt != null) {
+					stmt.close();
+				}
+			} catch (SQLException e) {
+				logger.log(Level.SEVERE, "Close statement exception");
+			}
+		}
 	}
 		
 	@Override

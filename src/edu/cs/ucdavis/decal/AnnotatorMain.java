@@ -17,7 +17,7 @@ public class AnnotatorMain {
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 				
-				controller.setProjectName("fake_project");
+				controller.setProjectName("demo");
 				controller.run();
 			} catch (Exception e) {
 				logger.log(Level.SEVERE, e.toString());

@@ -9,6 +9,7 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Name;
 
 public class OmniController {
 	private DumpAstVisitor visitor;
@@ -63,6 +64,7 @@ public class OmniController {
 		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
 		
 		// check visitor
+		/*
 		System.out.println("print binding keys");
 		
 		for (String bindingKey: visitor.getBindingKeys()) {
@@ -74,7 +76,8 @@ public class OmniController {
 					break;
 				}
 			}
-		}		
+		}
+		*/		
 	}
 
 	@SuppressWarnings("unchecked")
@@ -87,10 +90,6 @@ public class OmniController {
 			i++;
 		}
 		return sourceFilePaths;
-	}
-	
-	public void saveAstNode(ASTNode node) {
-		// TODO: save node information to database
 	}
 	
 	// getter/setter	
@@ -144,7 +143,7 @@ public class OmniController {
 	}
 	
 	public void retriveCurrentFileNameId(String sourceFilePath) {
-		int id = database.retrieveProjectId(sourceFilePath);
+		int id = database.retrieveFileId(sourceFilePath, projectId);
 		if (id == -1) {
 			throw new IllegalStateException("retrieve file id error");
 		}		
@@ -152,6 +151,25 @@ public class OmniController {
 	}
 	
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
+		/*
+		String string = node.toString();
+
+		node.getLocationInParent(),
 		
+		node.subtreeBytes()
+		*/
+		String string = node.toString();
+		int nodetype_id = node.getNodeType();
+		int start_pos = node.getStartPosition();
+		int length = node.getLength();
+		int line_number = unit.getLineNumber(node.getStartPosition());
+		
+		String binding_key = "";
+		if (node instanceof Name) {
+			Name n = (Name)node;
+			binding_key = n.resolveBinding().getKey();
+		}
+ 
+		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId);
 	}
 }

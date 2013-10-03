@@ -1,7 +1,16 @@
 package edu.cs.ucdavis.decal.test;
 
-import org.junit.Test;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.junit.Assert;
+import org.junit.Test;
 
 import edu.cs.ucdavis.decal.PostgreSQLStorer;
 
@@ -34,5 +43,41 @@ public class PostgreSQLTest {
 		Assert.assertTrue("create another new file id", f3 != f2);
 	}
 	
-
+	@Test
+	public void testPreparedStatement() {
+		Logger logger = Logger.getLogger("test");
+		PreparedStatement pre_stmt = null;
+		Statement stmt = null;
+		try {
+			Class.forName("org.postgresql.Driver"); 
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
+			if (conn == null || (conn != null && conn.isClosed())) {
+				logger.log(Level.SEVERE, "database is not connected");
+			}
+			String sql = "INSERT INTO h (string) VALUES (?);";
+			pre_stmt = conn.prepareStatement(sql);
+			pre_stmt.setString(1, "'str' ' ' i' \"ng'");
+			pre_stmt.executeUpdate();
+			
+			////
+			String query = "SELECT * FROM h;";
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			while (rs.next()) {
+				System.out.println(rs.getString("string"));
+			}			
+		} catch (ClassNotFoundException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e);
+		} finally {
+			if (pre_stmt != null) {
+				try {
+					pre_stmt.close();
+				} catch (SQLException e) {
+					
+				}
+			}
+		}
+	}
 }

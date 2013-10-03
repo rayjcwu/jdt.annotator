@@ -111,7 +111,7 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	public void register(OmniController controller) {
 		this.controller = controller;
-		controller.setVisitor(this);;
+		controller.setVisitor(this);
 	}
 	
 	public DumpAstVisitor setController(OmniController controller) {
@@ -180,12 +180,16 @@ public class DumpAstVisitor extends ASTVisitor {
 	}
 	
 	private String getNodeInfo(ASTNode node) {
+		// store all infomation
+		controller.saveAstNodeInfo(node, currentUnit);
+		
 		int startPos = node.getStartPosition();
 		int endPos = node.getStartPosition() + node.getLength();
 	
-		return String.format("\n>>> %s (%s) #%d %d->%d (%s->%s) >>>",
+		return String.format("\n>>> %s (%s, %d) #%d %d->%d (%s->%s) >>>",
 				node.toString(),                    // node string representation, ex: a
 				node.getClass().getSimpleName(),    // class type, ex: SimpleName
+				node.getNodeType(),
 				currentUnit.getLineNumber(startPos),
 				startPos, endPos, 
 				Integer.toHexString(startPos), Integer.toHexString(endPos));
