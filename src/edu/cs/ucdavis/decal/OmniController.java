@@ -74,12 +74,6 @@ public class OmniController {
 
 	private void init() {
 		// init database
-		if (database instanceof PostgreSQLStorer) {
-			PostgreSQLStorer db = (PostgreSQLStorer)database;
-			if (!db.isReady()) {
-				db.init();
-			}
-		}
 		// init visitor
 	}
 

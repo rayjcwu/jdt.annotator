@@ -33,16 +33,12 @@ public class PostgreSQLStorer {
 		this.ready = false;
 		this.url = url;
 		this.logger = Logger.getLogger("annotation");
-	}
 
-
-	public void init() {
 		connect();
 		createTableIfNotExist();
 		createViewIfNotExist();
-		ready = true;
+		this.ready = true;
 	}
-
 
 	public void connect() {
 		try {
@@ -53,8 +49,10 @@ public class PostgreSQLStorer {
 			}
 		} catch (ClassNotFoundException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalStateException();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
+			throw new IllegalStateException();
 		}
 	}
 
@@ -228,7 +226,6 @@ public class PostgreSQLStorer {
 
 
 	public int retrieveFileId(String fileName, int projectId) {
-		initIfNot();
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
@@ -259,7 +256,6 @@ public class PostgreSQLStorer {
 
 
 	public int retrieveProjectId(String projectName, String sourcePath) {
-		initIfNot();
 		PreparedStatement stmt = null;
 		ResultSet result = null;
 		String query = "SELECT id FROM project WHERE name=? AND path=?;";
@@ -389,7 +385,7 @@ public class PostgreSQLStorer {
 
 	}
 
-	public void resetDatabase() {
+	public PostgreSQLStorer resetDatabase() {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
@@ -408,15 +404,13 @@ public class PostgreSQLStorer {
 				}
 			}
 		}
+		createTableIfNotExist();
+		createViewIfNotExist();
+		return this;
 	}
 
 	public boolean isReady() {
 		return ready;
 	}
 
-	private void initIfNot() {
-		if (!isReady()) {
-			init();
-		}
-	}
 }

@@ -13,7 +13,7 @@ public class AnnotatorMain {
 			try {
 				OmniController controller = new OmniController(argv[0]);
 				controller.setLogger(logger);
-				(new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation")).register(controller);
+				(new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation")).resetDatabase().register(controller);
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 

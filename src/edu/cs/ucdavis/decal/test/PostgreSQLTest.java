@@ -19,14 +19,12 @@ public class PostgreSQLTest {
 	@Test
 	public void testCreateTable() {
 		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation");
-		db.init();
 	}
 
 
 	@Test
 	public void testRetrieveProjectFileId() {
 		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation");
-		db.init();
 
 		String projectName = "fake_project";
 		String sourcePath = "/Users/jcwu/";
