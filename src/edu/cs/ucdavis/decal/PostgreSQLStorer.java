@@ -151,16 +151,6 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 				stmt.executeUpdate(project_file);
 			}
 
-			/* (id serial, "
-									  + "start_pos int, "
-									  + "length int, "  	  // end_pos = start_pos + length
-									  + "line_number int, "   // #-th line in file
-								      + "nodetype_id int, "   // foreign key
-								      + "file_id int, "		  // foreign key
-								      + "binding_key text, "  // only some simple name nodes will have this
-								      + "string text, "	      // string representation
-								      + "declared_at_astnode_id int); "  /
-								      */
 			to_create = "astnode_type";
 			if (!views.contains(to_create)) {
 				String astnode_type = "CREATE VIEW astnode_type AS "
@@ -172,8 +162,8 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 					+ "nodetype_id, "
 					+ "nodetype.name AS nodetype, "
 					+ "file_id, "
-					+ "binding_key, "
 					+ "string, "
+					+ "binding_key, "
 					+ "declared_at_astnode_id "
 
 					+ "FROM astnode, nodetype "
@@ -181,8 +171,36 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 					;
 				stmt.executeUpdate(astnode_type);
 			}
+
+			to_create = "astnode_all";
+			if (!views.contains(to_create)) {
+				String astnode_type = "CREATE VIEW astnode_all AS "
+					+ "SELECT "
+					+ "astnode.id AS astnode_id, "
+					+ "start_pos, "
+					+ "length, "
+					+ "line_number, "
+					+ "nodetype_id, "
+					+ "nodetype.name AS nodetype, "
+					+ "file_id, "
+					+ "file.name AS file_name, "
+					+ "project.id AS project_id, "
+					+ "project.name AS project_name, "
+					+ "project.path AS project_path"
+					+ "string, "
+					+ "binding_key, "
+					+ "declared_at_astnode_id "
+
+					+ "FROM astnode, nodetype, file, project "
+					+ "WHERE astnode.nodetype_id = nodetype.id "
+					+ "AND astnode.file_id = file.id "
+					+ "AND file.project_id = project.id;"
+					;
+				stmt.executeUpdate(astnode_type);
+			}
+
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Create views "+ to_create + " exception");
+			logger.log(Level.SEVERE, "Create views "+ to_create + " exception\n" + e.toString());
 		} finally {
 			if (stmt != null) {
 				try {
