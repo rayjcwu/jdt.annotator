@@ -1,8 +1,10 @@
 package edu.cs.ucdavis.decal;
 
 import java.io.File;
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -26,6 +28,7 @@ public class OmniController {
 	private String sourcePath;
 
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
+	private Collection <String> bindingKeys;
 
 	public OmniController(String sourcePath) {
 		this.visitor = null;
@@ -39,6 +42,16 @@ public class OmniController {
 		this.currentFileId = -1;
 
 		this.compilaionUnitFileNameMap = new HashMap<CompilationUnit, String>();
+		this.bindingKeys = new HashSet<String>();
+	}
+
+	public OmniController addBindingKey(String bindingKey) {
+		bindingKeys.add(bindingKey);
+		return this;
+	}
+
+	public Collection <String> getBindingKeys() {
+		return bindingKeys;
 	}
 
 	public OmniController addCompilationUnitFileName(CompilationUnit unit, String fileName) {
@@ -79,21 +92,31 @@ public class OmniController {
 
 		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
 
-		// check visitor
-		/*
-		System.out.println("print binding keys");
+		resolveBindings();
+	}
 
-		for (String bindingKey: visitor.getBindingKeys()) {
-			System.out.println(bindingKey);
-			for (CompilationUnit cu: visitor.getCompilatoinUnits()) {
-				ASTNode node = cu.findDeclaringNode(bindingKey);
+	private void resolveBindings() {
+		for (String bindingKey: bindingKeys) {
+			for (Map.Entry<CompilationUnit, String> entry: compilaionUnitFileNameMap.entrySet()) {
+				CompilationUnit unit = entry.getKey();
+				ASTNode node = unit.findDeclaringNode(bindingKey);
 				if (node != null) {
+					System.out.println(bindingKey);
 					System.out.println(node);
+					retriveCurrentFileNameId(entry.getValue());  // set current file to corresponding id
+					saveForeignAstNode(node, bindingKey);
+
 					break;
 				}
 			}
 		}
-		*/
+	}
+
+	private void saveForeignAstNode(ASTNode node, String bindingKey) {
+		int start_pos = node.getStartPosition();
+		int length = node.getLength();
+		int nodetype_id = node.getNodeType();
+		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -177,6 +200,7 @@ public class OmniController {
 		if (node instanceof Name) {
 			Name n = (Name)node;
 			binding_key = n.resolveBinding().getKey();
+			bindingKeys.add(binding_key);
 		}
 		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId);
 	}

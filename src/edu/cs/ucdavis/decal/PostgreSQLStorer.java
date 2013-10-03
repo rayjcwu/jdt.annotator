@@ -321,6 +321,50 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 
+
+
+	@Override
+	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
+		PreparedStatement stmt = null;
+		try {
+			// find foreign astnode
+			String query = "SELECT id FROM astnode WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?";
+			stmt = conn.prepareStatement(query);
+			stmt.setInt(1, start_pos);
+			stmt.setInt(2, length);
+			stmt.setInt(3, nodetype_id);
+			stmt.setInt(4, file_id);
+			ResultSet rs = stmt.executeQuery();
+			int total = 0;
+			int foreign_id = -1;
+			while (rs.next()) {
+				total ++;
+				foreign_id = rs.getInt("id");
+			}
+
+			if (total > 1) {
+				throw new IllegalStateException("resolve more than on astnode");
+			}
+
+			String update = "UPDATE astnode SET declared_at_astnode_id = ? WHERE binding_key = ?;";
+			stmt = conn.prepareStatement(update);
+			stmt.setInt(1, foreign_id);
+			stmt.setString(2, binding_key);
+			stmt.executeUpdate();
+
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Resolve foreign astnode exception");
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					;
+				}
+			}
+		}
+	}
+
 	@Override
 	public boolean isReady() {
 		return ready;
