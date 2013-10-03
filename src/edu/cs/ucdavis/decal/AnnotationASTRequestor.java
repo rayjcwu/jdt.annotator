@@ -12,6 +12,8 @@ public class AnnotationASTRequestor extends FileASTRequestor {
 		// System.out.println("\n================ " + sourceFilePath);
 		//controller.setCurrentFileName(sourceFilePath);
 		controller.retriveCurrentFileNameId(sourceFilePath);
+		controller.addCompilationUnitFileName(ast, sourceFilePath);
+		controller.getVisitor().setCurrentCompilationUnit(ast);
 		ast.accept(controller.getVisitor());
 	}
 
