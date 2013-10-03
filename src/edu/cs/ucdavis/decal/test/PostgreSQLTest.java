@@ -28,11 +28,15 @@ public class PostgreSQLTest {
 		db.init();
 		
 		String projectName = "fake_project";
-		int p1 = db.retrieveProjectId(projectName);
-		Assert.assertTrue("create new project id", p1 >= 0);
-		int p2 = db.retrieveProjectId(projectName);
-		Assert.assertTrue("same project id", p1 == p2);
+		String sourcePath = "/Users/jcwu/";
+		String sourcePath2 = "/Users/jcwu/src";
 		
+		int p1 = db.retrieveProjectId(projectName, sourcePath);
+		Assert.assertTrue("create new project id", p1 >= 0);
+		int p2 = db.retrieveProjectId(projectName, sourcePath);
+		Assert.assertTrue("same project id", p1 == p2);
+		int p3 = db.retrieveProjectId(projectName, sourcePath2);
+		Assert.assertTrue("different project id", p3 != p2);		
 		
 		String filename = "/Users/jcwu/test.c";
 		int f1 = db.retrieveFileId(filename, p2);

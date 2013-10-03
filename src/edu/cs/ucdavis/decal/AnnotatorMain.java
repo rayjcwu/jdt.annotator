@@ -18,6 +18,7 @@ public class AnnotatorMain {
 				(new AnnotationASTRequestor()).register(controller);
 				
 				controller.setProjectName("demo");
+				
 				controller.run();
 			} catch (Exception e) {
 				logger.log(Level.SEVERE, e.toString());

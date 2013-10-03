@@ -131,11 +131,11 @@ public class OmniController {
 	
 	public void setProjectName(String projectName) {
 		this.projectName = projectName;
-		retriveProjectId(projectName);
+		retriveProjectId(projectName, sourcePath);
 	}
 
-	public void retriveProjectId(String projectName) {
-		int id = database.retrieveProjectId(projectName);
+	public void retriveProjectId(String projectName, String sourcePath) {
+		int id = database.retrieveProjectId(projectName, sourcePath);
 		if (id == -1) {
 			throw new IllegalStateException("retrieve project id error");
 		}		

@@ -182,7 +182,7 @@ public class DumpAstVisitor extends ASTVisitor {
 	private String getNodeInfo(ASTNode node) {
 		// store all infomation
 		controller.saveAstNodeInfo(node, currentUnit);
-		
+/*		
 		int startPos = node.getStartPosition();
 		int endPos = node.getStartPosition() + node.getLength();
 	
@@ -193,6 +193,8 @@ public class DumpAstVisitor extends ASTVisitor {
 				currentUnit.getLineNumber(startPos),
 				startPos, endPos, 
 				Integer.toHexString(startPos), Integer.toHexString(endPos));
+				*/
+		return "";
 	}
 	
 	private ASTNode getDeclaringNode(IBinding binding) {
