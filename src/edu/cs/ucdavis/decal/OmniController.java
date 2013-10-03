@@ -101,8 +101,8 @@ public class OmniController {
 				CompilationUnit unit = entry.getKey();
 				ASTNode node = unit.findDeclaringNode(bindingKey);
 				if (node != null) {
-					System.out.println(bindingKey);
-					System.out.println(node);
+			//		System.out.println(bindingKey);
+			//		System.out.println(node);
 					retriveCurrentFileNameId(entry.getValue());  // set current file to corresponding id
 					saveForeignAstNode(node, bindingKey);
 
@@ -178,6 +178,7 @@ public class OmniController {
 		if (id == -1) {
 			throw new IllegalStateException("retrieve project id error");
 		}
+		database.clearProjectAstnode(id);
 		projectId = id;
 	}
 

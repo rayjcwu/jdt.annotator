@@ -365,6 +365,33 @@ public class PostgreSQLStorer implements IDatabaseStorer {
 		}
 	}
 
+
+
+	@Override
+	public void clearProjectAstnode(int project_id) {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			String clear = "DELETE FROM astnode WHERE astnode.file_id IN ("
+					+ "SELECT file.id AS file_id "
+					+ "FROM file, project "
+					+ "WHERE file.project_id = project.id "
+					+ "AND project.id = 2);";
+			stmt.executeUpdate(clear);
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "Clear project exception");
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					;
+				}
+			}
+		}
+
+	}
+
 	@Override
 	public boolean isReady() {
 		return ready;

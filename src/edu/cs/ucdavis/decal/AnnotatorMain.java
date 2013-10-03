@@ -17,7 +17,7 @@ public class AnnotatorMain {
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 
-				controller.setProjectName("demo");
+				controller.setProjectName("demo2");
 
 				controller.run();
 

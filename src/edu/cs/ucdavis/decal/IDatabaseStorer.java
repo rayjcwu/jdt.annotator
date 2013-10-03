@@ -12,6 +12,6 @@ public interface IDatabaseStorer {
 	public int retrieveProjectId(String projectName, String sourcePath);
 	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id);
 	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id);
-
+	public void clearProjectAstnode(int project_id);
 	public boolean isReady();
 }
