@@ -107,6 +107,8 @@ public enum Token {
     AT("@"),
     ELLIPSIS("...");
 
+    public static final int base = 100;
+
     private final String token;
     private Token(String token) {
       this.token = token;
@@ -114,5 +116,5 @@ public enum Token {
 
     public String getToken() { return token; }
     public String toString() { return name(); }
-    public int getId() { return ordinal() + 100; }
+    public int getId() { return ordinal() + base; }
 }
