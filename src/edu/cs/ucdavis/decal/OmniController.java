@@ -232,8 +232,7 @@ public class OmniController {
 		/*
 		 * start_pos, length, line_number, nodetype_id, file_id, string, raw, parent_astnode_id
 		 */
-		//final int line_number = unit.getLineNumber(start_pos);
-		final int line_number = unit.getLineNumber(start_pos);
+		final int line_number = unit.getLineNumber(start_pos);    // token's start_pos not node's start_pos
 		final int column_number = unit.getColumnNumber(start_pos);
 		final int nodetype_id = token.getId();
 		final String string = token.getToken();
@@ -259,5 +258,9 @@ public class OmniController {
 
 	public void clearProjectAstNodeInfo() {
 		database.clearProjectAstnode(projectId);
+	}
+
+	public String getCurrentFileRaw() {
+		return currentFileRaw;
 	}
 }

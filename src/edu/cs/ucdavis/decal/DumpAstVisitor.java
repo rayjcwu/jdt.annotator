@@ -1,7 +1,10 @@
 package edu.cs.ucdavis.decal;
 
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.Annotation;
 import org.eclipse.jdt.core.dom.AnnotationTypeDeclaration;
 import org.eclipse.jdt.core.dom.AnnotationTypeMemberDeclaration;
 import org.eclipse.jdt.core.dom.AnonymousClassDeclaration;
@@ -422,8 +425,25 @@ public class DumpAstVisitor extends ASTVisitor {
 		// package ...... ;
 		// save package
 		// save ;
+		final String rawFile = controller.getCurrentFileRaw();
+		int package_start_pos = node.getStartPosition();
+
+		if (node.getJavadoc() != null) {
+			package_start_pos =  node.getJavadoc().getStartPosition() + node.getJavadoc().getLength();
+		}
+
+		if (node.annotations() != null && node.annotations().size() > 0) {
+			List <Annotation> annoList = node.annotations();
+			Annotation anno = annoList.get(annoList.size() - 1);
+			package_start_pos = anno.getStartPosition() + anno.getLength();
+		}
+
+		String tail = rawFile.substring(package_start_pos, node.getStartPosition() + node.getLength());
+		int ns = tail.indexOf(Token.PACKAGE.getToken());
+		package_start_pos += ns;
+
 		controller.saveTokenInfo(node, currentUnit,
-				node.getStartPosition(),
+				package_start_pos,
 				Token.PACKAGE.getLength(),
 				Token.PACKAGE);
 		controller.saveTokenInfo(node, currentUnit,
