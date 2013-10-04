@@ -314,7 +314,43 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(ImportDeclaration node) {
-		// TODO Auto-generated method stub
+		final int parentId = controller.getAstnodeId(node);  // token's parent is current astnode
+
+		String currentFileRaw = controller.getCurrentFileRaw();
+		int node_end_pos = node.getStartPosition() + node.getLength();
+
+		controller.saveTokenInfo(node, currentUnit,
+				node.getStartPosition(), Token.IMPORT.getLength(), Token.IMPORT, parentId);
+
+		if (node.isStatic()) {
+			int static_start_pos = node.getStartPosition() + Token.IMPORT.getLength();
+			String tail = currentFileRaw.substring(static_start_pos, node_end_pos);
+			int ns = tail.indexOf(Token.STATIC.getToken());
+			static_start_pos += ns;
+			controller.saveTokenInfo(node, currentUnit,
+					static_start_pos, Token.STATIC.getLength(), Token.STATIC, parentId);
+		}
+
+		// TODO: import ....[.*];
+		if (node.isOnDemand()) {
+			int dot_start_pos = node.getName().getStartPosition() + node.getName().getLength();
+			String tail = currentFileRaw.substring(dot_start_pos, node_end_pos);
+			int ns = tail.indexOf(Token.DOT.getToken());
+			dot_start_pos+=ns;
+			controller.saveTokenInfo(node, currentUnit, dot_start_pos, Token.DOT.getLength(), Token.DOT, parentId);
+
+			int star_start_pos = dot_start_pos + Token.DOT.getLength();
+			String t2 = currentFileRaw.substring(star_start_pos, node_end_pos);
+			int ns2 = t2.indexOf(Token.MUL.getToken());
+			star_start_pos += ns2;
+
+			controller.saveTokenInfo(node, currentUnit, star_start_pos, Token.MUL.getLength(), Token.MUL, parentId);
+		}
+
+		controller.saveTokenInfo(node, currentUnit,
+				node_end_pos - Token.SEMI.getLength(),
+				Token.SEMI.getLength(),
+				Token.SEMI, parentId);
 		return true;
 	}
 
@@ -422,6 +458,7 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(PackageDeclaration node) {
+		final int parentId = controller.getAstnodeId(node);
 		// package ...... ;
 		// save package
 		// save ;
@@ -445,11 +482,11 @@ public class DumpAstVisitor extends ASTVisitor {
 		controller.saveTokenInfo(node, currentUnit,
 				package_start_pos,
 				Token.PACKAGE.getLength(),
-				Token.PACKAGE);
+				Token.PACKAGE, parentId);
 		controller.saveTokenInfo(node, currentUnit,
 				node.getStartPosition() + node.getLength() - Token.SEMI.getLength(),
 				Token.SEMI.getLength(),
-				Token.SEMI);
+				Token.SEMI, parentId);
 		return true;
 	}
 
