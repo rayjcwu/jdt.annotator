@@ -76,6 +76,7 @@ public class PostgreSQLStorer {
 									  + "start_pos int, "
 									  + "length int, "  	  // end_pos = start_pos + length
 									  + "line_number int, "   // #-th line in file
+									  + "column_number int, "
 								      + "nodetype_id int, "   // foreign key
 								      + "file_id int, "		  // foreign key
 								      + "binding_key text, "  // only some simple name nodes will have this
@@ -201,6 +202,7 @@ public class PostgreSQLStorer {
 					+ "length, "
 					+ "start_pos + length AS end_pos, "
 					+ "line_number, "
+					+ "column_number, "
 					+ "nodetype_id, "
 					+ "nodetype.name AS nodetype, "
 					+ "file_id, "
@@ -225,6 +227,7 @@ public class PostgreSQLStorer {
 					+ "length, "
 					+ "start_pos + length AS end_pos, "
 					+ "line_number, "
+					+ "column_number, "
 					+ "nodetype_id, "
 					+ "nodetype.name AS nodetype, "
 					+ "file_id, "
@@ -320,20 +323,21 @@ public class PostgreSQLStorer {
 	}
 
 
-	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw, int parent_id) {
+	public void saveAstNodeInfo(int start_pos, int length, int line_number, int column_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw, int parent_id) {
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, binding_key, string, file_id, raw, parent_astnode_id) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, column_number, nodetype_id, binding_key, string, file_id, raw, parent_astnode_id) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			pstmt.setInt(1, start_pos);
 			pstmt.setInt(2, length);
 			pstmt.setInt(3, line_number);
-			pstmt.setInt(4, nodetype_id);
-			pstmt.setString(5, binding_key);
-			pstmt.setString(6, string);
-			pstmt.setInt(7, file_id);
-			pstmt.setString(8, currentFileRaw.substring(start_pos, start_pos+length));
-			pstmt.setInt(9, parent_id);
+			pstmt.setInt(4, column_number);
+			pstmt.setInt(5, nodetype_id);
+			pstmt.setString(6, binding_key);
+			pstmt.setString(7, string);
+			pstmt.setInt(8, file_id);
+			pstmt.setString(9, currentFileRaw.substring(start_pos, start_pos+length));
+			pstmt.setInt(10, parent_id);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
@@ -342,19 +346,20 @@ public class PostgreSQLStorer {
 		}
 	}
 
-	public void saveTokenInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw, int parent_id) {
+	public void saveTokenInfo(int start_pos, int length, int line_number, int column_number, int nodetype_id, String string, int file_id, String currentFileRaw, int parent_id) {
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, string, file_id, raw, parent_astnode_id) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, column_number, nodetype_id, string, file_id, raw, parent_astnode_id) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			pstmt.setInt(1, start_pos);
 			pstmt.setInt(2, length);
 			pstmt.setInt(3, line_number);
-			pstmt.setInt(4, nodetype_id);
-			pstmt.setString(5, string);
-			pstmt.setInt(6, file_id);
-			pstmt.setString(7, currentFileRaw.substring(start_pos, start_pos+length));
-			pstmt.setInt(8, parent_id);
+			pstmt.setInt(4, column_number);
+			pstmt.setInt(5, nodetype_id);
+			pstmt.setString(6, string);
+			pstmt.setInt(7, file_id);
+			pstmt.setString(8, currentFileRaw.substring(start_pos, start_pos+length));
+			pstmt.setInt(9, parent_id);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
