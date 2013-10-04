@@ -106,4 +106,20 @@ public class PostgreSQLTest {
 		} finally {
 		}
 	}
+
+	@Test
+	public void retrieveAllIndexNames() {
+		try {
+			Class.forName("org.postgresql.Driver");
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
+			DatabaseMetaData meta = conn.getMetaData();
+			  ResultSet res = meta.getTables(null, null, null, new String[] {"INDEX"});
+			  while (res.next()) {
+			     System.out.println(res.getString("TABLE_NAME"));
+			  }
+		} catch (ClassNotFoundException e) {
+		} catch (SQLException e) {
+		} finally {
+		}
+	}
 }
