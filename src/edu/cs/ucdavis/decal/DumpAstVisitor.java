@@ -95,6 +95,9 @@ public class DumpAstVisitor extends ASTVisitor {
 	CompilationUnit currentUnit;
 	OmniController controller;
 
+	private String snippet;
+	private int currentAstnodeId;
+
 	public DumpAstVisitor() {
 		currentUnit = null;
 		controller = null;
@@ -632,18 +635,13 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		final int parentId = controller.getAstnodeId(node);
-
-		final String currentFileRaw = controller.getCurrentFileRaw();
-		String pre = currentFileRaw.substring(node.getStartPosition(), node.getName().getStartPosition());
+		settle(node);
 		if (node.isInterface()) {
-			int idx = pre.lastIndexOf(Token.INTERFACE.getToken());
-			controller.saveTokenInfo(currentUnit, node.getStartPosition() + idx, Token.INTERFACE,
-					parentId);
+			int interface_start_pos = getTokenStartPosBeforeBackwardStartPos(snippet, node.getStartPosition(), Token.INTERFACE, node.getName().getStartPosition());
+			controller.saveTokenInfo(currentUnit, interface_start_pos, Token.INTERFACE, this.currentAstnodeId);
 		} else { // is class
-			int idx = pre.lastIndexOf(Token.CLASS.getToken());
-			controller.saveTokenInfo(currentUnit, node.getStartPosition() + idx, Token.CLASS,
-					parentId);
+			int class_start_pos = getTokenStartPosBeforeBackwardStartPos(snippet, node.getStartPosition(), Token.CLASS, node.getName().getStartPosition());
+			controller.saveTokenInfo(currentUnit, class_start_pos, Token.CLASS, this.currentAstnodeId);
 		}
 		return true;
 	}
@@ -700,6 +698,37 @@ public class DumpAstVisitor extends ASTVisitor {
 	public boolean visit(WildcardType node) {
 		// TODO Auto-generated method stub
 		return true;
+	}
+
+	//    "    rawSnippet   "
+	//    .................start_from ...........................................................................................
+	//    node.start_pos .........token.start_pos ....token.start_pos + token.length ................node.start_pos + node.length
+	//
+	//   snippet_start
+	// find token start pos in whole file
+
+	// return -1 when can't find it
+	public int getTokenStartPos(String rawSnippet, int snippet_start_pos, Token token, int skip_length) {
+		final String raw = rawSnippet.substring(skip_length);
+		final int token_pos = raw.indexOf(token.getToken());
+		return (token_pos == -1) ? -1 : snippet_start_pos + skip_length + token_pos;
+	}
+
+	public int getTokenStartPosBackward(String rawSnippet, int snippet_start_pos, Token token, int backward_skip_length) {
+		final String raw = rawSnippet.substring(0, rawSnippet.length() - backward_skip_length);
+		final int token_pos = raw.lastIndexOf(token.getToken());
+		return (token_pos == -1) ? -1 : snippet_start_pos + token_pos;
+	}
+
+	public int getTokenStartPosBeforeBackwardStartPos(String rawSnippet, int snippet_start_pos, Token token, int backward_start_pos) {
+		final String raw = rawSnippet.substring(0, backward_start_pos - snippet_start_pos);
+		final int token_pos = raw.lastIndexOf(token.getToken());
+		return (token_pos == -1) ? -1 : snippet_start_pos + token_pos;
+	}
+
+	private void settle(ASTNode node) {
+		this.currentAstnodeId = controller.getAstnodeId(node);
+		this.snippet = controller.getCurrentFileRaw().substring(node.getStartPosition(), node.getStartPosition() + node.getLength());
 	}
 
 }
