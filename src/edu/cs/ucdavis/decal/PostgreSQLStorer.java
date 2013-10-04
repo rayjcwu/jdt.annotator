@@ -136,13 +136,7 @@ public class PostgreSQLStorer {
 		} catch (IllegalAccessException e) {
 			;
 		} finally {
-			try {
-				if (stmt != null) {
-					stmt.close();
-				}
-			} catch (SQLException e) {
-				logger.log(Level.SEVERE, "Close statement exception", e);
-			}
+			closeIt(stmt);
 		}
 	}
 
@@ -255,13 +249,7 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Create views "+ to_create + " exception\n" + e.toString());
 		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					;
-				}
-			}
+			closeIt(stmt);
 		}
 
 	}
@@ -296,13 +284,7 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Retrieve file=%s id", fileName), e);
 		} finally {
-			try {
-				if (stmt != null) {
-					stmt.close();
-				}
-			} catch (SQLException e) {
-				logger.log(Level.SEVERE, "Close statement exception");
-			}
+			closeIt(stmt);
 		}
 		return -1; // should not happen
 	}
@@ -332,13 +314,7 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Retrieve project=%s id", projectName), e);
 		} finally {
-			try {
-				if (stmt != null) {
-					stmt.close();
-				}
-			} catch (SQLException e) {
-				logger.log(Level.SEVERE, "Close statement exception");
-			}
+			closeIt(stmt);
 		}
 		return -1; // should not happen
 	}
@@ -362,13 +338,28 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
 		} finally {
-			try {
-				if (pstmt != null) {
-					pstmt.close();
-				}
-			} catch (SQLException e) {
-				logger.log(Level.SEVERE, "Close statement exception");
-			}
+			closeIt(pstmt);
+		}
+	}
+
+	public void saveTokenInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw, int parent_id) {
+		PreparedStatement pstmt = null;
+		try {
+			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, string, file_id, raw, parent_astnode_id) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt.setInt(1, start_pos);
+			pstmt.setInt(2, length);
+			pstmt.setInt(3, line_number);
+			pstmt.setInt(4, nodetype_id);
+			pstmt.setString(5, string);
+			pstmt.setInt(6, file_id);
+			pstmt.setString(7, currentFileRaw.substring(start_pos, start_pos+length));
+			pstmt.setInt(8, parent_id);
+			pstmt.executeUpdate();
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
+		} finally {
+			closeIt(pstmt);
 		}
 	}
 
@@ -403,13 +394,7 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Resolve foreign astnode exception", e);
 		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					;
-				}
-			}
+			closeIt(stmt);
 		}
 	}
 
@@ -427,13 +412,7 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear project exception", e);
 		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					;
-				}
-			}
+			closeIt(stmt);
 		}
 
 	}
@@ -449,13 +428,7 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear database error", e);
 		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					;
-				}
-			}
+			closeIt(stmt);
 		}
 		createTableIfNotExist();
 		createViewIfNotExist();
@@ -489,14 +462,28 @@ public class PostgreSQLStorer {
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "query parent id exception", e);
 		} finally {
-			if (stmt != null) {
-				try {
-					stmt.close();
-				} catch (SQLException e) {
-					;
-				}
-			}
+			closeIt(stmt);
 		}
 		return result;
+	}
+
+	private void closeIt(PreparedStatement stmt) {
+		if (stmt != null) {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				;
+			}
+		}
+	}
+
+	private void closeIt(Statement stmt) {
+		if (stmt != null) {
+			try {
+				stmt.close();
+			} catch (SQLException e) {
+				;
+			}
+		}
 	}
 }
