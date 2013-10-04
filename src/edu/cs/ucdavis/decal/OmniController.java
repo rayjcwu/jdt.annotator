@@ -222,7 +222,19 @@ public class OmniController {
 				bindingKeys.add(binding_key);
 			}
 		}
-		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw);
+		int parentId = getParentAstnodeId(node);
+		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
+	}
+
+	private int getParentAstnodeId(ASTNode node) {
+		ASTNode parent = node.getParent();
+		if (parent == null) { return -1; }
+
+		int start_pos = parent.getStartPosition();
+		int length = parent.getLength();
+		int nodetype = parent.getNodeType();
+
+		return database.queryAstNodeId(start_pos, length, nodetype, currentFileId);
 	}
 
 	private static int progressCount = 0;

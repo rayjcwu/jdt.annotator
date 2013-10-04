@@ -80,6 +80,7 @@ public class PostgreSQLStorer {
 								      + "binding_key text, "  // only some simple name nodes will have this
 								      + "string text, "	      // string representation, stripped version
 								      + "raw text, "          // raw content of ast node
+								      + "parent_astnode_id int, "
 								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
 								      ;
 
@@ -171,6 +172,7 @@ public class PostgreSQLStorer {
 					+ "string, "
 					+ "raw, "
 					+ "binding_key, "
+					+ "parent_astnode_id, "
 					+ "declared_at_astnode_id "
 
 					+ "FROM astnode, nodetype "
@@ -198,6 +200,7 @@ public class PostgreSQLStorer {
 					+ "string, "
 					+ "raw, "
 					+ "binding_key, "
+					+ "parent_astnode_id, "
 					+ "declared_at_astnode_id "
 
 					+ "FROM astnode, nodetype, file, project "
@@ -300,11 +303,11 @@ public class PostgreSQLStorer {
 	}
 
 
-	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw) {
+	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw, int parent_id) {
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, binding_key, string, file_id, raw) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, binding_key, string, file_id, raw, parent_astnode_id) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			pstmt.setInt(1, start_pos);
 			pstmt.setInt(2, length);
 			pstmt.setInt(3, line_number);
@@ -313,9 +316,10 @@ public class PostgreSQLStorer {
 			pstmt.setString(6, string);
 			pstmt.setInt(7, file_id);
 			pstmt.setString(8, currentFileRaw.substring(start_pos, start_pos+length));
+			pstmt.setInt(9, parent_id);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string));
+			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
 		} finally {
 			try {
 				if (pstmt != null) {
@@ -421,4 +425,37 @@ public class PostgreSQLStorer {
 		return ready;
 	}
 
+	public int queryAstNodeId(int start_pos, int length, int nodetype, int file_id) {
+		PreparedStatement stmt = null;
+		String query = "SELECT id FROM astnode WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?;";
+		int result = -1;
+		try {
+			stmt = conn.prepareStatement(query);
+			stmt.setInt(1, start_pos);
+			stmt.setInt(2, length);
+			stmt.setInt(3, nodetype);
+			stmt.setInt(4, file_id);
+			ResultSet rs = stmt.executeQuery();
+
+			int count = 0;
+			while (rs.next()) {
+				result = rs.getInt("id");
+				count ++;
+			}
+
+			if (count > 1)
+				throw new IllegalStateException();
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "query parent id exception", e);
+		} finally {
+			if (stmt != null) {
+				try {
+					stmt.close();
+				} catch (SQLException e) {
+					;
+				}
+			}
+		}
+		return result;
+	}
 }
