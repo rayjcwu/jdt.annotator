@@ -319,38 +319,36 @@ public class DumpAstVisitor extends ASTVisitor {
 		String currentFileRaw = controller.getCurrentFileRaw();
 		int node_end_pos = node.getStartPosition() + node.getLength();
 
-		controller.saveTokenInfo(node, currentUnit,
-				node.getStartPosition(), Token.IMPORT.getLength(), Token.IMPORT, parentId);
+		controller.saveTokenInfo(currentUnit, node.getStartPosition(),
+				Token.IMPORT, parentId);
 
 		if (node.isStatic()) {
 			int static_start_pos = node.getStartPosition() + Token.IMPORT.getLength();
 			String tail = currentFileRaw.substring(static_start_pos, node_end_pos);
 			int ns = tail.indexOf(Token.STATIC.getToken());
 			static_start_pos += ns;
-			controller.saveTokenInfo(node, currentUnit,
-					static_start_pos, Token.STATIC.getLength(), Token.STATIC, parentId);
+			controller.saveTokenInfo(currentUnit, static_start_pos,
+					Token.STATIC, parentId);
 		}
 
-		// TODO: import ....[.*];
 		if (node.isOnDemand()) {
 			int dot_start_pos = node.getName().getStartPosition() + node.getName().getLength();
 			String tail = currentFileRaw.substring(dot_start_pos, node_end_pos);
 			int ns = tail.indexOf(Token.DOT.getToken());
 			dot_start_pos+=ns;
-			controller.saveTokenInfo(node, currentUnit, dot_start_pos, Token.DOT.getLength(), Token.DOT, parentId);
+			controller.saveTokenInfo(currentUnit, dot_start_pos, Token.DOT, parentId);
 
 			int star_start_pos = dot_start_pos + Token.DOT.getLength();
 			String t2 = currentFileRaw.substring(star_start_pos, node_end_pos);
 			int ns2 = t2.indexOf(Token.MUL.getToken());
 			star_start_pos += ns2;
 
-			controller.saveTokenInfo(node, currentUnit, star_start_pos, Token.MUL.getLength(), Token.MUL, parentId);
+			controller.saveTokenInfo(currentUnit, star_start_pos, Token.MUL, parentId);
 		}
 
-		controller.saveTokenInfo(node, currentUnit,
-				node_end_pos - Token.SEMI.getLength(),
-				Token.SEMI.getLength(),
-				Token.SEMI, parentId);
+		controller.saveTokenInfo(currentUnit, node_end_pos - Token.SEMI.getLength(),
+				Token.SEMI,
+				parentId);
 		return true;
 	}
 
@@ -479,14 +477,12 @@ public class DumpAstVisitor extends ASTVisitor {
 		int ns = tail.indexOf(Token.PACKAGE.getToken());
 		package_start_pos += ns;
 
-		controller.saveTokenInfo(node, currentUnit,
-				package_start_pos,
-				Token.PACKAGE.getLength(),
-				Token.PACKAGE, parentId);
-		controller.saveTokenInfo(node, currentUnit,
-				node.getStartPosition() + node.getLength() - Token.SEMI.getLength(),
-				Token.SEMI.getLength(),
-				Token.SEMI, parentId);
+		controller.saveTokenInfo(currentUnit, package_start_pos,
+				Token.PACKAGE,
+				parentId);
+		controller.saveTokenInfo(currentUnit, node.getStartPosition() + node.getLength() - Token.SEMI.getLength(),
+				Token.SEMI,
+				parentId);
 		return true;
 	}
 
@@ -636,7 +632,19 @@ public class DumpAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean visit(TypeDeclaration node) {
-		// TODO Auto-generated method stub
+		final int parentId = controller.getAstnodeId(node);
+
+		final String currentFileRaw = controller.getCurrentFileRaw();
+		String pre = currentFileRaw.substring(node.getStartPosition(), node.getName().getStartPosition());
+		if (node.isInterface()) {
+			int idx = pre.lastIndexOf(Token.INTERFACE.getToken());
+			controller.saveTokenInfo(currentUnit, node.getStartPosition() + idx, Token.INTERFACE,
+					parentId);
+		} else { // is class
+			int idx = pre.lastIndexOf(Token.CLASS.getToken());
+			controller.saveTokenInfo(currentUnit, node.getStartPosition() + idx, Token.CLASS,
+					parentId);
+		}
 		return true;
 	}
 

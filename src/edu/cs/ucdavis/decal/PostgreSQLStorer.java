@@ -461,7 +461,6 @@ public class PostgreSQLStorer {
 				result = rs.getInt("id");
 				count ++;
 			}
-
 			if (count > 1)
 				throw new IllegalStateException();
 		} catch (SQLException e) {

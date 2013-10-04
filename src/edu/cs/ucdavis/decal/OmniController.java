@@ -227,13 +227,14 @@ public class OmniController {
 		database.saveAstNodeInfo(start_pos, length, line_number, column_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
 	}
 
-	public void saveTokenInfo(ASTNode node, CompilationUnit unit,
-			int start_pos, int length, Token token, int parentId) {
+	public void saveTokenInfo(CompilationUnit unit, int start_pos, // to figure out
+			Token token, int parentId) {
 		/*
 		 * start_pos, length, line_number, nodetype_id, file_id, string, raw, parent_astnode_id
 		 */
 		final int line_number = unit.getLineNumber(start_pos);    // token's start_pos not node's start_pos
 		final int column_number = unit.getColumnNumber(start_pos);
+		final int length = token.getLength();
 		final int nodetype_id = token.getId();
 		final String string = token.getToken();
 
@@ -243,11 +244,14 @@ public class OmniController {
 	public int getAstnodeId(ASTNode node) {
 		if (node == null) { return -1; }
 
-		int start_pos = node.getStartPosition();
-		int length = node.getLength();
-		int nodetype = node.getNodeType();
-
-		return database.queryAstNodeId(start_pos, length, nodetype, currentFileId);
+		final int start_pos = node.getStartPosition();
+		final int length = node.getLength();
+		final int nodetype = node.getNodeType();
+		final int result = database.queryAstNodeId(start_pos, length, nodetype, currentFileId);
+		if (!(node instanceof CompilationUnit) && result == -1) {
+			throw new IllegalStateException("should not happen");
+		}
+		return result;
 	}
 
 	private static int progressCount = 0;
