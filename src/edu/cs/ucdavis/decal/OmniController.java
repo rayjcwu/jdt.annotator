@@ -96,8 +96,9 @@ public class OmniController {
 	private void resolveBindings() {
 		int bindingSize = bindingKeys.size();
 		int i = 1;
+		boolean resolved = false;
 		for (String bindingKey: bindingKeys) {
-			System.out.println(String.format("(%d/%d) binding", i, bindingSize));
+			System.out.print(String.format("(%d/%d) binding", i, bindingSize));
 			i++;
 			for (Map.Entry<CompilationUnit, String> entry: compilaionUnitFileNameMap.entrySet()) {
 				CompilationUnit unit = entry.getKey();
@@ -106,9 +107,15 @@ public class OmniController {
 					retriveCurrentFileNameId(entry.getValue());  // set current file to corresponding id
 					saveForeignAstNode(node, bindingKey);
 
+					System.out.println(" o " + bindingKey);
+					resolved = true;
 					break;
 				}
 			}
+			if (!resolved) {
+				System.out.println(" x " + bindingKey);
+			}
+			resolved = false;
 		}
 	}
 

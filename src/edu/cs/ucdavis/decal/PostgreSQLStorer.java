@@ -323,9 +323,6 @@ public class PostgreSQLStorer {
 		}
 	}
 
-
-
-
 	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
 		PreparedStatement stmt = null;
 		try {
