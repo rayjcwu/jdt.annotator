@@ -62,7 +62,7 @@ public class PostgreSQLStorer {
 		try {
 			stmt = conn.createStatement();
 
-			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int, name text); "
+			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int, name text, token text); "
 					                  + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
 					                  + "WHERE (EXISTS (SELECT id FROM nodetype WHERE nodetype.id = NEW.id)) "
 					                  + "DO INSTEAD NOTHING; ";
@@ -91,6 +91,9 @@ public class PostgreSQLStorer {
 			stmt.executeUpdate(createASTNodeTable);
 			stmt.executeUpdate(createIndex);
 
+			for (Token token: Token.values()) {
+				stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name, token) VALUES (%d, '%s', '%s');", token.getId(), token.toString(), token.getToken()));
+			}
 			// insert nodetype value
 			// TODO: this will throw IllegalAccessException, don't know why
 			for (Field field: ASTNode.class.getDeclaredFields()) {
@@ -100,7 +103,7 @@ public class PostgreSQLStorer {
 			}
 
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Create table exception");
+			logger.log(Level.SEVERE, "Create table exception", e);
 		} catch (IllegalAccessException e) {
 			;
 		} finally {
