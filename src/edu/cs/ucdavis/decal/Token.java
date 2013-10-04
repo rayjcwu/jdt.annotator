@@ -114,6 +114,7 @@ public enum Token {
       this.token = token;
     }
 
+    public int getLength() { return token.length(); }
     public String getToken() { return token; }
     public String toString() { return name(); }
     public int getId() { return ordinal() + base; }

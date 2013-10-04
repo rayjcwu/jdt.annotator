@@ -208,11 +208,12 @@ public class OmniController {
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
 
-		String string = node.toString();
-		int nodetype_id = node.getNodeType();
-		int start_pos = node.getStartPosition();
-		int length = node.getLength();
-		int line_number = unit.getLineNumber(node.getStartPosition());
+		final String string = node.toString();
+		final int nodetype_id = node.getNodeType();
+		final int start_pos = node.getStartPosition();
+		final int length = node.getLength();
+		final int line_number = unit.getLineNumber(start_pos);
+		final int column_number = unit.getColumnNumber(start_pos);
 
 		String binding_key = "";
 		if (node instanceof Name) {
@@ -222,17 +223,30 @@ public class OmniController {
 				bindingKeys.add(binding_key);
 			}
 		}
-		int parentId = getParentAstnodeId(node);
-		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
+		final int parentId = getAstnodeId(node.getParent());
+		database.saveAstNodeInfo(start_pos, length, line_number, column_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
 	}
 
-	private int getParentAstnodeId(ASTNode node) {
-		ASTNode parent = node.getParent();
-		if (parent == null) { return -1; }
+	public void saveTokenInfo(ASTNode node, CompilationUnit unit,
+			int start_pos, int length, Token token) {
+		/*
+		 * start_pos, length, line_number, nodetype_id, file_id, string, raw, parent_astnode_id
+		 */
+		//final int line_number = unit.getLineNumber(start_pos);
+		final int line_number = unit.getLineNumber(start_pos);
+		final int column_number = unit.getColumnNumber(start_pos);
+		final int nodetype_id = token.getId();
+		final String string = token.getToken();
+		final int parentId = getAstnodeId(node);  // token's parent is current astnode
+		database.saveTokenInfo(start_pos, length, line_number, column_number, nodetype_id, string, currentFileId, currentFileRaw, parentId);
+	}
 
-		int start_pos = parent.getStartPosition();
-		int length = parent.getLength();
-		int nodetype = parent.getNodeType();
+	private int getAstnodeId(ASTNode node) {
+		if (node == null) { return -1; }
+
+		int start_pos = node.getStartPosition();
+		int length = node.getLength();
+		int nodetype = node.getNodeType();
 
 		return database.queryAstNodeId(start_pos, length, nodetype, currentFileId);
 	}
