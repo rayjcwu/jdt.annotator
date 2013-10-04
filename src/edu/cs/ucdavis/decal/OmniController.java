@@ -1,10 +1,12 @@
 package edu.cs.ucdavis.decal;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FileUtils;
@@ -23,6 +25,7 @@ public class OmniController {
 	private String projectName;
 	private int projectId;
 	private int currentFileId;
+	private String currentFileRaw;
 
 	private String sourcePath;
 
@@ -40,6 +43,7 @@ public class OmniController {
 		this.projectName = "";
 		this.projectId = -1;
 		this.currentFileId = -1;
+		this.currentFileRaw = "";
 		this.projectSize = -1;
 
 		this.compilaionUnitFileNameMap = new HashMap<CompilationUnit, String>();
@@ -193,6 +197,12 @@ public class OmniController {
 		if (id == -1) {
 			throw new IllegalStateException("retrieve file id error");
 		}
+		try {
+			currentFileRaw = FileUtils.readFileToString(new File(sourceFilePath));
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Read file content error", e);
+		}
+
 		currentFileId = id;
 	}
 
@@ -212,7 +222,7 @@ public class OmniController {
 				bindingKeys.add(binding_key);
 			}
 		}
-		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId);
+		database.saveAstNodeInfo(start_pos, length, line_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw);
 	}
 
 	private static int progressCount = 0;

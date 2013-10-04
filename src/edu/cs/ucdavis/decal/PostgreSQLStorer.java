@@ -78,7 +78,8 @@ public class PostgreSQLStorer {
 								      + "nodetype_id int, "   // foreign key
 								      + "file_id int, "		  // foreign key
 								      + "binding_key text, "  // only some simple name nodes will have this
-								      + "string text, "	      // string representation
+								      + "string text, "	      // string representation, stripped version
+								      + "raw text, "          // raw content of ast node
 								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
 								      ;
 
@@ -168,6 +169,7 @@ public class PostgreSQLStorer {
 					+ "nodetype.name AS nodetype, "
 					+ "file_id, "
 					+ "string, "
+					+ "raw, "
 					+ "binding_key, "
 					+ "declared_at_astnode_id "
 
@@ -194,6 +196,7 @@ public class PostgreSQLStorer {
 					+ "project.name AS project_name, "
 					+ "project.path AS project_path, "
 					+ "string, "
+					+ "raw, "
 					+ "binding_key, "
 					+ "declared_at_astnode_id "
 
@@ -297,11 +300,11 @@ public class PostgreSQLStorer {
 	}
 
 
-	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id) {
+	public void saveAstNodeInfo(int start_pos, int length, int line_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw) {
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, binding_key, string, file_id) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?)");
+			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, nodetype_id, binding_key, string, file_id, raw) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 			pstmt.setInt(1, start_pos);
 			pstmt.setInt(2, length);
 			pstmt.setInt(3, line_number);
@@ -309,6 +312,7 @@ public class PostgreSQLStorer {
 			pstmt.setString(5, binding_key);
 			pstmt.setString(6, string);
 			pstmt.setInt(7, file_id);
+			pstmt.setString(8, currentFileRaw.substring(start_pos, start_pos+length));
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string));
