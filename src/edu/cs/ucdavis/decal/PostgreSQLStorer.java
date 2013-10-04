@@ -59,6 +59,7 @@ public class PostgreSQLStorer {
 
 	public void createTableIfNotExist() {
 		Statement stmt = null;
+		Collection<String> indexes = collectIndexNames();
 		try {
 			stmt = conn.createStatement();
 
@@ -83,15 +84,41 @@ public class PostgreSQLStorer {
 								      + "parent_astnode_id int, "
 								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
 								      ;
-
-			String createIndex = "CREATE INDEX ON astnode(binding_key);";
 			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
-
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createFileTable);
 			stmt.executeUpdate(createProjectTable);
 			stmt.executeUpdate(createASTNodeTable);
-			stmt.executeUpdate(createIndex);
+
+			String to_create = "astnode_binding_key_idx";
+			if (!indexes.contains(to_create)) {
+				String createIndex = "CREATE INDEX "+to_create+" ON astnode(binding_key);";
+				stmt.executeUpdate(createIndex);
+			}
+
+			to_create = "astnode_start_pos_idx";
+			if (!indexes.contains(to_create)) {
+				String createIndex = "CREATE INDEX "+to_create+" ON astnode(start_pos);";
+				stmt.executeUpdate(createIndex);
+			}
+
+			to_create = "astnode_length_idx";
+			if (!indexes.contains(to_create)) {
+				String createIndex = "CREATE INDEX "+to_create+" ON astnode(length);";
+				stmt.executeUpdate(createIndex);
+			}
+
+			to_create = "astnode_file_id_idx";
+			if (!indexes.contains(to_create)) {
+				String createIndex = "CREATE INDEX "+to_create+" ON astnode(file_id);";
+				stmt.executeUpdate(createIndex);
+			}
+
+			to_create = "astnode_parent_astnode_id_idx";
+			if (!indexes.contains(to_create)) {
+				String createIndex = "CREATE INDEX "+to_create+" ON astnode(parent_astnode_id);";
+				stmt.executeUpdate(createIndex);
+			}
 
 			for (Token token: Token.values()) {
 				stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name, token) VALUES (%d, '%s', '%s');", token.getId(), token.toString(), token.getToken()));
@@ -114,7 +141,7 @@ public class PostgreSQLStorer {
 					stmt.close();
 				}
 			} catch (SQLException e) {
-				logger.log(Level.SEVERE, "Close statement exception");
+				logger.log(Level.SEVERE, "Close statement exception", e);
 			}
 		}
 	}
@@ -129,11 +156,25 @@ public class PostgreSQLStorer {
 			  }
 		} catch (SQLException e) {
 			Logger logger = Logger.getLogger("annotation");
-			logger.log(Level.SEVERE, "Collect view names exception");
+			logger.log(Level.SEVERE, "Collect view names exception", e);
 		}
 		return views;
 	}
 
+	private Collection<String> collectIndexNames() {
+		List <String> views = new ArrayList<String>();
+		try {
+			DatabaseMetaData meta = conn.getMetaData();
+			ResultSet res = meta.getTables(null, null, null, new String[] {"INDEX"});
+			while (res.next()) {
+				views.add(res.getString("TABLE_NAME"));
+			  }
+		} catch (SQLException e) {
+			Logger logger = Logger.getLogger("annotation");
+			logger.log(Level.SEVERE, "Collect index names exception", e);
+		}
+		return views;
+	}
 
 	public void createViewIfNotExist() {
 		Statement stmt = null;
@@ -230,7 +271,7 @@ public class PostgreSQLStorer {
 		try {
 			this.conn.close();
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Cannot close");
+			logger.log(Level.SEVERE, "Cannot close", e);
 		} finally {
 			ready = false;
 		}
@@ -253,7 +294,7 @@ public class PostgreSQLStorer {
 				}
 			}
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, String.format("Retrieve file=%s id", fileName));
+			logger.log(Level.SEVERE, String.format("Retrieve file=%s id", fileName), e);
 		} finally {
 			try {
 				if (stmt != null) {
@@ -289,7 +330,7 @@ public class PostgreSQLStorer {
 				}
 			}
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, String.format("Retrieve project=%s id", projectName));
+			logger.log(Level.SEVERE, String.format("Retrieve project=%s id", projectName), e);
 		} finally {
 			try {
 				if (stmt != null) {
@@ -360,7 +401,7 @@ public class PostgreSQLStorer {
 			stmt.executeUpdate();
 
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Resolve foreign astnode exception");
+			logger.log(Level.SEVERE, "Resolve foreign astnode exception", e);
 		} finally {
 			if (stmt != null) {
 				try {
@@ -384,7 +425,7 @@ public class PostgreSQLStorer {
 					+ "DELETE FROM file WHERE project_id = " + project_id + ";";
 			stmt.executeUpdate(clear);
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Clear project exception");
+			logger.log(Level.SEVERE, "Clear project exception", e);
 		} finally {
 			if (stmt != null) {
 				try {
@@ -406,7 +447,7 @@ public class PostgreSQLStorer {
 					+ "DROP TABLE file CASCADE;"
 					+ "DROP TABLE nodetype CASCADE;");
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Clear database error");
+			logger.log(Level.SEVERE, "Clear database error", e);
 		} finally {
 			if (stmt != null) {
 				try {
