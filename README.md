@@ -1,4 +1,4 @@
-jdt.annotation
+jdt.annotator
 ==============
 This project is based on Eclipse JDT to annotate java source files. Results are saved in database, you could get all information in massive join `astnode_all` view.
 
