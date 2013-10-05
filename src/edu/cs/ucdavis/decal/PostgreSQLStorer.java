@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.antlr.JavaLexer;
 import org.eclipse.jdt.core.dom.ASTNode;
 
 public class PostgreSQLStorer {
@@ -23,6 +24,8 @@ public class PostgreSQLStorer {
 	private Logger logger;
 
 	private OmniController controller;
+
+	private static int tokenBase = 100;
 
 	public void register(OmniController controller) {
 		this.controller = controller;
@@ -121,8 +124,17 @@ public class PostgreSQLStorer {
 				stmt.executeUpdate(createIndex);
 			}
 
-			for (Token token: Token.values()) {
-				stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name, token) VALUES (%d, '%s', '%s');", token.getId(), token.toString(), token.getToken()));
+			for (Field field: JavaLexer.class.getDeclaredFields()) {
+				if (field.getType().equals(int.class)) {
+					int id = field.getInt(null);
+					String string = field.getName();
+					String token = JavaLexer.tokenNames[id];
+					if (token.startsWith("'")) {
+						token = token.substring(1, token.length() - 1);
+					}
+					stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name, token) VALUES (%d, '%s', '%s');",
+							id + PostgreSQLStorer.tokenBase, string, token));
+				}
 			}
 			// insert nodetype value
 			// TODO: this will throw IllegalAccessException, don't know why

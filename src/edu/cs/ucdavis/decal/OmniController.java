@@ -227,19 +227,20 @@ public class OmniController {
 		database.saveAstNodeInfo(start_pos, length, line_number, column_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
 	}
 
-	public void saveTokenInfo(CompilationUnit unit, int start_pos, // to figure out
-			Token token, int parentId) {
-		/*
-		 * start_pos, length, line_number, nodetype_id, file_id, string, raw, parent_astnode_id
-		 */
-		final int line_number = unit.getLineNumber(start_pos);    // token's start_pos not node's start_pos
-		final int column_number = unit.getColumnNumber(start_pos);
-		final int length = token.getLength();
-		final int nodetype_id = token.getId();
-		final String string = token.getToken();
+//	public void saveTokenInfo(CompilationUnit unit, int start_pos, // to figure out
+//			Token token, int parentId) {
+//		/*
+//		 * start_pos, length, line_number, nodetype_id, file_id, string, raw, parent_astnode_id
+//		 */
+//		final int line_number = unit.getLineNumber(start_pos);    // token's start_pos not node's start_pos
+//		final int column_number = unit.getColumnNumber(start_pos);
+//		final int length = token.getLength();
+//		final int nodetype_id = token.getId();
+//		final String string = token.getToken();
+//
+//		database.saveTokenInfo(start_pos, length, line_number, column_number, nodetype_id, string, currentFileId, currentFileRaw, parentId);
+//	}
 
-		database.saveTokenInfo(start_pos, length, line_number, column_number, nodetype_id, string, currentFileId, currentFileRaw, parentId);
-	}
 
 	public int getAstnodeId(ASTNode node) {
 		if (node == null) { return -1; }
