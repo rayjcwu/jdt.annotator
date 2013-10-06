@@ -22,15 +22,15 @@ public class JavaParser extends Parser {
 		NATIVE=30, NEW=31, PACKAGE=32, PRIVATE=33, PROTECTED=34, PUBLIC=35, RETURN=36, 
 		SHORT=37, STATIC=38, STRICTFP=39, SUPER=40, SWITCH=41, SYNCHRONIZED=42, 
 		THIS=43, THROW=44, THROWS=45, TRANSIENT=46, TRY=47, VOID=48, VOLATILE=49, 
-		WHILE=50, IntegerLiteral=51, FloatingPointLiteral=52, BooleanLiteral=53, 
-		CharacterLiteral=54, StringLiteral=55, NullLiteral=56, LPAREN=57, RPAREN=58, 
+		WHILE=50, INTEGER_LITERAL=51, FLOATING_POINT_LITERAL=52, BOOLEAN_LITERAL=53, 
+		CHARACTER_LITERAL=54, STRING_LITERAL=55, NULL_LITERAL=56, LPAREN=57, RPAREN=58, 
 		LBRACE=59, RBRACE=60, LBRACK=61, RBRACK=62, SEMI=63, COMMA=64, DOT=65, 
 		ASSIGN=66, GT=67, LT=68, BANG=69, TILDE=70, QUESTION=71, COLON=72, EQUAL=73, 
 		LE=74, GE=75, NOTEQUAL=76, AND=77, OR=78, INC=79, DEC=80, ADD=81, SUB=82, 
 		MUL=83, DIV=84, BITAND=85, BITOR=86, CARET=87, MOD=88, ADD_ASSIGN=89, 
 		SUB_ASSIGN=90, MUL_ASSIGN=91, DIV_ASSIGN=92, AND_ASSIGN=93, OR_ASSIGN=94, 
 		XOR_ASSIGN=95, MOD_ASSIGN=96, LSHIFT_ASSIGN=97, RSHIFT_ASSIGN=98, URSHIFT_ASSIGN=99, 
-		Identifier=100, AT=101, ELLIPSIS=102, WS=103, ML_COMMENT=104, LINE_COMMENT=105;
+		IDENTIFIER=100, AT=101, ELLIPSIS=102, WS=103, ML_COMMENT=104, LINE_COMMENT=105;
 	public static final String[] tokenNames = {
 		"<INVALID>", "'abstract'", "'assert'", "'boolean'", "'break'", "'byte'", 
 		"'case'", "'catch'", "'char'", "'class'", "'const'", "'continue'", "'default'", 
@@ -39,13 +39,13 @@ public class JavaParser extends Parser {
 		"'int'", "'interface'", "'long'", "'native'", "'new'", "'package'", "'private'", 
 		"'protected'", "'public'", "'return'", "'short'", "'static'", "'strictfp'", 
 		"'super'", "'switch'", "'synchronized'", "'this'", "'throw'", "'throws'", 
-		"'transient'", "'try'", "'void'", "'volatile'", "'while'", "IntegerLiteral", 
-		"FloatingPointLiteral", "BooleanLiteral", "CharacterLiteral", "StringLiteral", 
+		"'transient'", "'try'", "'void'", "'volatile'", "'while'", "INTEGER_LITERAL", 
+		"FLOATING_POINT_LITERAL", "BOOLEAN_LITERAL", "CHARACTER_LITERAL", "STRING_LITERAL", 
 		"'null'", "'('", "')'", "'{'", "'}'", "'['", "']'", "';'", "','", "'.'", 
 		"'='", "'>'", "'<'", "'!'", "'~'", "'?'", "':'", "'=='", "'<='", "'>='", 
 		"'!='", "'&&'", "'||'", "'++'", "'--'", "'+'", "'-'", "'*'", "'/'", "'&'", 
 		"'|'", "'^'", "'%'", "'+='", "'-='", "'*='", "'/='", "'&='", "'|='", "'^='", 
-		"'%='", "'<<='", "'>>='", "'>>>='", "Identifier", "'@'", "'...'", "WS", 
+		"'%='", "'<<='", "'>>='", "'>>>='", "IDENTIFIER", "'@'", "'...'", "WS", 
 		"ML_COMMENT", "LINE_COMMENT"
 	};
 	public static final int
@@ -699,10 +699,10 @@ public class JavaParser extends Parser {
 		public ClassBodyContext classBody() {
 			return getRuleContext(ClassBodyContext.class,0);
 		}
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public TypeListContext typeList() {
 			return getRuleContext(TypeListContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
@@ -733,7 +733,7 @@ public class JavaParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(287); match(CLASS);
-			setState(288); match(Identifier);
+			setState(288); match(IDENTIFIER);
 			setState(290);
 			_la = _input.LA(1);
 			if (_la==LT) {
@@ -838,7 +838,7 @@ public class JavaParser extends Parser {
 	}
 
 	public static class TypeParameterContext extends ParserRuleContext {
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public TypeBoundContext typeBound() {
 			return getRuleContext(TypeBoundContext.class,0);
 		}
@@ -868,7 +868,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(313); match(Identifier);
+			setState(313); match(IDENTIFIER);
 			setState(316);
 			_la = _input.LA(1);
 			if (_la==EXTENDS) {
@@ -954,13 +954,13 @@ public class JavaParser extends Parser {
 
 	public static class EnumDeclarationContext extends ParserRuleContext {
 		public TerminalNode ENUM() { return getToken(JavaParser.ENUM, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public TypeListContext typeList() {
 			return getRuleContext(TypeListContext.class,0);
 		}
 		public EnumConstantsContext enumConstants() {
 			return getRuleContext(EnumConstantsContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public EnumBodyDeclarationsContext enumBodyDeclarations() {
 			return getRuleContext(EnumBodyDeclarationsContext.class,0);
 		}
@@ -991,7 +991,7 @@ public class JavaParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(326); match(ENUM);
-			setState(327); match(Identifier);
+			setState(327); match(IDENTIFIER);
 			setState(330);
 			_la = _input.LA(1);
 			if (_la==IMPLEMENTS) {
@@ -1004,7 +1004,7 @@ public class JavaParser extends Parser {
 			setState(332); match(LBRACE);
 			setState(334);
 			_la = _input.LA(1);
-			if (_la==Identifier || _la==AT) {
+			if (_la==IDENTIFIER || _la==AT) {
 				{
 				setState(333); enumConstants();
 				}
@@ -1110,7 +1110,7 @@ public class JavaParser extends Parser {
 		public ClassBodyContext classBody() {
 			return getRuleContext(ClassBodyContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public List<AnnotationContext> annotation() {
 			return getRuleContexts(AnnotationContext.class);
 		}
@@ -1156,7 +1156,7 @@ public class JavaParser extends Parser {
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(358); match(Identifier);
+			setState(358); match(IDENTIFIER);
 			setState(360);
 			_la = _input.LA(1);
 			if (_la==LPAREN) {
@@ -1223,7 +1223,7 @@ public class JavaParser extends Parser {
 			setState(369);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0)) {
 				{
 				{
 				setState(366); classBodyDeclaration();
@@ -1250,10 +1250,10 @@ public class JavaParser extends Parser {
 		public TypeParametersContext typeParameters() {
 			return getRuleContext(TypeParametersContext.class,0);
 		}
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public TypeListContext typeList() {
 			return getRuleContext(TypeListContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public InterfaceBodyContext interfaceBody() {
 			return getRuleContext(InterfaceBodyContext.class,0);
 		}
@@ -1284,7 +1284,7 @@ public class JavaParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(372); match(INTERFACE);
-			setState(373); match(Identifier);
+			setState(373); match(IDENTIFIER);
 			setState(375);
 			_la = _input.LA(1);
 			if (_la==LT) {
@@ -1414,7 +1414,7 @@ public class JavaParser extends Parser {
 			setState(395);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0)) {
 				{
 				{
 				setState(392); classBodyDeclaration();
@@ -1475,7 +1475,7 @@ public class JavaParser extends Parser {
 			setState(404);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOID) | (1L << VOLATILE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0)) {
 				{
 				{
 				setState(401); interfaceBodyDeclaration();
@@ -1727,10 +1727,10 @@ public class JavaParser extends Parser {
 		public MethodBodyContext methodBody() {
 			return getRuleContext(MethodBodyContext.class,0);
 		}
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public FormalParametersContext formalParameters() {
 			return getRuleContext(FormalParametersContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
@@ -1773,7 +1773,7 @@ public class JavaParser extends Parser {
 			case INT:
 			case LONG:
 			case SHORT:
-			case Identifier:
+			case IDENTIFIER:
 				{
 				setState(434); type();
 				}
@@ -1786,7 +1786,7 @@ public class JavaParser extends Parser {
 			default:
 				throw new NoViableAltException(this);
 			}
-			setState(438); match(Identifier);
+			setState(438); match(IDENTIFIER);
 			setState(439); formalParameters();
 			setState(444);
 			_errHandler.sync(this);
@@ -1887,10 +1887,10 @@ public class JavaParser extends Parser {
 	}
 
 	public static class ConstructorDeclarationContext extends ParserRuleContext {
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public FormalParametersContext formalParameters() {
 			return getRuleContext(FormalParametersContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public ConstructorBodyContext constructorBody() {
 			return getRuleContext(ConstructorBodyContext.class,0);
 		}
@@ -1923,7 +1923,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(458); match(Identifier);
+			setState(458); match(IDENTIFIER);
 			setState(459); formalParameters();
 			setState(462);
 			_la = _input.LA(1);
@@ -2103,7 +2103,7 @@ public class JavaParser extends Parser {
 			case VOID:
 			case VOLATILE:
 			case LT:
-			case Identifier:
+			case IDENTIFIER:
 			case AT:
 				enterOuterAlt(_localctx, 1);
 				{
@@ -2321,7 +2321,7 @@ public class JavaParser extends Parser {
 	}
 
 	public static class ConstantDeclaratorContext extends ParserRuleContext {
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public VariableInitializerContext variableInitializer() {
 			return getRuleContext(VariableInitializerContext.class,0);
 		}
@@ -2351,7 +2351,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(503); match(Identifier);
+			setState(503); match(IDENTIFIER);
 			setState(508);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2382,10 +2382,10 @@ public class JavaParser extends Parser {
 	}
 
 	public static class InterfaceMethodDeclarationContext extends ParserRuleContext {
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public FormalParametersContext formalParameters() {
 			return getRuleContext(FormalParametersContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
@@ -2428,7 +2428,7 @@ public class JavaParser extends Parser {
 			case INT:
 			case LONG:
 			case SHORT:
-			case Identifier:
+			case IDENTIFIER:
 				{
 				setState(514); type();
 				}
@@ -2441,7 +2441,7 @@ public class JavaParser extends Parser {
 			default:
 				throw new NoViableAltException(this);
 			}
-			setState(518); match(Identifier);
+			setState(518); match(IDENTIFIER);
 			setState(519); formalParameters();
 			setState(524);
 			_errHandler.sync(this);
@@ -2645,7 +2645,7 @@ public class JavaParser extends Parser {
 	}
 
 	public static class VariableDeclaratorIdContext extends ParserRuleContext {
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public VariableDeclaratorIdContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2672,7 +2672,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(549); match(Identifier);
+			setState(549); match(IDENTIFIER);
 			setState(554);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -2750,12 +2750,12 @@ public class JavaParser extends Parser {
 			case SUPER:
 			case THIS:
 			case VOID:
-			case IntegerLiteral:
-			case FloatingPointLiteral:
-			case BooleanLiteral:
-			case CharacterLiteral:
-			case StringLiteral:
-			case NullLiteral:
+			case INTEGER_LITERAL:
+			case FLOATING_POINT_LITERAL:
+			case BOOLEAN_LITERAL:
+			case CHARACTER_LITERAL:
+			case STRING_LITERAL:
+			case NULL_LITERAL:
 			case LPAREN:
 			case LT:
 			case BANG:
@@ -2764,7 +2764,7 @@ public class JavaParser extends Parser {
 			case DEC:
 			case ADD:
 			case SUB:
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(558); expression(0);
@@ -2822,7 +2822,7 @@ public class JavaParser extends Parser {
 			setState(561); match(LBRACE);
 			setState(573);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN) | (1L << LBRACE))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN) | (1L << LBRACE))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)))) != 0)) {
 				{
 				setState(562); variableInitializer();
 				setState(567);
@@ -2910,7 +2910,7 @@ public class JavaParser extends Parser {
 	}
 
 	public static class EnumConstantNameContext extends ParserRuleContext {
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public EnumConstantNameContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -2936,7 +2936,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(579); match(Identifier);
+			setState(579); match(IDENTIFIER);
 			}
 		}
 		catch (RecognitionException re) {
@@ -3026,7 +3026,7 @@ public class JavaParser extends Parser {
 			int _alt;
 			setState(599);
 			switch (_input.LA(1)) {
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(583); classOrInterfaceType();
@@ -3096,10 +3096,10 @@ public class JavaParser extends Parser {
 		public TypeArgumentsContext typeArguments(int i) {
 			return getRuleContext(TypeArgumentsContext.class,i);
 		}
-		public TerminalNode Identifier(int i) {
-			return getToken(JavaParser.Identifier, i);
+		public TerminalNode IDENTIFIER(int i) {
+			return getToken(JavaParser.IDENTIFIER, i);
 		}
-		public List<TerminalNode> Identifier() { return getTokens(JavaParser.Identifier); }
+		public List<TerminalNode> IDENTIFIER() { return getTokens(JavaParser.IDENTIFIER); }
 		public List<TypeArgumentsContext> typeArguments() {
 			return getRuleContexts(TypeArgumentsContext.class);
 		}
@@ -3129,7 +3129,7 @@ public class JavaParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(601); match(Identifier);
+			setState(601); match(IDENTIFIER);
 			setState(603);
 			switch ( getInterpreter().adaptivePredict(_input,61,_ctx) ) {
 			case 1:
@@ -3146,7 +3146,7 @@ public class JavaParser extends Parser {
 					{
 					{
 					setState(605); match(DOT);
-					setState(606); match(Identifier);
+					setState(606); match(IDENTIFIER);
 					setState(608);
 					switch ( getInterpreter().adaptivePredict(_input,62,_ctx) ) {
 					case 1:
@@ -3322,7 +3322,7 @@ public class JavaParser extends Parser {
 			case INT:
 			case LONG:
 			case SHORT:
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(628); type();
@@ -3457,7 +3457,7 @@ public class JavaParser extends Parser {
 			setState(644); match(LPAREN);
 			setState(646);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << SHORT))) != 0) || _la==Identifier || _la==AT) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << SHORT))) != 0) || _la==IDENTIFIER || _la==AT) {
 				{
 				setState(645); formalParameterList();
 				}
@@ -3787,10 +3787,10 @@ public class JavaParser extends Parser {
 	}
 
 	public static class QualifiedNameContext extends ParserRuleContext {
-		public TerminalNode Identifier(int i) {
-			return getToken(JavaParser.Identifier, i);
+		public TerminalNode IDENTIFIER(int i) {
+			return getToken(JavaParser.IDENTIFIER, i);
 		}
-		public List<TerminalNode> Identifier() { return getTokens(JavaParser.Identifier); }
+		public List<TerminalNode> IDENTIFIER() { return getTokens(JavaParser.IDENTIFIER); }
 		public QualifiedNameContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -3817,7 +3817,7 @@ public class JavaParser extends Parser {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(688); match(Identifier);
+			setState(688); match(IDENTIFIER);
 			setState(693);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,74,_ctx);
@@ -3826,7 +3826,7 @@ public class JavaParser extends Parser {
 					{
 					{
 					setState(689); match(DOT);
-					setState(690); match(Identifier);
+					setState(690); match(IDENTIFIER);
 					}
 					} 
 				}
@@ -3848,11 +3848,11 @@ public class JavaParser extends Parser {
 	}
 
 	public static class LiteralContext extends ParserRuleContext {
-		public TerminalNode CharacterLiteral() { return getToken(JavaParser.CharacterLiteral, 0); }
-		public TerminalNode IntegerLiteral() { return getToken(JavaParser.IntegerLiteral, 0); }
-		public TerminalNode StringLiteral() { return getToken(JavaParser.StringLiteral, 0); }
-		public TerminalNode FloatingPointLiteral() { return getToken(JavaParser.FloatingPointLiteral, 0); }
-		public TerminalNode BooleanLiteral() { return getToken(JavaParser.BooleanLiteral, 0); }
+		public TerminalNode INTEGER_LITERAL() { return getToken(JavaParser.INTEGER_LITERAL, 0); }
+		public TerminalNode BOOLEAN_LITERAL() { return getToken(JavaParser.BOOLEAN_LITERAL, 0); }
+		public TerminalNode STRING_LITERAL() { return getToken(JavaParser.STRING_LITERAL, 0); }
+		public TerminalNode FLOATING_POINT_LITERAL() { return getToken(JavaParser.FLOATING_POINT_LITERAL, 0); }
+		public TerminalNode CHARACTER_LITERAL() { return getToken(JavaParser.CHARACTER_LITERAL, 0); }
 		public LiteralContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -3881,7 +3881,7 @@ public class JavaParser extends Parser {
 			{
 			setState(696);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral))) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL))) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			consume();
@@ -4080,7 +4080,7 @@ public class JavaParser extends Parser {
 		public ElementValueContext elementValue() {
 			return getRuleContext(ElementValueContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public ElementValuePairContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -4106,7 +4106,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(718); match(Identifier);
+			setState(718); match(IDENTIFIER);
 			setState(719); match(ASSIGN);
 			setState(720); elementValue();
 			}
@@ -4169,12 +4169,12 @@ public class JavaParser extends Parser {
 			case SUPER:
 			case THIS:
 			case VOID:
-			case IntegerLiteral:
-			case FloatingPointLiteral:
-			case BooleanLiteral:
-			case CharacterLiteral:
-			case StringLiteral:
-			case NullLiteral:
+			case INTEGER_LITERAL:
+			case FLOATING_POINT_LITERAL:
+			case BOOLEAN_LITERAL:
+			case CHARACTER_LITERAL:
+			case STRING_LITERAL:
+			case NULL_LITERAL:
 			case LPAREN:
 			case LT:
 			case BANG:
@@ -4183,7 +4183,7 @@ public class JavaParser extends Parser {
 			case DEC:
 			case ADD:
 			case SUB:
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(722); expression(0);
@@ -4253,7 +4253,7 @@ public class JavaParser extends Parser {
 			setState(727); match(LBRACE);
 			setState(736);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN) | (1L << LBRACE))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN) | (1L << LBRACE))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0)) {
 				{
 				setState(728); elementValue();
 				setState(733);
@@ -4301,7 +4301,7 @@ public class JavaParser extends Parser {
 		public AnnotationTypeBodyContext annotationTypeBody() {
 			return getRuleContext(AnnotationTypeBodyContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public AnnotationTypeDeclarationContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -4329,7 +4329,7 @@ public class JavaParser extends Parser {
 			{
 			setState(743); match(AT);
 			setState(744); match(INTERFACE);
-			setState(745); match(Identifier);
+			setState(745); match(IDENTIFIER);
 			setState(746); annotationTypeBody();
 			}
 		}
@@ -4381,7 +4381,7 @@ public class JavaParser extends Parser {
 			setState(752);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOLATILE) | (1L << SEMI))) != 0) || _la==Identifier || _la==AT) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NATIVE) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SYNCHRONIZED) | (1L << TRANSIENT) | (1L << VOLATILE) | (1L << SEMI))) != 0) || _la==IDENTIFIER || _la==AT) {
 				{
 				{
 				setState(749); annotationTypeElementDeclaration();
@@ -4463,7 +4463,7 @@ public class JavaParser extends Parser {
 			case SYNCHRONIZED:
 			case TRANSIENT:
 			case VOLATILE:
-			case Identifier:
+			case IDENTIFIER:
 			case AT:
 				enterOuterAlt(_localctx, 1);
 				{
@@ -4558,7 +4558,7 @@ public class JavaParser extends Parser {
 			case INT:
 			case LONG:
 			case SHORT:
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(767); type();
@@ -4699,7 +4699,7 @@ public class JavaParser extends Parser {
 		public DefaultValueContext defaultValue() {
 			return getRuleContext(DefaultValueContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public AnnotationMethodRestContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -4726,7 +4726,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(793); match(Identifier);
+			setState(793); match(IDENTIFIER);
 			setState(794); match(LPAREN);
 			setState(795); match(RPAREN);
 			setState(797);
@@ -4874,7 +4874,7 @@ public class JavaParser extends Parser {
 			setState(808);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << ASSERT) | (1L << BOOLEAN) | (1L << BREAK) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << CONTINUE) | (1L << DO) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << FOR) | (1L << IF) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NEW) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RETURN) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SUPER) | (1L << SWITCH) | (1L << SYNCHRONIZED) | (1L << THIS) | (1L << THROW) | (1L << TRY) | (1L << VOID) | (1L << WHILE) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << ASSERT) | (1L << BOOLEAN) | (1L << BREAK) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << CONTINUE) | (1L << DO) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << FOR) | (1L << IF) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NEW) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RETURN) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SUPER) | (1L << SWITCH) | (1L << SYNCHRONIZED) | (1L << THIS) | (1L << THROW) | (1L << TRY) | (1L << VOID) | (1L << WHILE) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0)) {
 				{
 				{
 				setState(805); blockStatement();
@@ -5096,7 +5096,6 @@ public class JavaParser extends Parser {
 		public ResourceSpecificationContext resourceSpecification() {
 			return getRuleContext(ResourceSpecificationContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
 		public List<ExpressionContext> expression() {
 			return getRuleContexts(ExpressionContext.class);
 		}
@@ -5115,6 +5114,7 @@ public class JavaParser extends Parser {
 		public StatementExpressionContext statementExpression() {
 			return getRuleContext(StatementExpressionContext.class,0);
 		}
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public List<CatchClauseContext> catchClause() {
 			return getRuleContexts(CatchClauseContext.class);
 		}
@@ -5355,7 +5355,7 @@ public class JavaParser extends Parser {
 				setState(908); match(RETURN);
 				setState(910);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)))) != 0)) {
 					{
 					setState(909); expression(0);
 					}
@@ -5380,9 +5380,9 @@ public class JavaParser extends Parser {
 				setState(917); match(BREAK);
 				setState(919);
 				_la = _input.LA(1);
-				if (_la==Identifier) {
+				if (_la==IDENTIFIER) {
 					{
-					setState(918); match(Identifier);
+					setState(918); match(IDENTIFIER);
 					}
 				}
 
@@ -5396,9 +5396,9 @@ public class JavaParser extends Parser {
 				setState(922); match(CONTINUE);
 				setState(924);
 				_la = _input.LA(1);
-				if (_la==Identifier) {
+				if (_la==IDENTIFIER) {
 					{
-					setState(923); match(Identifier);
+					setState(923); match(IDENTIFIER);
 					}
 				}
 
@@ -5424,7 +5424,7 @@ public class JavaParser extends Parser {
 			case 17:
 				enterOuterAlt(_localctx, 17);
 				{
-				setState(931); match(Identifier);
+				setState(931); match(IDENTIFIER);
 				setState(932); match(COLON);
 				setState(933); statement();
 				}
@@ -5449,7 +5449,7 @@ public class JavaParser extends Parser {
 		public VariableModifierContext variableModifier(int i) {
 			return getRuleContext(VariableModifierContext.class,i);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public BlockContext block() {
 			return getRuleContext(BlockContext.class,0);
 		}
@@ -5498,7 +5498,7 @@ public class JavaParser extends Parser {
 				_la = _input.LA(1);
 			}
 			setState(944); catchType();
-			setState(945); match(Identifier);
+			setState(945); match(IDENTIFIER);
 			setState(946); match(RPAREN);
 			setState(947); block();
 			}
@@ -5872,7 +5872,7 @@ public class JavaParser extends Parser {
 				setState(994); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << ASSERT) | (1L << BOOLEAN) | (1L << BREAK) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << CONTINUE) | (1L << DO) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << FOR) | (1L << IF) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NEW) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RETURN) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SUPER) | (1L << SWITCH) | (1L << SYNCHRONIZED) | (1L << THIS) | (1L << THROW) | (1L << TRY) | (1L << VOID) | (1L << WHILE) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0) );
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << ABSTRACT) | (1L << ASSERT) | (1L << BOOLEAN) | (1L << BREAK) | (1L << BYTE) | (1L << CHAR) | (1L << CLASS) | (1L << CONTINUE) | (1L << DO) | (1L << DOUBLE) | (1L << ENUM) | (1L << FINAL) | (1L << FLOAT) | (1L << FOR) | (1L << IF) | (1L << INT) | (1L << INTERFACE) | (1L << LONG) | (1L << NEW) | (1L << PRIVATE) | (1L << PROTECTED) | (1L << PUBLIC) | (1L << RETURN) | (1L << SHORT) | (1L << STATIC) | (1L << STRICTFP) | (1L << SUPER) | (1L << SWITCH) | (1L << SYNCHRONIZED) | (1L << THIS) | (1L << THROW) | (1L << TRY) | (1L << VOID) | (1L << WHILE) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN) | (1L << LBRACE) | (1L << SEMI))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0) );
 			}
 		}
 		catch (RecognitionException re) {
@@ -6007,7 +6007,7 @@ public class JavaParser extends Parser {
 				{
 				setState(1010);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)) | (1L << (AT - 68)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FINAL) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)) | (1L << (AT - 68)))) != 0)) {
 					{
 					setState(1009); forInit();
 					}
@@ -6016,7 +6016,7 @@ public class JavaParser extends Parser {
 				setState(1012); match(SEMI);
 				setState(1014);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)))) != 0)) {
 					{
 					setState(1013); expression(0);
 					}
@@ -6025,7 +6025,7 @@ public class JavaParser extends Parser {
 				setState(1016); match(SEMI);
 				setState(1018);
 				_la = _input.LA(1);
-				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)))) != 0)) {
+				if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)))) != 0)) {
 					{
 					setState(1017); forUpdate();
 					}
@@ -6111,7 +6111,7 @@ public class JavaParser extends Parser {
 		public VariableModifierContext variableModifier(int i) {
 			return getRuleContext(VariableModifierContext.class,i);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
@@ -6158,7 +6158,7 @@ public class JavaParser extends Parser {
 				_la = _input.LA(1);
 			}
 			setState(1032); type();
-			setState(1033); match(Identifier);
+			setState(1033); match(IDENTIFIER);
 			setState(1034); match(COLON);
 			setState(1035); expression(0);
 			}
@@ -6429,7 +6429,7 @@ public class JavaParser extends Parser {
 		public SuperSuffixContext superSuffix() {
 			return getRuleContext(SuperSuffixContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public TypeContext type() {
 			return getRuleContext(TypeContext.class,0);
 		}
@@ -6782,7 +6782,7 @@ public class JavaParser extends Parser {
 						setState(1130);
 						if (!(25 >= _localctx._p)) throw new FailedPredicateException(this, "25 >= $_p");
 						setState(1131); match(DOT);
-						setState(1132); match(Identifier);
+						setState(1132); match(IDENTIFIER);
 						}
 						break;
 
@@ -6861,7 +6861,7 @@ public class JavaParser extends Parser {
 						setState(1156); match(LPAREN);
 						setState(1158);
 						_la = _input.LA(1);
-						if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)))) != 0)) {
+						if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)))) != 0)) {
 							{
 							setState(1157); expressionList();
 							}
@@ -6920,7 +6920,7 @@ public class JavaParser extends Parser {
 		public NonWildcardTypeArgumentsContext nonWildcardTypeArguments() {
 			return getRuleContext(NonWildcardTypeArgumentsContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public ExplicitGenericInvocationSuffixContext explicitGenericInvocationSuffix() {
 			return getRuleContext(ExplicitGenericInvocationSuffixContext.class,0);
 		}
@@ -6994,7 +6994,7 @@ public class JavaParser extends Parser {
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(1178); match(Identifier);
+				setState(1178); match(IDENTIFIER);
 				}
 				break;
 
@@ -7023,7 +7023,7 @@ public class JavaParser extends Parser {
 				setState(1190);
 				switch (_input.LA(1)) {
 				case SUPER:
-				case Identifier:
+				case IDENTIFIER:
 					{
 					setState(1187); explicitGenericInvocationSuffix();
 					}
@@ -7106,7 +7106,7 @@ public class JavaParser extends Parser {
 			case INT:
 			case LONG:
 			case SHORT:
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(1198); createdName();
@@ -7146,10 +7146,10 @@ public class JavaParser extends Parser {
 		public TypeArgumentsOrDiamondContext typeArgumentsOrDiamond(int i) {
 			return getRuleContext(TypeArgumentsOrDiamondContext.class,i);
 		}
-		public TerminalNode Identifier(int i) {
-			return getToken(JavaParser.Identifier, i);
+		public TerminalNode IDENTIFIER(int i) {
+			return getToken(JavaParser.IDENTIFIER, i);
 		}
-		public List<TerminalNode> Identifier() { return getTokens(JavaParser.Identifier); }
+		public List<TerminalNode> IDENTIFIER() { return getTokens(JavaParser.IDENTIFIER); }
 		public List<TypeArgumentsOrDiamondContext> typeArgumentsOrDiamond() {
 			return getRuleContexts(TypeArgumentsOrDiamondContext.class);
 		}
@@ -7182,10 +7182,10 @@ public class JavaParser extends Parser {
 		try {
 			setState(1220);
 			switch (_input.LA(1)) {
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(1205); match(Identifier);
+				setState(1205); match(IDENTIFIER);
 				setState(1207);
 				_la = _input.LA(1);
 				if (_la==LT) {
@@ -7201,7 +7201,7 @@ public class JavaParser extends Parser {
 					{
 					{
 					setState(1209); match(DOT);
-					setState(1210); match(Identifier);
+					setState(1210); match(IDENTIFIER);
 					setState(1212);
 					_la = _input.LA(1);
 					if (_la==LT) {
@@ -7250,7 +7250,7 @@ public class JavaParser extends Parser {
 		public NonWildcardTypeArgumentsOrDiamondContext nonWildcardTypeArgumentsOrDiamond() {
 			return getRuleContext(NonWildcardTypeArgumentsOrDiamondContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public ClassCreatorRestContext classCreatorRest() {
 			return getRuleContext(ClassCreatorRestContext.class,0);
 		}
@@ -7280,7 +7280,7 @@ public class JavaParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(1222); match(Identifier);
+			setState(1222); match(IDENTIFIER);
 			setState(1224);
 			_la = _input.LA(1);
 			if (_la==LT) {
@@ -7375,12 +7375,12 @@ public class JavaParser extends Parser {
 			case SUPER:
 			case THIS:
 			case VOID:
-			case IntegerLiteral:
-			case FloatingPointLiteral:
-			case BooleanLiteral:
-			case CharacterLiteral:
-			case StringLiteral:
-			case NullLiteral:
+			case INTEGER_LITERAL:
+			case FLOATING_POINT_LITERAL:
+			case BOOLEAN_LITERAL:
+			case CHARACTER_LITERAL:
+			case STRING_LITERAL:
+			case NULL_LITERAL:
 			case LPAREN:
 			case LT:
 			case BANG:
@@ -7389,7 +7389,7 @@ public class JavaParser extends Parser {
 			case DEC:
 			case ADD:
 			case SUB:
-			case Identifier:
+			case IDENTIFIER:
 				{
 				setState(1238); expression(0);
 				setState(1239); match(RBRACK);
@@ -7703,7 +7703,7 @@ public class JavaParser extends Parser {
 	}
 
 	public static class SuperSuffixContext extends ParserRuleContext {
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public ArgumentsContext arguments() {
 			return getRuleContext(ArgumentsContext.class,0);
 		}
@@ -7742,7 +7742,7 @@ public class JavaParser extends Parser {
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(1280); match(DOT);
-				setState(1281); match(Identifier);
+				setState(1281); match(IDENTIFIER);
 				setState(1283);
 				switch ( getInterpreter().adaptivePredict(_input,146,_ctx) ) {
 				case 1:
@@ -7772,7 +7772,7 @@ public class JavaParser extends Parser {
 		public SuperSuffixContext superSuffix() {
 			return getRuleContext(SuperSuffixContext.class,0);
 		}
-		public TerminalNode Identifier() { return getToken(JavaParser.Identifier, 0); }
+		public TerminalNode IDENTIFIER() { return getToken(JavaParser.IDENTIFIER, 0); }
 		public ArgumentsContext arguments() {
 			return getRuleContext(ArgumentsContext.class,0);
 		}
@@ -7808,10 +7808,10 @@ public class JavaParser extends Parser {
 				setState(1288); superSuffix();
 				}
 				break;
-			case Identifier:
+			case IDENTIFIER:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(1289); match(Identifier);
+				setState(1289); match(IDENTIFIER);
 				setState(1290); arguments();
 				}
 				break;
@@ -7863,7 +7863,7 @@ public class JavaParser extends Parser {
 			setState(1293); match(LPAREN);
 			setState(1295);
 			_la = _input.LA(1);
-			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << IntegerLiteral) | (1L << FloatingPointLiteral) | (1L << BooleanLiteral) | (1L << CharacterLiteral) | (1L << StringLiteral) | (1L << NullLiteral) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (Identifier - 68)))) != 0)) {
+			if ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << BOOLEAN) | (1L << BYTE) | (1L << CHAR) | (1L << DOUBLE) | (1L << FLOAT) | (1L << INT) | (1L << LONG) | (1L << NEW) | (1L << SHORT) | (1L << SUPER) | (1L << THIS) | (1L << VOID) | (1L << INTEGER_LITERAL) | (1L << FLOATING_POINT_LITERAL) | (1L << BOOLEAN_LITERAL) | (1L << CHARACTER_LITERAL) | (1L << STRING_LITERAL) | (1L << NULL_LITERAL) | (1L << LPAREN))) != 0) || ((((_la - 68)) & ~0x3f) == 0 && ((1L << (_la - 68)) & ((1L << (LT - 68)) | (1L << (BANG - 68)) | (1L << (TILDE - 68)) | (1L << (INC - 68)) | (1L << (DEC - 68)) | (1L << (ADD - 68)) | (1L << (SUB - 68)) | (1L << (IDENTIFIER - 68)))) != 0)) {
 				{
 				setState(1294); expressionList();
 				}

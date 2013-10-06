@@ -22,15 +22,15 @@ public class JavaLexer extends Lexer {
 		NATIVE=30, NEW=31, PACKAGE=32, PRIVATE=33, PROTECTED=34, PUBLIC=35, RETURN=36, 
 		SHORT=37, STATIC=38, STRICTFP=39, SUPER=40, SWITCH=41, SYNCHRONIZED=42, 
 		THIS=43, THROW=44, THROWS=45, TRANSIENT=46, TRY=47, VOID=48, VOLATILE=49, 
-		WHILE=50, IntegerLiteral=51, FloatingPointLiteral=52, BooleanLiteral=53, 
-		CharacterLiteral=54, StringLiteral=55, NullLiteral=56, LPAREN=57, RPAREN=58, 
+		WHILE=50, INTEGER_LITERAL=51, FLOATING_POINT_LITERAL=52, BOOLEAN_LITERAL=53, 
+		CHARACTER_LITERAL=54, STRING_LITERAL=55, NULL_LITERAL=56, LPAREN=57, RPAREN=58, 
 		LBRACE=59, RBRACE=60, LBRACK=61, RBRACK=62, SEMI=63, COMMA=64, DOT=65, 
 		ASSIGN=66, GT=67, LT=68, BANG=69, TILDE=70, QUESTION=71, COLON=72, EQUAL=73, 
 		LE=74, GE=75, NOTEQUAL=76, AND=77, OR=78, INC=79, DEC=80, ADD=81, SUB=82, 
 		MUL=83, DIV=84, BITAND=85, BITOR=86, CARET=87, MOD=88, ADD_ASSIGN=89, 
 		SUB_ASSIGN=90, MUL_ASSIGN=91, DIV_ASSIGN=92, AND_ASSIGN=93, OR_ASSIGN=94, 
 		XOR_ASSIGN=95, MOD_ASSIGN=96, LSHIFT_ASSIGN=97, RSHIFT_ASSIGN=98, URSHIFT_ASSIGN=99, 
-		Identifier=100, AT=101, ELLIPSIS=102, WS=103, ML_COMMENT=104, LINE_COMMENT=105;
+		IDENTIFIER=100, AT=101, ELLIPSIS=102, WS=103, ML_COMMENT=104, LINE_COMMENT=105;
 	public static String[] modeNames = {
 		"DEFAULT_MODE"
 	};
@@ -44,13 +44,13 @@ public class JavaLexer extends Lexer {
 		"'int'", "'interface'", "'long'", "'native'", "'new'", "'package'", "'private'", 
 		"'protected'", "'public'", "'return'", "'short'", "'static'", "'strictfp'", 
 		"'super'", "'switch'", "'synchronized'", "'this'", "'throw'", "'throws'", 
-		"'transient'", "'try'", "'void'", "'volatile'", "'while'", "IntegerLiteral", 
-		"FloatingPointLiteral", "BooleanLiteral", "CharacterLiteral", "StringLiteral", 
+		"'transient'", "'try'", "'void'", "'volatile'", "'while'", "INTEGER_LITERAL", 
+		"FLOATING_POINT_LITERAL", "BOOLEAN_LITERAL", "CHARACTER_LITERAL", "STRING_LITERAL", 
 		"'null'", "'('", "')'", "'{'", "'}'", "'['", "']'", "';'", "','", "'.'", 
 		"'='", "'>'", "'<'", "'!'", "'~'", "'?'", "':'", "'=='", "'<='", "'>='", 
 		"'!='", "'&&'", "'||'", "'++'", "'--'", "'+'", "'-'", "'*'", "'/'", "'&'", 
 		"'|'", "'^'", "'%'", "'+='", "'-='", "'*='", "'/='", "'&='", "'|='", "'^='", 
-		"'%='", "'<<='", "'>>='", "'>>>='", "Identifier", "'@'", "'...'", "WS", 
+		"'%='", "'<<='", "'>>='", "'>>>='", "IDENTIFIER", "'@'", "'...'", "WS", 
 		"ML_COMMENT", "LINE_COMMENT"
 	};
 	public static final String[] ruleNames = {
@@ -60,23 +60,23 @@ public class JavaLexer extends Lexer {
 		"IMPORT", "INSTANCEOF", "INT", "INTERFACE", "LONG", "NATIVE", "NEW", "PACKAGE", 
 		"PRIVATE", "PROTECTED", "PUBLIC", "RETURN", "SHORT", "STATIC", "STRICTFP", 
 		"SUPER", "SWITCH", "SYNCHRONIZED", "THIS", "THROW", "THROWS", "TRANSIENT", 
-		"TRY", "VOID", "VOLATILE", "WHILE", "IntegerLiteral", "DecimalIntegerLiteral", 
+		"TRY", "VOID", "VOLATILE", "WHILE", "INTEGER_LITERAL", "DecimalIntegerLiteral", 
 		"HexIntegerLiteral", "OctalIntegerLiteral", "BinaryIntegerLiteral", "IntegerTypeSuffix", 
 		"DecimalNumeral", "Digits", "Digit", "NonZeroDigit", "DigitOrUnderscore", 
 		"Underscores", "HexNumeral", "HexDigits", "HexDigit", "HexDigitOrUnderscore", 
 		"OctalNumeral", "OctalDigits", "OctalDigit", "OctalDigitOrUnderscore", 
 		"BinaryNumeral", "BinaryDigits", "BinaryDigit", "BinaryDigitOrUnderscore", 
-		"FloatingPointLiteral", "DecimalFloatingPointLiteral", "ExponentPart", 
+		"FLOATING_POINT_LITERAL", "DecimalFloatingPointLiteral", "ExponentPart", 
 		"ExponentIndicator", "SignedInteger", "Sign", "FloatTypeSuffix", "HexadecimalFloatingPointLiteral", 
-		"HexSignificand", "BinaryExponent", "BinaryExponentIndicator", "BooleanLiteral", 
-		"CharacterLiteral", "SingleCharacter", "StringLiteral", "StringCharacters", 
+		"HexSignificand", "BinaryExponent", "BinaryExponentIndicator", "BOOLEAN_LITERAL", 
+		"CHARACTER_LITERAL", "SingleCharacter", "STRING_LITERAL", "StringCharacters", 
 		"StringCharacter", "EscapeSequence", "OctalEscape", "UnicodeEscape", "ZeroToThree", 
-		"NullLiteral", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
+		"NULL_LITERAL", "LPAREN", "RPAREN", "LBRACE", "RBRACE", "LBRACK", "RBRACK", 
 		"SEMI", "COMMA", "DOT", "ASSIGN", "GT", "LT", "BANG", "TILDE", "QUESTION", 
 		"COLON", "EQUAL", "LE", "GE", "NOTEQUAL", "AND", "OR", "INC", "DEC", "ADD", 
 		"SUB", "MUL", "DIV", "BITAND", "BITOR", "CARET", "MOD", "ADD_ASSIGN", 
 		"SUB_ASSIGN", "MUL_ASSIGN", "DIV_ASSIGN", "AND_ASSIGN", "OR_ASSIGN", "XOR_ASSIGN", 
-		"MOD_ASSIGN", "LSHIFT_ASSIGN", "RSHIFT_ASSIGN", "URSHIFT_ASSIGN", "Identifier", 
+		"MOD_ASSIGN", "LSHIFT_ASSIGN", "RSHIFT_ASSIGN", "URSHIFT_ASSIGN", "IDENTIFIER", 
 		"JavaLetter", "JavaLetterOrDigit", "AT", "ELLIPSIS", "WS", "ML_COMMENT", 
 		"LINE_COMMENT"
 	};

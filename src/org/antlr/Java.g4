@@ -88,7 +88,7 @@ variableModifier
     ;
 
 classDeclaration
-    :   'class' Identifier typeParameters?
+    :   'class' IDENTIFIER typeParameters?
         ('extends' type)?
         ('implements' typeList)?
         classBody
@@ -99,7 +99,7 @@ typeParameters
     ;
 
 typeParameter
-    :   Identifier ('extends' typeBound)?
+    :   IDENTIFIER ('extends' typeBound)?
     ;
 
 typeBound
@@ -107,7 +107,7 @@ typeBound
     ;
 
 enumDeclaration
-    :   ENUM Identifier ('implements' typeList)?
+    :   ENUM IDENTIFIER ('implements' typeList)?
         '{' enumConstants? ','? enumBodyDeclarations? '}'
     ;
 
@@ -116,7 +116,7 @@ enumConstants
     ;
 
 enumConstant
-    :   annotation* Identifier arguments? classBody?
+    :   annotation* IDENTIFIER arguments? classBody?
     ;
 
 enumBodyDeclarations
@@ -124,7 +124,7 @@ enumBodyDeclarations
     ;
 
 interfaceDeclaration
-    :   'interface' Identifier typeParameters? ('extends' typeList)? interfaceBody
+    :   'interface' IDENTIFIER typeParameters? ('extends' typeList)? interfaceBody
     ;
 
 typeList
@@ -163,7 +163,7 @@ memberDeclaration
    for invalid return type after parsing.
  */
 methodDeclaration
-    :   (type|'void') Identifier formalParameters ('[' ']')*
+    :   (type|'void') IDENTIFIER formalParameters ('[' ']')*
         ('throws' qualifiedNameList)?
         (   methodBody
         |   ';'
@@ -175,7 +175,7 @@ genericMethodDeclaration
     ;
 
 constructorDeclaration
-    :   Identifier formalParameters ('throws' qualifiedNameList)?
+    :   IDENTIFIER formalParameters ('throws' qualifiedNameList)?
         constructorBody
     ;
 
@@ -207,12 +207,12 @@ constDeclaration
     ;
 
 constantDeclarator
-    :   Identifier ('[' ']')* '=' variableInitializer
+    :   IDENTIFIER ('[' ']')* '=' variableInitializer
     ;
 
 // see matching of [] comment in methodDeclaratorRest
 interfaceMethodDeclaration
-    :   (type|'void') Identifier formalParameters ('[' ']')*
+    :   (type|'void') IDENTIFIER formalParameters ('[' ']')*
         ('throws' qualifiedNameList)?
         ';'
     ;
@@ -230,7 +230,7 @@ variableDeclarator
     ;
 
 variableDeclaratorId
-    :   Identifier ('[' ']')*
+    :   IDENTIFIER ('[' ']')*
     ;
 
 variableInitializer
@@ -247,7 +247,7 @@ packageOrTypeName
     ;
 
 enumConstantName
-    :   Identifier
+    :   IDENTIFIER
     ;
 
 typeName
@@ -260,7 +260,7 @@ type
     ;
 
 classOrInterfaceType
-    :   Identifier typeArguments? ('.' Identifier typeArguments? )*
+    :   IDENTIFIER typeArguments? ('.' IDENTIFIER typeArguments? )*
     ;
 
 primitiveType
@@ -313,15 +313,15 @@ constructorBody
     ;
 
 qualifiedName
-    :   Identifier ('.' Identifier)*
+    :   IDENTIFIER ('.' IDENTIFIER)*
     ;
 
 literal
-    :   IntegerLiteral
-    |   FloatingPointLiteral
-    |   CharacterLiteral
-    |   StringLiteral
-    |   BooleanLiteral
+    :   INTEGER_LITERAL
+    |   FLOATING_POINT_LITERAL
+    |   CHARACTER_LITERAL
+    |   STRING_LITERAL
+    |   BOOLEAN_LITERAL
     |   'null'
     ;
 
@@ -338,7 +338,7 @@ elementValuePairs
     ;
 
 elementValuePair
-    :   Identifier '=' elementValue
+    :   IDENTIFIER '=' elementValue
     ;
 
 elementValue
@@ -352,7 +352,7 @@ elementValueArrayInitializer
     ;
 
 annotationTypeDeclaration
-    :   '@' 'interface' Identifier annotationTypeBody
+    :   '@' 'interface' IDENTIFIER annotationTypeBody
     ;
 
 annotationTypeBody
@@ -378,7 +378,7 @@ annotationMethodOrConstantRest
     ;
 
 annotationMethodRest
-    :   Identifier '(' ')' defaultValue?
+    :   IDENTIFIER '(' ')' defaultValue?
     ;
 
 annotationConstantRest
@@ -422,15 +422,15 @@ statement
     |   'synchronized' parExpression block
     |   'return' expression? ';'
     |   'throw' expression ';'
-    |   'break' Identifier? ';'
-    |   'continue' Identifier? ';'
+    |   'break' IDENTIFIER? ';'
+    |   'continue' IDENTIFIER? ';'
     |   ';'
     |   statementExpression ';'
-    |   Identifier ':' statement
+    |   IDENTIFIER ':' statement
     ;
 
 catchClause
-    :   'catch' '(' variableModifier* catchType Identifier ')' block
+    :   'catch' '(' variableModifier* catchType IDENTIFIER ')' block
     ;
 
 catchType
@@ -477,7 +477,7 @@ forInit
     ;
 
 enhancedForControl
-    :   variableModifier* type Identifier ':' expression
+    :   variableModifier* type IDENTIFIER ':' expression
     ;
 
 forUpdate
@@ -504,7 +504,7 @@ constantExpression
 
 expression
     :   primary
-    |   expression '.' Identifier
+    |   expression '.' IDENTIFIER
     |   expression '.' 'this'
     |   expression '.' 'new' nonWildcardTypeArguments? innerCreator
     |   expression '.' 'super' superSuffix
@@ -550,7 +550,7 @@ primary
     |   'this'
     |   'super'
     |   literal
-    |   Identifier
+    |   IDENTIFIER
     |   type '.' 'class'
     |   'void' '.' 'class'
     |   nonWildcardTypeArguments (explicitGenericInvocationSuffix | 'this' arguments)
@@ -562,12 +562,12 @@ creator
     ;
 
 createdName
-    :   Identifier typeArgumentsOrDiamond? ('.' Identifier typeArgumentsOrDiamond?)*
+    :   IDENTIFIER typeArgumentsOrDiamond? ('.' IDENTIFIER typeArgumentsOrDiamond?)*
     |   primitiveType
     ;
 
 innerCreator
-    :   Identifier nonWildcardTypeArgumentsOrDiamond? classCreatorRest
+    :   IDENTIFIER nonWildcardTypeArgumentsOrDiamond? classCreatorRest
     ;
 
 arrayCreatorRest
@@ -601,12 +601,12 @@ nonWildcardTypeArgumentsOrDiamond
 
 superSuffix
     :   arguments
-    |   '.' Identifier arguments?
+    |   '.' IDENTIFIER arguments?
     ;
 
 explicitGenericInvocationSuffix
     :   'super' superSuffix
-    |   Identifier arguments
+    |   IDENTIFIER arguments
     ;
 
 arguments
@@ -670,7 +670,7 @@ WHILE         : 'while';
 
 // §3.10.1 Integer Literals
 
-IntegerLiteral
+INTEGER_LITERAL
     :   DecimalIntegerLiteral
     |   HexIntegerLiteral
     |   OctalIntegerLiteral
@@ -800,7 +800,7 @@ BinaryDigitOrUnderscore
 
 // §3.10.2 Floating-Point Literals
 
-FloatingPointLiteral
+FLOATING_POINT_LITERAL
     :   DecimalFloatingPointLiteral
     |   HexadecimalFloatingPointLiteral
     ;
@@ -861,14 +861,14 @@ BinaryExponentIndicator
 
 // §3.10.3 Boolean Literals
 
-BooleanLiteral
+BOOLEAN_LITERAL
     :   'true'
     |   'false'
     ;
 
 // §3.10.4 Character Literals
 
-CharacterLiteral
+CHARACTER_LITERAL
     :   '\'' SingleCharacter '\''
     |   '\'' EscapeSequence '\''
     ;
@@ -880,7 +880,7 @@ SingleCharacter
 
 // §3.10.5 String Literals
 
-StringLiteral
+STRING_LITERAL
     :   '"' StringCharacters? '"'
     ;
 
@@ -923,7 +923,7 @@ ZeroToThree
 
 // §3.10.7 The Null Literal
 
-NullLiteral
+NULL_LITERAL
     :   'null'
     ;
 
@@ -979,7 +979,7 @@ URSHIFT_ASSIGN  : '>>>=';
 
 // §3.8 Identifiers (must appear after all keywords in the grammar)
 
-Identifier
+IDENTIFIER
     :   JavaLetter JavaLetterOrDigit*
     ;
 
