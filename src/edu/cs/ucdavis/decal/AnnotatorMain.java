@@ -24,7 +24,6 @@ public class AnnotatorMain {
 		options.addOption("s", "src", true, "absolute root path of files");
 		options.addOption("p", "project", true, "project name");
 		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database)");
-		options.addOption("c", "clear", false, "clear all annotated astnode information in specified project before annotating");
 		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
 
 		HelpFormatter formatter = new HelpFormatter();
@@ -52,9 +51,7 @@ public class AnnotatorMain {
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 				controller.setProjectName(project_name);
-				if (cmd.hasOption("c")) {
-					controller.clearProjectAstNodeInfo();
-				}
+				controller.clearProjectAstNodeInfo();
 				controller.run();
 				System.out.println("annotating finished.");
 			}

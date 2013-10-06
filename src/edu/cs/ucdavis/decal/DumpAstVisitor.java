@@ -9,7 +9,6 @@ public class DumpAstVisitor extends ASTVisitor {
 	CompilationUnit currentUnit;
 	OmniController controller;
 
-	private String snippet;
 	private int currentAstnodeId;
 
 	public DumpAstVisitor() {
@@ -36,9 +35,18 @@ public class DumpAstVisitor extends ASTVisitor {
 		controller.saveAstNodeInfo(node, currentUnit);
 	}
 
+	private void saveTokenInfo(ASTNode node) {
+		controller.saveTokenInfo(node, currentUnit);
+	}
+
 	@Override
 	public boolean preVisit2(ASTNode node) {
 		saveAstNodeInfo(node);
 		return true;
+	}
+
+	@Override
+	public void postVisit(ASTNode node) {
+		saveTokenInfo(node);
 	}
 }

@@ -5,10 +5,16 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.antlr.JavaLexer;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -32,6 +38,7 @@ public class OmniController {
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
 	private Collection <String> bindingKeys;
 	private int projectSize;
+	private List <Token> tokens;
 
 	public OmniController(String sourcePath) {
 		this.visitor = null;
@@ -199,11 +206,19 @@ public class OmniController {
 		}
 		try {
 			currentFileRaw = FileUtils.readFileToString(new File(sourceFilePath));
+			prepareTokens();
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Read file content error", e);
 		}
-
 		currentFileId = id;
+	}
+
+	private void prepareTokens() {
+		ANTLRInputStream input = new ANTLRInputStream(currentFileRaw);
+		JavaLexer lexel = new JavaLexer(input);
+		CommonTokenStream tokens = new CommonTokenStream(lexel);
+		tokens.fill();
+		this.tokens = tokens.getTokens();
 	}
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
@@ -227,6 +242,39 @@ public class OmniController {
 		database.saveAstNodeInfo(start_pos, length, line_number, column_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
 	}
 
+	// TODO: interval tree to find out tokens?
+	public void saveTokenInfo(ASTNode node, CompilationUnit unit) {
+		final int node_start_pos = node.getStartPosition();
+		final int node_end_pos = node.getStartPosition() + node.getLength();
+
+		final int parentId = getAstnodeId(node); // token's parent is current id
+
+		List <Integer> token_to_remove = new LinkedList <Integer> ();
+		for(int i = 0; i < tokens.size(); i++) {
+			Token token = tokens.get(i);
+			final int token_start_pos = token.getStartIndex();
+			final int token_end_pos = token.getStopIndex();
+			final int line_number = token.getLine();
+			final int column_number = token.getCharPositionInLine();
+
+			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
+			final String string = token.getText();
+			final int file_id = this.currentFileId;
+			if (node_start_pos <= token_start_pos && token_end_pos <= node_end_pos && token.getType() != -1) {
+				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
+					System.out.println(token);
+				}
+				database.saveTokenInfo(token_start_pos, string.length(), line_number, column_number, nodetype_id, string, file_id, currentFileRaw, parentId);
+				token_to_remove.add(i);
+			}
+		}
+
+		// remove from tokens
+		for (int i = 0; i < token_to_remove.size(); i++) {
+			tokens.remove(token_to_remove.get(i) - i);
+		}
+	}
+
 //	public void saveTokenInfo(CompilationUnit unit, int start_pos, // to figure out
 //			Token token, int parentId) {
 //		/*
@@ -241,7 +289,7 @@ public class OmniController {
 //		database.saveTokenInfo(start_pos, length, line_number, column_number, nodetype_id, string, currentFileId, currentFileRaw, parentId);
 //	}
 
-
+	// TODO: cache result
 	public int getAstnodeId(ASTNode node) {
 		if (node == null) { return -1; }
 

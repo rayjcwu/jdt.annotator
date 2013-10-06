@@ -25,7 +25,7 @@ public class PostgreSQLStorer {
 
 	private OmniController controller;
 
-	private static int tokenBase = 100;
+	public static int tokenBase = 100;
 
 	public void register(OmniController controller) {
 		this.controller = controller;
@@ -375,6 +375,8 @@ public class PostgreSQLStorer {
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
 		} finally {
 			closeIt(pstmt);
 		}
@@ -474,7 +476,7 @@ public class PostgreSQLStorer {
 				count ++;
 			}
 			if (count > 1)
-				throw new IllegalStateException();
+				throw new IllegalStateException("more than one astnode found while query");
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "query parent id exception", e);
 		} finally {
