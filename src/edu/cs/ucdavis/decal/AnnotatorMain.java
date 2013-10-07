@@ -23,7 +23,7 @@ public class AnnotatorMain {
 		Options options = new Options();
 		options.addOption("s", "src", true, "absolute root path of files");
 		options.addOption("p", "project", true, "project name");
-		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database)");
+		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database) (postgresql default port: 5432)");
 		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
 
 		HelpFormatter formatter = new HelpFormatter();
