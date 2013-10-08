@@ -512,6 +512,9 @@ public class PostgreSQLStorer {
 		} finally {
 			closeIt(stmt);
 		}
+		if (astnode_id_cache.size() > 2048) {
+			astnode_id_cache.clear();
+		}
 		astnode_id_cache.put(queryKey, result);
 		return result;
 	}
