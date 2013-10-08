@@ -253,14 +253,13 @@ public class OmniController {
 		for(int i = 0; i < tokens.size(); i++) {
 			Token token = tokens.get(i);
 			final int token_start_pos = token.getStartIndex();
-			final int token_end_pos = token.getStopIndex();
 			final int line_number = token.getLine();
 			final int column_number = token.getCharPositionInLine();
 
 			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
 			final String string = token.getText();
 			final int file_id = this.currentFileId;
-			if (node_start_pos <= token_start_pos && token_end_pos <= node_end_pos && token.getType() != -1) {
+			if (node_start_pos <= token_start_pos && token_start_pos + string.length() <= node_end_pos && token.getType() != -1) {
 				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
 					System.out.println(token);
 				}
