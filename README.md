@@ -8,13 +8,15 @@ Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt
 `java -jar annotator.jar [opts]`, `-s`, `-d`, `-p` are required options to start annotating.
 
 ```
-usage: annotator.jar
- -d,--jdbc <arg>      jdbc url, currently only support postgresql
-                      (jdbc:postgresql://ip:port/database)
- -p,--project <arg>   project name
- -r,--reset           reset all annotated astnode information in database
+-d,--jdbc <arg>       jdbc url, currently only support postgresql
+                       (jdbc:postgresql://ip:port/database) (postgresql
+                      default port: 5432)
+-p,--project <arg>    project name
+-r,--reset            reset all annotated astnode information in database
                       [need to specify --jdbc]
- -s,--src <arg>       absolute root path of files
+-s,--src <arg>        absolute root path of files
+-U,--username <arg>   (optional) username, must specify password as well
+-W,--password <arg>   (optional) password, must specify username as well
 ```
 
 # Schema
