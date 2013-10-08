@@ -69,4 +69,4 @@ To rebuild, you need to install [Maven 3](http://maven.apache.org/). If you want
 
 * `outOfMemoryException`: Allocating more memory for JVM by `java -Xmx2048m -jar …`
 * create database in postgresql: `$> createdb database_name` in shell or `CREATE DATABASE database_name` in SQL.
-* **why it's SO slow**: Current implementation query database for any information and auto commit for every `INSERT INTO`/`UPDATE`.
+* slow: Current implementation use auto commit for every `INSERT INTO`/`UPDATE`.
