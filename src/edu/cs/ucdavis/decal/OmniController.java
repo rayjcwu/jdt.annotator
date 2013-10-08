@@ -2,6 +2,7 @@ package edu.cs.ucdavis.decal;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -219,7 +220,7 @@ public class OmniController {
 		JavaLexer lexel = new JavaLexer(input);
 		CommonTokenStream tokenStream = new CommonTokenStream(lexel);
 		tokenStream.fill();
-		List <Token> trimedTokens = new LinkedList<Token>();
+		List <Token> trimedTokens = new ArrayList<Token>();
 		for (Token token: tokenStream.getTokens()) {
 			if (!(token.getType() == JavaLexer.IDENTIFIER ||
 				  token.getType() == JavaLexer.NULL_LITERAL ||
@@ -268,19 +269,25 @@ public class OmniController {
 		List <Integer> token_to_remove = new LinkedList <Integer> ();
 		for(int i = 0; i < tokens.size(); i++) {
 			Token token = tokens.get(i);
+			final String string = token.getText();
+
 			final int token_start_pos = token.getStartIndex();
+			final int token_end_pos = token_start_pos + string.length();
 			final int line_number = token.getLine();
 			final int column_number = token.getCharPositionInLine();
-
 			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
-			final String string = token.getText();
+
 			final int file_id = this.currentFileId;
-			if (node_start_pos <= token_start_pos && token_start_pos + string.length() <= node_end_pos && token.getType() != -1) {
-				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
-					System.out.println(token);
+			if (node_start_pos <= token_start_pos && token_end_pos <= node_end_pos) {  // if token is inside of node interval
+				if (token.getType() != -1 ) {
+					database.saveTokenInfo(token_start_pos, string.length(), line_number, column_number, nodetype_id, string, file_id, currentFileRaw, parentId);
+					token_to_remove.add(i);
 				}
-				database.saveTokenInfo(token_start_pos, string.length(), line_number, column_number, nodetype_id, string, file_id, currentFileRaw, parentId);
-				token_to_remove.add(i);
+				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
+					System.err.println("Should not happend: " + token.toString());
+				}
+			} else if (token_end_pos > node_end_pos){
+				break;
 			}
 		}
 
