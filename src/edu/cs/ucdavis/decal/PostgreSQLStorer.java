@@ -11,6 +11,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,8 @@ public class PostgreSQLStorer {
 	private Logger logger;
 
 	private OmniController controller;
+	private String username;
+	private String password;
 
 	public static int tokenBase = 100;
 
@@ -33,8 +36,14 @@ public class PostgreSQLStorer {
 	}
 
 	public PostgreSQLStorer(String url) {
+		this(url, null, null);
+	}
+
+	public PostgreSQLStorer(String url, String username, String password) {
 		this.ready = false;
 		this.url = url;
+		this.username = username;
+		this.password = password;
 		this.logger = Logger.getLogger("annotation");
 
 		connect();
@@ -45,8 +54,16 @@ public class PostgreSQLStorer {
 
 	public void connect() {
 		try {
+			Properties props = new Properties();
+			if (username != null) {
+				props.setProperty("user", username);
+			}
+			if (password != null) {
+				props.setProperty("password", password);
+			}
+
 			Class.forName("org.postgresql.Driver");
-			conn = DriverManager.getConnection(url);
+			conn = DriverManager.getConnection(url, props);
 			if (conn == null || (conn != null && conn.isClosed())) {
 				logger.log(Level.SEVERE, "database is not connected");
 			}

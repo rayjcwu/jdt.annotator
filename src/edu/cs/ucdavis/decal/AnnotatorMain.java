@@ -25,6 +25,8 @@ public class AnnotatorMain {
 		options.addOption("p", "project", true, "project name");
 		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database) (postgresql default port: 5432)");
 		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
+		options.addOption("U", "username", true, "username, must specify password as well");
+		options.addOption("W", "password", true, "password, must specify username as well");
 
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
@@ -33,21 +35,33 @@ public class AnnotatorMain {
 		String jdbc_url = "";
 		String project_name = "";
 		String src_path = "";
+		String username = "";
+		String password = "";
 		try {
 			cmd = parser.parse(options, argv);
 			src_path = cmd.getOptionValue("s");
 			project_name = cmd.getOptionValue("p", src_path);
 			jdbc_url = cmd.getOptionValue("d");
+			username = cmd.getOptionValue("U");
+			password = cmd.getOptionValue("W");
 
 			if (cmd.hasOption("r") && jdbc_url != null) {
-				(new PostgreSQLStorer(jdbc_url)).resetDatabase();
+				if (cmd.hasOption("U") && cmd.hasOption("W")) {
+					(new PostgreSQLStorer(jdbc_url, username, password)).resetDatabase();
+				} else {
+					(new PostgreSQLStorer(jdbc_url)).resetDatabase();
+				}
 				System.out.println("reset done.");
 			} else if (src_path == null || project_name == null || jdbc_url == null) {
 				throw new ParseException(argv.toString());
 			} else {
 				OmniController controller = new OmniController(src_path);
 				controller.setLogger(logger);
-				(new PostgreSQLStorer(jdbc_url)).register(controller);
+				if (cmd.hasOption("U") && cmd.hasOption("W")) {
+					(new PostgreSQLStorer(jdbc_url, username, password)).register(controller);
+				} else {
+					(new PostgreSQLStorer(jdbc_url)).register(controller);
+				}
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 				controller.setProjectName(project_name);
