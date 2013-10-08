@@ -37,6 +37,8 @@ public class AnnotatorMain {
 		String src_path = "";
 		String username = "";
 		String password = "";
+
+		OmniController controller = null;
 		try {
 			cmd = parser.parse(options, argv);
 			src_path = cmd.getOptionValue("s");
@@ -55,7 +57,7 @@ public class AnnotatorMain {
 			} else if (src_path == null || project_name == null || jdbc_url == null) {
 				throw new ParseException(argv.toString());
 			} else {
-				OmniController controller = new OmniController(src_path);
+				controller = new OmniController(src_path);
 				controller.setLogger(logger);
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
 					(new PostgreSQLStorer(jdbc_url, username, password)).register(controller);
@@ -74,6 +76,9 @@ public class AnnotatorMain {
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.toString());
 			e.printStackTrace();
+		} finally {
+			if (controller != null)
+				controller.getDatabase().close();
 		}
 	}
 }
