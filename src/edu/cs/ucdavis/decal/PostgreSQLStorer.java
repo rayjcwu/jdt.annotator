@@ -66,22 +66,22 @@ public class PostgreSQLStorer {
 		try {
 			stmt = conn.createStatement();
 
-			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int, name text, token text); "
+			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int PRIMARY KEY, name text, token text); "
 					                  + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
 					                  + "WHERE (EXISTS (SELECT id FROM nodetype WHERE nodetype.id = NEW.id)) "
 					                  + "DO INSTEAD NOTHING; ";
 
-			String createFileTable = "CREATE TABLE IF NOT EXISTS file (id serial, name text, project_id int); ";
+			String createProjectTable = "CREATE TABLE IF NOT EXISTS project (id serial PRIMARY KEY, name text, path text); ";
 
-			String createProjectTable = "CREATE TABLE IF NOT EXISTS project (id serial, name text, path text); ";
+			String createFileTable = "CREATE TABLE IF NOT EXISTS file (id serial PRIMARY KEY, name text, project_id int references project(id)); ";
 
-			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial, "
+			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial PRIMARY KEY, "
 									  + "start_pos int, "
 									  + "length int, "  	  // end_pos = start_pos + length
 									  + "line_number int, "   // #-th line in file
 									  + "column_number int, "
-								      + "nodetype_id int, "   // foreign key
-								      + "file_id int, "		  // foreign key
+								      + "nodetype_id int references nodetype(id), "   // foreign key
+								      + "file_id int references file(id), "		  // foreign key
 								      + "binding_key text, "  // only some simple name nodes will have this
 								      + "string text, "	      // string representation, stripped version
 								      + "raw text, "          // raw content of ast node
@@ -89,9 +89,9 @@ public class PostgreSQLStorer {
 								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
 								      ;
 			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
-			stmt.executeUpdate(createNodetypeTable);
-			stmt.executeUpdate(createFileTable);
 			stmt.executeUpdate(createProjectTable);
+			stmt.executeUpdate(createFileTable);
+			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createASTNodeTable);
 
 			String to_create = "astnode_binding_key_idx";
