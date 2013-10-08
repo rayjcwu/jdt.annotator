@@ -1,5 +1,8 @@
 package edu.cs.ucdavis.decal;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -32,11 +35,21 @@ public class DumpAstVisitor extends ASTVisitor {
 	}
 
 	private void saveAstNodeInfo(ASTNode node) {
-		controller.saveAstNodeInfo(node, currentUnit);
+		if (node.getStartPosition() == -1 && node.getLength() == 0) {
+			Logger logger = Logger.getAnonymousLogger();
+			logger.log(Level.SEVERE, "Node doesn't have information: " + node.toString());
+		} else {
+			controller.saveAstNodeInfo(node, currentUnit);
+		}
 	}
 
 	private void saveTokenInfo(ASTNode node) {
-		controller.saveTokenInfo(node, currentUnit);
+		if (node.getStartPosition() == -1 && node.getLength() == 0) {
+			Logger logger = Logger.getAnonymousLogger();
+			logger.log(Level.SEVERE, "Node doesn't have information: " + node.toString());
+		} else {
+			controller.saveTokenInfo(node, currentUnit);
+		}
 	}
 
 	@Override

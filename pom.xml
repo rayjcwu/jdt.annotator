@@ -65,19 +65,9 @@
       <version>9.2-1003-jdbc4</version>
     </dependency>
     <dependency>
-      <groupId>org.eclipse.tycho</groupId>
-      <artifactId>org.eclipse.jdt.core</artifactId>
-      <version>3.9.0.v20130604-1421</version>
-    </dependency>
-    <dependency>
       <groupId>org.eclipse.birt.runtime</groupId>
       <artifactId>org.eclipse.core.resources</artifactId>
       <version>3.8.100.v20130521-2026</version>
-    </dependency>
-    <dependency>
-      <groupId>org.eclipse.tycho</groupId>
-      <artifactId>org.eclipse.osgi</artifactId>
-      <version>3.9.0.v20130529-1710</version>
     </dependency>
     <dependency>
       <groupId>org.eclipse.birt.runtime</groupId>
@@ -128,6 +118,16 @@
       <groupId>org.antlr</groupId>
       <artifactId>antlr4-runtime</artifactId>
       <version>4.1</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.eclipse.birt.runtime</groupId>
+    	<artifactId>org.eclipse.osgi</artifactId>
+    	<version>3.9.0.v20130529-1710</version>
+    </dependency>
+    <dependency>
+    	<groupId>org.eclipse.tycho</groupId>
+    	<artifactId>org.eclipse.jdt.core</artifactId>
+    	<version>3.9.0.v20130604-1421</version>
     </dependency>
   </dependencies>
 </project>

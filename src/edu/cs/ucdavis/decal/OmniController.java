@@ -252,7 +252,62 @@ public class OmniController {
 			}
 		}
 		final int parentId = getAstnodeId(node.getParent());
+		if (start_pos == -1) {
+			throw new IllegalStateException("should not happen");
+		}
 		database.saveAstNodeInfo(start_pos, length, line_number, column_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
+	}
+
+	private int findFirstInInterval(int start_pos) {
+		int lower_bound = 0;
+		int upper_bound = this.totalTokens - 1;
+		int mid = (lower_bound + upper_bound) / 2;
+
+		while (upper_bound < lower_bound) {
+
+			if (tokens.get(mid).getStartIndex() > start_pos) {
+				lower_bound = mid;
+			} else if (tokens.get(mid).getStartIndex() < start_pos) {
+				upper_bound = mid;
+			} else if (tokens.get(mid).getStartIndex() == start_pos) {
+				break;
+			}
+			mid = (lower_bound + upper_bound) / 2;
+		}
+
+		int i = 0;
+		for (i = mid; i >= 0; i--) {
+			if (tokens.get(i).getStartIndex() <= start_pos) {
+				break;
+			}
+		}
+		return i;
+	}
+
+	private int findIndex(int start_pos) {
+		int max = this.tokens.size() - 1;
+		int min = 0;
+
+		int mid = (max + min)/2;
+		while (max > min) {
+			mid = (max + min)/2;
+			if (this.tokens.get(mid).getStartIndex() > start_pos) {
+				max = mid;
+			} else if (this.tokens.get(mid).getStartIndex() < start_pos) {
+				min = mid + 1;
+			} else {
+				return mid;
+			}
+		}
+
+		// not found
+		while (mid > 0) {
+			if (this.tokens.get(mid).getStartIndex() < start_pos){
+				break;
+			}
+			mid --;
+		}
+		return mid;
 	}
 
 	// TODO: interval tree to find out tokens?
@@ -267,7 +322,7 @@ public class OmniController {
 		System.out.print(tokenStatus + " " + bar + "\r");
 
 		List <Integer> token_to_remove = new LinkedList <Integer> ();
-		for(int i = 0; i < tokens.size(); i++) {
+		for(int i = findIndex(node_start_pos); i < tokens.size(); i++) {
 			Token token = tokens.get(i);
 			final String string = token.getText();
 
@@ -286,7 +341,7 @@ public class OmniController {
 				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
 					System.err.println("Should not happend: " + token.toString());
 				}
-			} else if (token_end_pos > node_end_pos){
+			} else if (token_start_pos > node_end_pos){
 				break;
 			}
 		}

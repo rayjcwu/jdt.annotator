@@ -376,6 +376,8 @@ public class PostgreSQLStorer {
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
 		} finally {
 			closeIt(pstmt);
 		}
