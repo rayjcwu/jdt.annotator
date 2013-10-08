@@ -10,7 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,6 +31,8 @@ public class PostgreSQLStorer {
 	private String password;
 
 	public static int tokenBase = 100;
+
+	private Map <String, Integer> astnode_id_cache;
 
 	public void register(OmniController controller) {
 		this.controller = controller;
@@ -50,6 +54,7 @@ public class PostgreSQLStorer {
 		createTableIfNotExist();
 		createViewIfNotExist();
 		this.ready = true;
+		this.astnode_id_cache = new HashMap<String, Integer>();
 	}
 
 	public void connect() {
@@ -476,6 +481,11 @@ public class PostgreSQLStorer {
 	}
 
 	public int queryAstNodeId(int start_pos, int length, int nodetype, int file_id) {
+		String queryKey = String.format("%d:%d:%d:%d", start_pos, length, nodetype, file_id);
+		if (astnode_id_cache.containsKey(queryKey)) {
+			return astnode_id_cache.get(queryKey);
+		}
+
 		PreparedStatement stmt = null;
 		String query = "SELECT id FROM astnode WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?;";
 		int result = -1;
@@ -499,6 +509,7 @@ public class PostgreSQLStorer {
 		} finally {
 			closeIt(stmt);
 		}
+		astnode_id_cache.put(queryKey, result);
 		return result;
 	}
 

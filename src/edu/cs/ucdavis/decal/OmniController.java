@@ -288,7 +288,6 @@ public class OmniController {
 //		database.saveTokenInfo(start_pos, length, line_number, column_number, nodetype_id, string, currentFileId, currentFileRaw, parentId);
 //	}
 
-	// TODO: cache result
 	public int getAstnodeId(ASTNode node) {
 		if (node == null) { return -1; }
 
