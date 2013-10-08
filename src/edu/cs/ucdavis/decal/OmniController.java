@@ -216,9 +216,19 @@ public class OmniController {
 	private void prepareTokens() {
 		ANTLRInputStream input = new ANTLRInputStream(currentFileRaw);
 		JavaLexer lexel = new JavaLexer(input);
-		CommonTokenStream tokens = new CommonTokenStream(lexel);
-		tokens.fill();
-		this.tokens = tokens.getTokens();
+		CommonTokenStream tokenStream = new CommonTokenStream(lexel);
+		tokenStream.fill();
+		List <Token> trimedTokens = new LinkedList<Token>();
+		for (Token token: tokenStream.getTokens()) {
+			if (!(token.getType() == JavaLexer.IDENTIFIER ||
+				  token.getType() == JavaLexer.NULL_LITERAL ||
+				  token.getType() == JavaLexer.BOOLEAN_LITERAL ||
+				  token.getType() == JavaLexer.STRING_LITERAL ||
+				  token.getType() == JavaLexer.CHARACTER_LITERAL )) {
+				trimedTokens.add(token);
+			}
+		}
+		this.tokens = trimedTokens;
 	}
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {

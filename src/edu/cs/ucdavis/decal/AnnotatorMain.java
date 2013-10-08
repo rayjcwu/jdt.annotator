@@ -25,8 +25,8 @@ public class AnnotatorMain {
 		options.addOption("p", "project", true, "project name");
 		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database) (postgresql default port: 5432)");
 		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
-		options.addOption("U", "username", true, "username, must specify password as well");
-		options.addOption("W", "password", true, "password, must specify username as well");
+		options.addOption("U", "username", true, "(optional) username, must specify password as well");
+		options.addOption("W", "password", true, "(optional) password, must specify username as well");
 
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
