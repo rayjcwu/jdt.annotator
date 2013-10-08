@@ -304,6 +304,7 @@ public class PostgreSQLStorer {
 
 
 	public int retrieveFileId(String fileName, int projectId) {
+		this.astnode_id_cache.clear();
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
