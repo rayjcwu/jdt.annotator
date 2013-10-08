@@ -39,6 +39,7 @@ public class OmniController {
 	private Collection <String> bindingKeys;
 	private int projectSize;
 	private List <Token> tokens;
+	private int totalTokens;
 
 	public OmniController(String sourcePath) {
 		this.visitor = null;
@@ -229,6 +230,7 @@ public class OmniController {
 			}
 		}
 		this.tokens = trimedTokens;
+		this.totalTokens = this.tokens.size();
 	}
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
@@ -258,6 +260,10 @@ public class OmniController {
 		final int node_end_pos = node.getStartPosition() + node.getLength();
 
 		final int parentId = getAstnodeId(node); // token's parent is current id
+
+		String tokenStatus = String.format("%d/%d", totalTokens - this.tokens.size(), totalTokens);
+		String bar = String.format("%2.2f%%", (1-(float)this.tokens.size()/totalTokens)*100);
+		System.out.print(tokenStatus + " " + bar + "\r");
 
 		List <Integer> token_to_remove = new LinkedList <Integer> ();
 		for(int i = 0; i < tokens.size(); i++) {
