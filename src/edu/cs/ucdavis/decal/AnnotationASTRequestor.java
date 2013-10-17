@@ -13,7 +13,9 @@ public class AnnotationASTRequestor extends FileASTRequestor {
 		controller.retriveCurrentFileNameId(sourceFilePath);
 		controller.addCompilationUnitFileName(ast, sourceFilePath);
 		controller.getVisitor().setCurrentCompilationUnit(ast);
-		ast.accept(controller.getVisitor());
+		ast.accept(controller.getVisitor()); // save ast node information happend in here
+
+		controller.storeTokenInfo(ast);
 	}
 
 	public void register(OmniController controller) {

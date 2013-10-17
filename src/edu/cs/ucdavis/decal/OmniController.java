@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -117,7 +116,6 @@ public class OmniController {
 
 		System.out.println("Annotating .java files...");
 		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
-
 		System.out.println("Resolving bindings...");
 		resolveBindings();
 	}
@@ -226,11 +224,12 @@ public class OmniController {
 		tokenStream.fill();
 		List <Token> trimedTokens = new ArrayList<Token>();
 		for (Token token: tokenStream.getTokens()) {
-			if (!(token.getType() == JavaLexer.IDENTIFIER ||
-				  token.getType() == JavaLexer.NULL_LITERAL ||
+			if (!(token.getType() == JavaLexer.IDENTIFIER ||     // same as SimpleName
+				  token.getType() == JavaLexer.NULL_LITERAL ||   // have corresponding literal ast nodes
 				  token.getType() == JavaLexer.BOOLEAN_LITERAL ||
 				  token.getType() == JavaLexer.STRING_LITERAL ||
-				  token.getType() == JavaLexer.CHARACTER_LITERAL )) {
+				  token.getType() == JavaLexer.CHARACTER_LITERAL ||
+				  token.getType() == JavaLexer.EOF)) {           // simply ignore
 				trimedTokens.add(token);
 			}
 		}
@@ -313,76 +312,32 @@ public class OmniController {
 		}
 	}
 
-	private int findFirstInInterval(int start_pos) {
-		int lower_bound = 0;
-		int upper_bound = this.totalTokens - 1;
-		int mid = (lower_bound + upper_bound) / 2;
-
-		while (upper_bound < lower_bound) {
-
-			if (tokens.get(mid).getStartIndex() > start_pos) {
-				lower_bound = mid;
-			} else if (tokens.get(mid).getStartIndex() < start_pos) {
-				upper_bound = mid;
-			} else if (tokens.get(mid).getStartIndex() == start_pos) {
-				break;
-			}
-			mid = (lower_bound + upper_bound) / 2;
-		}
-
-		int i = 0;
-		for (i = mid; i >= 0; i--) {
-			if (tokens.get(i).getStartIndex() <= start_pos) {
-				break;
-			}
-		}
-		return i;
+	private int getAstnodeId(LookupVisitor lookup) {
+		final int node_start_pos = lookup.getStartPos();
+		final int nodetype = lookup.getNodetype();
+		final int node_length = lookup.getLength();
+		final int parentId = database.queryAstNodeId(node_start_pos, node_length, nodetype, this.currentFileId);
+		return parentId;
 	}
 
-	private int findIndex(int start_pos) {
-		int max = this.tokens.size() - 1;
-		int min = 0;
-
-		int mid = (max + min)/2;
-		while (max > min) {
-			mid = (max + min)/2;
-			if (this.tokens.get(mid).getStartIndex() > start_pos) {
-				max = mid;
-			} else if (this.tokens.get(mid).getStartIndex() < start_pos) {
-				min = mid + 1;
-			} else {
-				return mid;
-			}
-		}
-
-		// not found
-		while (mid > 0) {
-			if (this.tokens.get(mid).getStartIndex() < start_pos){
-				break;
-			}
-			mid --;
-		}
-		return mid;
-	}
-
-	// TODO: interval tree to find out tokens?
-	public void saveTokenInfo(ASTNode node, CompilationUnit unit) {
-		final int node_start_pos = node.getStartPosition();
-		final int node_end_pos = node.getStartPosition() + node.getLength();
-
-		final int parentId = getAstnodeId(node); // token's parent is current id
+	public void storeTokenInfo(CompilationUnit unit) {
 
 		String tokenStatus = String.format("%d/%d", totalTokens - this.tokens.size(), totalTokens);
 		String bar = String.format("%2.2f%%", (1-(float)this.tokens.size()/totalTokens)*100);
 		System.out.print(tokenStatus + " " + bar + "\r");
 
-		List <Integer> token_to_remove = new LinkedList <Integer> ();
-		for(int i = findIndex(node_start_pos); i < tokens.size(); i++) {
-			Token token = tokens.get(i);
+		LookupVisitor lookup = new LookupVisitor();
+
+		for (Token token: tokens) {
+			lookup.reset();
+			lookup.setToken(token);
+			unit.accept(lookup);  // look up token in current source code
+			final int parentId = getAstnodeId(lookup);
+
 			final String string = token.getText();
 
 			final int token_start_pos = token.getStartIndex();
-			final int token_end_pos = token_start_pos + string.length();
+			final int token_end_pos = token_start_pos + string.length() - 1;  // inclusive end pos
 
 			final int start_line_number = token.getLine();
 			final int start_column_number = token.getCharPositionInLine();
@@ -390,45 +345,16 @@ public class OmniController {
 			final int end_line_number = unit.getLineNumber(token_end_pos);
 			final int end_column_number = unit.getColumnNumber(token_end_pos);
 
-
 			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
 
 			final int file_id = this.currentFileId;
-			if (node_start_pos <= token_start_pos && token_end_pos <= node_end_pos) {  // if token is inside of node interval
-				if (token.getType() != -1 ) {
-					database.saveTokenInfo(token_start_pos, string.length(),
-							start_line_number, start_column_number,
-							end_line_number, end_column_number,
-							nodetype_id, string, file_id, currentFileRaw, parentId);
-					token_to_remove.add(i);
-				}
-				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
-					System.err.println("Should not happend: " + token.toString());
-				}
-			} else if (token_start_pos > node_end_pos){
-				break;
-			}
-		}
 
-		// remove from tokens
-		for (int i = 0; i < token_to_remove.size(); i++) {
-			tokens.remove(token_to_remove.get(i) - i);
+			database.saveTokenInfo(token_start_pos, string.length(),
+					start_line_number, start_column_number,
+					end_line_number, end_column_number,
+					nodetype_id, string, file_id, currentFileRaw, parentId);
 		}
 	}
-
-//	public void saveTokenInfo(CompilationUnit unit, int start_pos, // to figure out
-//			Token token, int parentId) {
-//		/*
-//		 * start_pos, length, line_number, nodetype_id, file_id, string, raw, parent_astnode_id
-//		 */
-//		final int line_number = unit.getLineNumber(start_pos);    // token's start_pos not node's start_pos
-//		final int column_number = unit.getColumnNumber(start_pos);
-//		final int length = token.getLength();
-//		final int nodetype_id = token.getId();
-//		final String string = token.getToken();
-//
-//		database.saveTokenInfo(start_pos, length, line_number, column_number, nodetype_id, string, currentFileId, currentFileRaw, parentId);
-//	}
 
 	public int getAstnodeId(ASTNode node) {
 		if (node == null) { return -1; }

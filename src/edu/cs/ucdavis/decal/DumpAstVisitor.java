@@ -43,23 +43,9 @@ public class DumpAstVisitor extends ASTVisitor {
 		}
 	}
 
-	private void saveTokenInfo(ASTNode node) {
-		if (node.getStartPosition() == -1 && node.getLength() == 0) {
-			Logger logger = Logger.getAnonymousLogger();
-			logger.log(Level.SEVERE, "Node doesn't have information: " + node.toString());
-		} else {
-			controller.saveTokenInfo(node, currentUnit);
-		}
-	}
-
 	@Override
 	public boolean preVisit2(ASTNode node) {
 		saveAstNodeInfo(node);
 		return true;
-	}
-
-	@Override
-	public void postVisit(ASTNode node) {
-		saveTokenInfo(node);
 	}
 }
