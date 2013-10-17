@@ -32,7 +32,7 @@ public class PostgreSQLStorer {
 
 	public static int tokenBase = 100;
 
-	private Map <String, Integer> astnode_id_cache;
+	private Map <String, Integer> entity_id_cache;
 
 	public void register(OmniController controller) {
 		this.controller = controller;
@@ -54,7 +54,7 @@ public class PostgreSQLStorer {
 		createTableIfNotExist();
 		createViewIfNotExist();
 		this.ready = true;
-		this.astnode_id_cache = new HashMap<String, Integer>();
+		this.entity_id_cache = new HashMap<String, Integer>();
 	}
 
 	public void connect() {
@@ -88,61 +88,81 @@ public class PostgreSQLStorer {
 		try {
 			stmt = conn.createStatement();
 
-			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (id int PRIMARY KEY, name text, token text); "
-					                  + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
-					                  + "WHERE (EXISTS (SELECT id FROM nodetype WHERE nodetype.id = NEW.id)) "
-					                  + "DO INSTEAD NOTHING; ";
+			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (nodetype_id int PRIMARY KEY, name text, token text); "
 
-			String createProjectTable = "CREATE TABLE IF NOT EXISTS project (id serial PRIMARY KEY, name text, path text); ";
+					                   + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
+					                   + "WHERE (EXISTS (SELECT nodetype.nodetype_id FROM nodetype WHERE nodetype.nodetype_id = NEW.nodetype_id)) "
+					                   + "DO INSTEAD NOTHING; ";
 
-			String createFileTable = "CREATE TABLE IF NOT EXISTS file (id serial PRIMARY KEY, name text, project_id int references project(id)); ";
+			String createProjectTable = "CREATE TABLE IF NOT EXISTS project ("
+									  + "project_id serial PRIMARY KEY, "
+									  + "project_type text, "
+									  + "project_name text, "
+									  + "description text, "
+									  + "project_path text); ";
 
-			String createASTNodeTable = "CREATE TABLE IF NOT EXISTS astnode (id serial PRIMARY KEY, "
+			String createFileTable = "CREATE TABLE IF NOT EXISTS file ( "
+								   + "file_id serial PRIMARY KEY, "
+								   + "file_type text, "
+								   + "file_path text, "
+								   + "file_name text, "
+								   + "project_id int references project(project_id)); ";
+
+			String createEntityTable = "CREATE TABLE IF NOT EXISTS entity ("
+									  + "entity_id serial PRIMARY KEY, "
 									  + "start_pos int, "
 									  + "length int, "  	  // end_pos = start_pos + length
-									  + "line_number int, "   // #-th line in file
-									  + "column_number int, "
-								      + "nodetype_id int references nodetype(id), "   // foreign key
-								      + "file_id int references file(id), "		  // foreign key
-								      + "binding_key text, "  // only some simple name nodes will have this
+									  + "start_line_number int, "   // #-th line in file
+									  + "start_column_number int, "
+									  + "end_line_number int, "
+									  + "end_column_number int, "
+								      + "nodetype_id int references nodetype(nodetype_id), "   // foreign key
+								      + "file_id int references file(file_id), "		  // foreign key
+								      + "cross_ref_key text, "  // only some simple name nodes will have this
 								      + "string text, "	      // string representation, stripped version
 								      + "raw text, "          // raw content of ast node
-								      + "parent_astnode_id int, "
-								      + "declared_at_astnode_id int); "  // binding information, will fill this in second round
+								      + "parent_id int);"
 								      ;
+
+			String createCrossReferenceTable = "CREATE TABLE IF NOT EXISTS cross_ref( "
+					+ "ref_id serial PRIMARY KEY, "
+					+ "declare_id int references entity(entity_id), "
+					+ "reference_id int references entity(entity_id)); ";
+
 			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
 			stmt.executeUpdate(createProjectTable);
 			stmt.executeUpdate(createFileTable);
 			stmt.executeUpdate(createNodetypeTable);
-			stmt.executeUpdate(createASTNodeTable);
+			stmt.executeUpdate(createEntityTable);
+			stmt.executeUpdate(createCrossReferenceTable);
 
-			String to_create = "astnode_binding_key_idx";
+			String to_create = "entity_cross_ref_key_idx";
 			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON astnode(binding_key);";
+				String createIndex = "CREATE INDEX "+to_create+" ON entity(cross_ref_key);";
 				stmt.executeUpdate(createIndex);
 			}
 
-			to_create = "astnode_start_pos_idx";
+			to_create = "entity_start_pos_idx";
 			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON astnode(start_pos);";
+				String createIndex = "CREATE INDEX "+to_create+" ON entity(start_pos);";
 				stmt.executeUpdate(createIndex);
 			}
 
-			to_create = "astnode_length_idx";
+			to_create = "entity_length_idx";
 			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON astnode(length);";
+				String createIndex = "CREATE INDEX "+to_create+" ON entity(length);";
 				stmt.executeUpdate(createIndex);
 			}
 
-			to_create = "astnode_file_id_idx";
+			to_create = "entity_file_id_idx";
 			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON astnode(file_id);";
+				String createIndex = "CREATE INDEX "+to_create+" ON entity(file_id);";
 				stmt.executeUpdate(createIndex);
 			}
 
-			to_create = "astnode_parent_astnode_id_idx";
+			to_create = "entity_parent_id_idx";
 			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON astnode(parent_astnode_id);";
+				String createIndex = "CREATE INDEX "+to_create+" ON entity(parent_id);";
 				stmt.executeUpdate(createIndex);
 			}
 
@@ -154,7 +174,7 @@ public class PostgreSQLStorer {
 					if (token.startsWith("'")) {
 						token = token.substring(1, token.length() - 1);
 					}
-					stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name, token) VALUES (%d, '%s', '%s');",
+					stmt.executeUpdate(String.format("INSERT INTO nodetype (nodetype_id, name, token) VALUES (%d, '%s', '%s');",
 							id + PostgreSQLStorer.tokenBase, string, token));
 				}
 			}
@@ -162,7 +182,7 @@ public class PostgreSQLStorer {
 			// TODO: this will throw IllegalAccessException, don't know why
 			for (Field field: ASTNode.class.getDeclaredFields()) {
 				if (field.getType().equals(int.class)) {
-					stmt.executeUpdate(String.format("INSERT INTO nodetype (id, name) VALUES (%d, '%s');", field.getInt(null), field.getName()));
+					stmt.executeUpdate(String.format("INSERT INTO nodetype (nodetype_id, name) VALUES (%d, '%s');", field.getInt(null), field.getName()));
 				}
 			}
 
@@ -215,72 +235,77 @@ public class PostgreSQLStorer {
 			to_create = "project_file";
 			if (!views.contains(to_create)) {
 				String project_file = "CREATE VIEW project_file AS "
-					+ "SELECT project.id AS project_id, "
-					+ "project.name AS project_name, "
-					+ "project.path as project_path, "
-					+ "file.id AS file_id, "
-					+ "file.name AS file_name "
+
+					+ "SELECT project.project_id AS project_id, "
+					+ "project.project_name AS project_name, "
+					+ "project.project_path as project_path, "
+					+ "file.file_id AS file_id, "
+					+ "file.file_name AS file_name "
 
 					+ "FROM project, file "
 
-					+ "WHERE file.project_id = project.id;";
+					+ "WHERE file.project_id = project.project_id;";
 				stmt.executeUpdate(project_file);
 			}
 
-			to_create = "astnode_type";
+			to_create = "entity_nodetype";
 			if (!views.contains(to_create)) {
-				String astnode_type = "CREATE VIEW astnode_type AS "
+				String entity_type = "CREATE VIEW entity_nodetype AS "
 					+ "SELECT "
-					+ "astnode.id AS astnode_id, "
+					+ "entity.entity_id AS entity_id, "
 					+ "start_pos, "
 					+ "length, "
 					+ "start_pos + length AS end_pos, "
-					+ "line_number, "
-					+ "column_number, "
-					+ "nodetype_id, "
+					+ "start_line_number, "
+					+ "start_column_number, "
+					+ "end_line_number, "
+					+ "end_column_number, "
+					+ "entity.nodetype_id AS nodetype_id, "
 					+ "nodetype.name AS nodetype, "
+
 					+ "file_id, "
 					+ "string, "
 					+ "raw, "
-					+ "binding_key, "
-					+ "parent_astnode_id, "
-					+ "declared_at_astnode_id "
+					+ "cross_ref_key, "
+					+ "parent_id "
 
-					+ "FROM astnode, nodetype "
-					+ "WHERE astnode.nodetype_id = nodetype.id;"
+					+ "FROM entity, nodetype "
+					+ "WHERE entity.nodetype_id = nodetype.nodetype_id;"
 					;
-				stmt.executeUpdate(astnode_type);
+				stmt.executeUpdate(entity_type);
 			}
 
-			to_create = "astnode_all";
+			to_create = "entity_all";
 			if (!views.contains(to_create)) {
-				String astnode_type = "CREATE VIEW astnode_all AS "
+				String entity_type = "CREATE VIEW entity_all AS "
 					+ "SELECT "
-					+ "astnode.id AS astnode_id, "
+					+ "entity.entity_id AS entity_id, "
 					+ "start_pos, "
 					+ "length, "
 					+ "start_pos + length AS end_pos, "
-					+ "line_number, "
-					+ "column_number, "
-					+ "nodetype_id, "
+					+ "start_line_number, "
+					+ "start_column_number, "
+					+ "end_line_number, "
+					+ "end_column_number, "
+
+					+ "entity.nodetype_id AS nodetype_id, "
 					+ "nodetype.name AS nodetype, "
-					+ "file_id, "
-					+ "file.name AS file_name, "
-					+ "project.id AS project_id, "
-					+ "project.name AS project_name, "
-					+ "project.path AS project_path, "
+					+ "entity.file_id AS file_id, "
+					+ "file.file_name AS file_name, "
+					+ "project.project_id AS project_id, "
+					+ "project.project_name AS project_name, "
+					+ "project.project_path AS project_path, "
 					+ "string, "
 					+ "raw, "
-					+ "binding_key, "
-					+ "parent_astnode_id, "
-					+ "declared_at_astnode_id "
+					+ "cross_ref_key, "
+					+ "parent_id "
 
-					+ "FROM astnode, nodetype, file, project "
-					+ "WHERE astnode.nodetype_id = nodetype.id "
-					+ "AND astnode.file_id = file.id "
-					+ "AND file.project_id = project.id;"
+					+ "FROM entity, nodetype, file, project "
+					+ "WHERE entity.nodetype_id = nodetype.nodetype_id "
+					+ "AND entity.file_id = file.file_id "
+					+ "AND file.project_id = project.project_id;"
 					;
-				stmt.executeUpdate(astnode_type);
+				stmt.executeUpdate(entity_type);
 			}
 
 		} catch (SQLException e) {
@@ -304,19 +329,19 @@ public class PostgreSQLStorer {
 
 
 	public int retrieveFileId(String fileName, int projectId) {
-		this.astnode_id_cache.clear();
+		this.entity_id_cache.clear();
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			String query = String.format("SELECT id FROM file WHERE name='%s' AND project_id = %d;", fileName, projectId);
+			String query = String.format("SELECT file_id FROM file WHERE file_name='%s' AND project_id = %d;", fileName, projectId);
 			ResultSet result = stmt.executeQuery(query);
 			if(result.next()) {
-				return result.getInt("id");
+				return result.getInt("file_id");
 			} else {
-				stmt.executeUpdate(String.format("INSERT INTO file (name, project_id) VALUES ('%s', %s);", fileName, projectId));
+				stmt.executeUpdate(String.format("INSERT INTO file (file_name, project_id) VALUES ('%s', %s);", fileName, projectId));
 				ResultSet result2 = stmt.executeQuery(query);
 				if (result2.next()) {
-					return result2.getInt("id");
+					return result2.getInt("file_id");
 				}
 			}
 		} catch (SQLException e) {
@@ -331,22 +356,22 @@ public class PostgreSQLStorer {
 	public int retrieveProjectId(String projectName, String sourcePath) {
 		PreparedStatement stmt = null;
 		ResultSet result = null;
-		String query = "SELECT id FROM project WHERE name=? AND path=?;";
+		String query = "SELECT project_id FROM project WHERE project_name=? AND project_path=?;";
 		try {
 			stmt = conn.prepareStatement(query);
 			stmt.setString(1, projectName);
 			stmt.setString(2, sourcePath);
 			result = stmt.executeQuery();
 			if(result.next()) {
-				return result.getInt("id");
+				return result.getInt("project_id");
 			} else {
-				PreparedStatement ins_stmt = conn.prepareStatement("INSERT INTO project (name, path) VALUES (?, ?);");
+				PreparedStatement ins_stmt = conn.prepareStatement("INSERT INTO project (project_name, project_path) VALUES (?, ?);");
 				ins_stmt.setString(1, projectName);
 				ins_stmt.setString(2, sourcePath);
 				ins_stmt.executeUpdate();
 				result = stmt.executeQuery();
 				if (result.next()) {
-					return result.getInt("id");
+					return result.getInt("project_id");
 				}
 			}
 		} catch (SQLException e) {
@@ -358,21 +383,31 @@ public class PostgreSQLStorer {
 	}
 
 
-	public void saveAstNodeInfo(int start_pos, int length, int line_number, int column_number, int nodetype_id, String binding_key, String string, int file_id, String currentFileRaw, int parent_id) {
+	public void saveAstNodeInfo(int start_pos, int length,
+			int start_line_number, int start_column_number,
+			int end_line_number, int end_column_number,
+			int nodetype_id, String cross_ref_key, String string, int file_id, String currentFileRaw, int parent_id) {
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, column_number, nodetype_id, binding_key, string, file_id, raw, parent_astnode_id) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt = conn.prepareStatement("INSERT INTO entity ("
+					+ "start_pos, length, "
+					+ "start_line_number, start_column_number, "
+					+ "end_line_number, end_column_number, "
+					+ "nodetype_id, cross_ref_key, string, file_id, raw, parent_id) "
+					+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?)");
 			pstmt.setInt(1, start_pos);
 			pstmt.setInt(2, length);
-			pstmt.setInt(3, line_number);
-			pstmt.setInt(4, column_number);
-			pstmt.setInt(5, nodetype_id);
-			pstmt.setString(6, binding_key);
-			pstmt.setString(7, string);
-			pstmt.setInt(8, file_id);
-			pstmt.setString(9, currentFileRaw.substring(start_pos, start_pos+length));
-			pstmt.setInt(10, parent_id);
+			pstmt.setInt(3, start_line_number);
+			pstmt.setInt(4, start_column_number);
+			pstmt.setInt(5, end_line_number);
+			pstmt.setInt(6, end_column_number);
+
+			pstmt.setInt(7, nodetype_id);
+			pstmt.setString(8, cross_ref_key);
+			pstmt.setString(9, string);
+			pstmt.setInt(10, file_id);
+			pstmt.setString(11, currentFileRaw.substring(start_pos, start_pos+length));
+			pstmt.setInt(12, parent_id);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
@@ -383,20 +418,30 @@ public class PostgreSQLStorer {
 		}
 	}
 
-	public void saveTokenInfo(int start_pos, int length, int line_number, int column_number, int nodetype_id, String string, int file_id, String currentFileRaw, int parent_id) {
+	public void saveTokenInfo(int start_pos, int length,
+			int start_line_number, int start_column_number,
+			int end_line_number, int end_column_number,
+			int nodetype_id, String string, int file_id, String currentFileRaw, int parent_id) {
 		PreparedStatement pstmt = null;
 		try {
-			pstmt = conn.prepareStatement("INSERT INTO astnode (start_pos, length, line_number, column_number, nodetype_id, string, file_id, raw, parent_astnode_id) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+			pstmt = conn.prepareStatement("INSERT INTO entity ( "
+					+ "start_pos, length, "
+					+ "start_line_number, start_column_number, "
+					+ "end_line_number, end_column_number, "
+					+ "nodetype_id, string, file_id, raw, parent_id) "
+					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 			pstmt.setInt(1, start_pos);
 			pstmt.setInt(2, length);
-			pstmt.setInt(3, line_number);
-			pstmt.setInt(4, column_number);
-			pstmt.setInt(5, nodetype_id);
-			pstmt.setString(6, string);
-			pstmt.setInt(7, file_id);
-			pstmt.setString(8, currentFileRaw.substring(start_pos, start_pos+length));
-			pstmt.setInt(9, parent_id);
+			pstmt.setInt(3, start_line_number);
+			pstmt.setInt(4, start_column_number);
+			pstmt.setInt(5, start_line_number);
+			pstmt.setInt(6, start_column_number);
+
+			pstmt.setInt(7, nodetype_id);
+			pstmt.setString(8, string);
+			pstmt.setInt(9, file_id);
+			pstmt.setString(10, currentFileRaw.substring(start_pos, start_pos+length));
+			pstmt.setInt(11, parent_id);
 			pstmt.executeUpdate();
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
@@ -407,11 +452,11 @@ public class PostgreSQLStorer {
 		}
 	}
 
-	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
+	public void saveForeignAstNode_(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
 		PreparedStatement stmt = null;
 		try {
-			// find foreign astnode
-			String query = "SELECT id FROM astnode WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?";
+			// find foreign entity
+			String query = "SELECT entity_id FROM entity WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?";
 			stmt = conn.prepareStatement(query);
 			stmt.setInt(1, start_pos);
 			stmt.setInt(2, length);
@@ -422,21 +467,21 @@ public class PostgreSQLStorer {
 			int foreign_id = -1;
 			while (rs.next()) {
 				total ++;
-				foreign_id = rs.getInt("id");
+				foreign_id = rs.getInt("entity_id");
 			}
 
 			if (total > 1) {
-				throw new IllegalStateException("resolve more than on astnode");
+				throw new IllegalStateException("resolve more than on entity");
 			}
 
-			String update = "UPDATE astnode SET declared_at_astnode_id = ? WHERE binding_key = ?;";
+			String update = "INSERT INTO cross_ref (declared_id, reference_idi) VALUES (?, ?);";
 			stmt = conn.prepareStatement(update);
 			stmt.setInt(1, foreign_id);
 			stmt.setString(2, binding_key);
 			stmt.executeUpdate();
 
 		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Resolve foreign astnode exception", e);
+			logger.log(Level.SEVERE, "Resolve foreign entity exception", e);
 		} finally {
 			closeIt(stmt);
 		}
@@ -446,9 +491,9 @@ public class PostgreSQLStorer {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			String clear = "DELETE FROM astnode WHERE astnode.id IN ("
-					+ "SELECT astnode_id AS id "
-					+ "FROM astnode_all "
+			String clear = "DELETE FROM entity WHERE entity.entity_id IN ("
+					+ "SELECT entity_id "
+					+ "FROM entity_all "
 					+ "WHERE project_id = " + project_id + ");"
 
 					+ "DELETE FROM file WHERE project_id = " + project_id + ";";
@@ -465,10 +510,10 @@ public class PostgreSQLStorer {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			stmt.execute("DROP TABLE astnode CASCADE;"
-					+ "DROP TABLE project CASCADE;"
-					+ "DROP TABLE file CASCADE;"
-					+ "DROP TABLE nodetype CASCADE;");
+			stmt.execute("DROP TABLE IF EXISTS entity CASCADE;"
+					+ "DROP TABLE IF EXISTS project CASCADE;"
+					+ "DROP TABLE IF EXISTS file CASCADE;"
+					+ "DROP TABLE IF EXISTS nodetype CASCADE;");
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear database error", e);
 		} finally {
@@ -485,12 +530,12 @@ public class PostgreSQLStorer {
 
 	public int queryAstNodeId(int start_pos, int length, int nodetype, int file_id) {
 		String queryKey = String.format("%d:%d:%d:%d", start_pos, length, nodetype, file_id);
-		if (astnode_id_cache.containsKey(queryKey)) {
-			return astnode_id_cache.get(queryKey);
+		if (entity_id_cache.containsKey(queryKey)) {
+			return entity_id_cache.get(queryKey);
 		}
 
 		PreparedStatement stmt = null;
-		String query = "SELECT id FROM astnode WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?;";
+		String query = "SELECT entity_id FROM entity WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?;";
 		int result = -1;
 		try {
 			stmt = conn.prepareStatement(query);
@@ -502,20 +547,20 @@ public class PostgreSQLStorer {
 
 			int count = 0;
 			while (rs.next()) {
-				result = rs.getInt("id");
+				result = rs.getInt("entity_id");
 				count ++;
 			}
 			if (count > 1)
-				throw new IllegalStateException("more than one astnode found while query");
+				throw new IllegalStateException("more than one entity found while query");
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "query parent id exception", e);
 		} finally {
 			closeIt(stmt);
 		}
-		if (astnode_id_cache.size() > 2048) {
-			astnode_id_cache.clear();
+		if (entity_id_cache.size() > 2048) {
+			entity_id_cache.clear();
 		}
-		astnode_id_cache.put(queryKey, result);
+		entity_id_cache.put(queryKey, result);
 		return result;
 	}
 

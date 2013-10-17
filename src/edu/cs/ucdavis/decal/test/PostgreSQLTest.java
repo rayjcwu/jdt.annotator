@@ -18,13 +18,13 @@ import edu.cs.ucdavis.decal.PostgreSQLStorer;
 public class PostgreSQLTest {
 	@Test
 	public void testCreateTable() {
-		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation");
+		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/entity");
 	}
 
 
 	@Test
 	public void testRetrieveProjectFileId() {
-		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/annotation");
+		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/entity");
 
 		String projectName = "fake_project";
 		String sourcePath = "/Users/jcwu/";
@@ -53,7 +53,7 @@ public class PostgreSQLTest {
 		Statement stmt = null;
 		try {
 			Class.forName("org.postgresql.Driver");
-			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/entity");
 			if (conn == null || (conn != null && conn.isClosed())) {
 				logger.log(Level.SEVERE, "database is not connected");
 			}
@@ -88,7 +88,7 @@ public class PostgreSQLTest {
 	public void retrieveAllViewNames() {
 		try {
 			Class.forName("org.postgresql.Driver");
-			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/entity");
 			DatabaseMetaData meta = conn.getMetaData();
 			  ResultSet res = meta.getTables(null, null, null, new String[] {"VIEW"});
 			  while (res.next()) {
@@ -111,7 +111,7 @@ public class PostgreSQLTest {
 	public void retrieveAllIndexNames() {
 		try {
 			Class.forName("org.postgresql.Driver");
-			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/annotation");
+			Connection conn = DriverManager.getConnection("jdbc:postgresql://127.0.0.1:5432/entity");
 			DatabaseMetaData meta = conn.getMetaData();
 			  ResultSet res = meta.getTables(null, null, null, new String[] {"INDEX"});
 			  while (res.next()) {

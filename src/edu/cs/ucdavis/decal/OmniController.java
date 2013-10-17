@@ -136,7 +136,7 @@ public class OmniController {
 		int start_pos = node.getStartPosition();
 		int length = node.getLength();
 		int nodetype_id = node.getNodeType();
-		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
+	//	database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -240,22 +240,30 @@ public class OmniController {
 		final int nodetype_id = node.getNodeType();
 		final int start_pos = node.getStartPosition();
 		final int length = node.getLength();
-		final int line_number = unit.getLineNumber(start_pos);
-		final int column_number = unit.getColumnNumber(start_pos);
 
-		String binding_key = "";
+		final int start_line_number = unit.getLineNumber(start_pos);
+		final int start_column_number = unit.getColumnNumber(start_pos);
+
+		final int end_line_number = unit.getLineNumber(start_pos + length);
+		final int end_column_number = unit.getColumnNumber(start_pos + length);
+
+
+		String cross_ref_key = "";
 		if (node instanceof Name) {
 			Name n = (Name)node;
 			if (n.resolveBinding() != null) {
-				binding_key = n.resolveBinding().getKey();
-				bindingKeys.add(binding_key);
+				cross_ref_key = n.resolveBinding().getKey();
+				bindingKeys.add(cross_ref_key);
 			}
 		}
 		final int parentId = getAstnodeId(node.getParent());
 		if (start_pos == -1) {
 			throw new IllegalStateException("should not happen");
 		}
-		database.saveAstNodeInfo(start_pos, length, line_number, column_number, nodetype_id, binding_key, string, currentFileId, currentFileRaw, parentId);
+		database.saveAstNodeInfo(start_pos, length,
+				start_line_number, start_column_number,
+				end_line_number, end_column_number,
+				nodetype_id, cross_ref_key, string, currentFileId, currentFileRaw, parentId);
 	}
 
 	private int findFirstInInterval(int start_pos) {
@@ -328,14 +336,23 @@ public class OmniController {
 
 			final int token_start_pos = token.getStartIndex();
 			final int token_end_pos = token_start_pos + string.length();
-			final int line_number = token.getLine();
-			final int column_number = token.getCharPositionInLine();
+
+			final int start_line_number = token.getLine();
+			final int start_column_number = token.getCharPositionInLine();
+
+			final int end_line_number = unit.getLineNumber(token_end_pos);
+			final int end_column_number = unit.getColumnNumber(token_end_pos);
+
+
 			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
 
 			final int file_id = this.currentFileId;
 			if (node_start_pos <= token_start_pos && token_end_pos <= node_end_pos) {  // if token is inside of node interval
 				if (token.getType() != -1 ) {
-					database.saveTokenInfo(token_start_pos, string.length(), line_number, column_number, nodetype_id, string, file_id, currentFileRaw, parentId);
+					database.saveTokenInfo(token_start_pos, string.length(),
+							start_line_number, start_column_number,
+							end_line_number, end_column_number,
+							nodetype_id, string, file_id, currentFileRaw, parentId);
 					token_to_remove.add(i);
 				}
 				if (token_start_pos > currentFileRaw.length() || nodetype_id == 99) {
