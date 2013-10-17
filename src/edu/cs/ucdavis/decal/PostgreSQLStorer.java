@@ -1,6 +1,7 @@
 package edu.cs.ucdavis.decal;
 
 import java.lang.reflect.Field;
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
@@ -106,7 +107,7 @@ public class PostgreSQLStorer {
 								   + "file_type text, "
 								   + "file_path text, "
 								   + "file_name text, "
-								   + "project_id int references project(project_id)); ";
+								   + "project_id int references project(project_id) ON DELETE CASCADE ON UPDATE CASCADE); ";
 
 			String createEntityTable = "CREATE TABLE IF NOT EXISTS entity ("
 									  + "entity_id serial PRIMARY KEY, "
@@ -116,8 +117,8 @@ public class PostgreSQLStorer {
 									  + "start_column_number int, "
 									  + "end_line_number int, "
 									  + "end_column_number int, "
-								      + "nodetype_id int references nodetype(nodetype_id), "   // foreign key
-								      + "file_id int references file(file_id), "		  // foreign key
+								      + "nodetype_id int references nodetype(nodetype_id) ON DELETE CASCADE ON UPDATE CASCADE, "   // foreign key
+								      + "file_id int references file(file_id) ON DELETE CASCADE ON UPDATE CASCADE, "		  // foreign key
 								      + "cross_ref_key text, "  // only some simple name nodes will have this
 								      + "string text, "	      // string representation, stripped version
 								      + "raw text, "          // raw content of ast node
@@ -126,8 +127,8 @@ public class PostgreSQLStorer {
 
 			String createCrossReferenceTable = "CREATE TABLE IF NOT EXISTS cross_ref( "
 					+ "ref_id serial PRIMARY KEY, "
-					+ "declare_id int references entity(entity_id), "
-					+ "reference_id int references entity(entity_id)); ";
+					+ "declared_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+					+ "reference_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE); ";
 
 			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
 			stmt.executeUpdate(createProjectTable);
@@ -248,11 +249,20 @@ public class PostgreSQLStorer {
 				stmt.executeUpdate(project_file);
 			}
 
+			to_create = "entity_cross_ref";
+			if (!views.contains(to_create)) {
+				String entity_cross_ref = "CREATE VIEW entity_cross_ref AS "
+						+ "SELECT * "
+						+ "FROM entity LEFT JOIN cross_ref "
+						+ "ON entity.entity_id = cross_ref.reference_id; ";
+				stmt.executeUpdate(entity_cross_ref);
+			}
+
 			to_create = "entity_nodetype";
 			if (!views.contains(to_create)) {
 				String entity_type = "CREATE VIEW entity_nodetype AS "
 					+ "SELECT "
-					+ "entity.entity_id AS entity_id, "
+					+ "entity_cross_ref.entity_id AS entity_id, "
 					+ "start_pos, "
 					+ "length, "
 					+ "start_pos + length AS end_pos, "
@@ -260,17 +270,18 @@ public class PostgreSQLStorer {
 					+ "start_column_number, "
 					+ "end_line_number, "
 					+ "end_column_number, "
-					+ "entity.nodetype_id AS nodetype_id, "
+					+ "entity_cross_ref.nodetype_id AS nodetype_id, "
 					+ "nodetype.name AS nodetype, "
 
 					+ "file_id, "
 					+ "string, "
 					+ "raw, "
 					+ "cross_ref_key, "
-					+ "parent_id "
+					+ "parent_id, "
+					+ "declared_id "
 
-					+ "FROM entity, nodetype "
-					+ "WHERE entity.nodetype_id = nodetype.nodetype_id;"
+					+ "FROM entity_cross_ref, nodetype "
+					+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id;"
 					;
 				stmt.executeUpdate(entity_type);
 			}
@@ -279,7 +290,7 @@ public class PostgreSQLStorer {
 			if (!views.contains(to_create)) {
 				String entity_type = "CREATE VIEW entity_all AS "
 					+ "SELECT "
-					+ "entity.entity_id AS entity_id, "
+					+ "entity_cross_ref.entity_id AS entity_id, "
 					+ "start_pos, "
 					+ "length, "
 					+ "start_pos + length AS end_pos, "
@@ -288,9 +299,9 @@ public class PostgreSQLStorer {
 					+ "end_line_number, "
 					+ "end_column_number, "
 
-					+ "entity.nodetype_id AS nodetype_id, "
+					+ "entity_cross_ref.nodetype_id AS nodetype_id, "
 					+ "nodetype.name AS nodetype, "
-					+ "entity.file_id AS file_id, "
+					+ "entity_cross_ref.file_id AS file_id, "
 					+ "file.file_name AS file_name, "
 					+ "project.project_id AS project_id, "
 					+ "project.project_name AS project_name, "
@@ -298,12 +309,13 @@ public class PostgreSQLStorer {
 					+ "string, "
 					+ "raw, "
 					+ "cross_ref_key, "
-					+ "parent_id "
+					+ "parent_id,"
+					+ "declared_id "
 
-					+ "FROM entity, nodetype, file, project "
-					+ "WHERE entity.nodetype_id = nodetype.nodetype_id "
-					+ "AND entity.file_id = file.file_id "
-					+ "AND file.project_id = project.project_id;"
+					+ "FROM entity_cross_ref, nodetype, file, project "
+					+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id "
+					+ "AND entity_cross_ref.file_id = file.file_id "
+					+ "AND file.project_id = project.project_id; "
 					;
 				stmt.executeUpdate(entity_type);
 			}
@@ -452,8 +464,9 @@ public class PostgreSQLStorer {
 		}
 	}
 
-	public void saveForeignAstNode_(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
+	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
 		PreparedStatement stmt = null;
+		ResultSet rs = null;
 		try {
 			// find foreign entity
 			String query = "SELECT entity_id FROM entity WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?";
@@ -462,26 +475,37 @@ public class PostgreSQLStorer {
 			stmt.setInt(2, length);
 			stmt.setInt(3, nodetype_id);
 			stmt.setInt(4, file_id);
-			ResultSet rs = stmt.executeQuery();
+			rs = stmt.executeQuery();
 			int total = 0;
-			int foreign_id = -1;
+			int declare_id = -1;
 			while (rs.next()) {
 				total ++;
-				foreign_id = rs.getInt("entity_id");
+				declare_id = rs.getInt("entity_id");
 			}
-
 			if (total > 1) {
 				throw new IllegalStateException("resolve more than on entity");
 			}
 
-			String update = "INSERT INTO cross_ref (declared_id, reference_idi) VALUES (?, ?);";
-			stmt = conn.prepareStatement(update);
-			stmt.setInt(1, foreign_id);
-			stmt.setString(2, binding_key);
-			stmt.executeUpdate();
+			String query_same_binding_key = String.format("SELECT entity_id FROM entity WHERE cross_ref_key=?;");
+			stmt = conn.prepareStatement(query_same_binding_key);
+			stmt.setString(1, binding_key);
+			rs = stmt.executeQuery();
 
+			int ref_id = -1;
+			String update = "INSERT INTO cross_ref (declared_id, reference_id) VALUES (?, ?);";
+			stmt = conn.prepareStatement(update);
+			while (rs.next()) {
+				ref_id = rs.getInt("entity_id");
+				stmt.setInt(1, declare_id);
+				stmt.setInt(2, ref_id);
+				stmt.addBatch();
+			}
+			stmt.executeBatch();
+		} catch (BatchUpdateException e) {
+			logger.log(Level.SEVERE, "batch update exception", e.getNextException());
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Resolve foreign entity exception", e);
+
 		} finally {
 			closeIt(stmt);
 		}
@@ -491,12 +515,7 @@ public class PostgreSQLStorer {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			String clear = "DELETE FROM entity WHERE entity.entity_id IN ("
-					+ "SELECT entity_id "
-					+ "FROM entity_all "
-					+ "WHERE project_id = " + project_id + ");"
-
-					+ "DELETE FROM file WHERE project_id = " + project_id + ";";
+			String clear = "DELETE FROM file WHERE project_id = " + project_id + ";";
 			stmt.executeUpdate(clear);
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear project exception", e);

@@ -136,7 +136,7 @@ public class OmniController {
 		int start_pos = node.getStartPosition();
 		int length = node.getLength();
 		int nodetype_id = node.getNodeType();
-	//	database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
+		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
 	}
 
 	@SuppressWarnings("unchecked")
