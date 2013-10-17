@@ -22,6 +22,7 @@ public class AnnotatorMain {
 
 		Options options = new Options();
 		options.addOption("s", "src", true, "absolute root path of files");
+		options.addOption("l", "lib", true, "absolute root path of libraries (.jar)");
 		options.addOption("p", "project", true, "project name");
 		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database) (postgresql default port: 5432)");
 		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
@@ -35,6 +36,7 @@ public class AnnotatorMain {
 		String jdbc_url = "";
 		String project_name = "";
 		String src_path = "";
+		String lib_path = "";
 		String username = "";
 		String password = "";
 
@@ -42,6 +44,7 @@ public class AnnotatorMain {
 		try {
 			cmd = parser.parse(options, argv);
 			src_path = cmd.getOptionValue("s");
+			lib_path = cmd.getOptionValue("l");
 			project_name = cmd.getOptionValue("p", src_path);
 			jdbc_url = cmd.getOptionValue("d");
 			username = cmd.getOptionValue("U");
@@ -58,6 +61,7 @@ public class AnnotatorMain {
 				throw new ParseException(argv.toString());
 			} else {
 				controller = new OmniController(src_path);
+				controller.setLibPath(lib_path);
 				controller.setLogger(logger);
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
 					(new PostgreSQLStorer(jdbc_url, username, password)).register(controller);

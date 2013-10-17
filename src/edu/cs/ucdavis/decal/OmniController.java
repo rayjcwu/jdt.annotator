@@ -35,6 +35,7 @@ public class OmniController {
 	private String currentFileRaw;
 
 	private String sourcePath;
+	private String libPath;
 
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
 	private Collection <String> bindingKeys;
@@ -78,9 +79,15 @@ public class OmniController {
 	}
 
 	private ASTParser getParser() {
+
 		ASTParser parser = ASTParser.newParser(AST.JLS4);
 		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setEnvironment(null, null, null, true);
+		if (this.libPath == null || this.libPath.equals("")) {
+			parser.setEnvironment(null, null, null, true);
+		} else {
+			String []libPath = collectFilePaths(this.libPath, new String[] {"jar"});
+			parser.setEnvironment(libPath, null, null, true);
+		}
 		parser.setUnitName("test");  // seems you should set unit name for whatever you want
 		parser.setResolveBindings(true);
 		parser.setBindingsRecovery(true);
@@ -95,7 +102,7 @@ public class OmniController {
 	public void run() {
 		init();
 
-		String[] sourceFilePaths = collectFilePaths(new String[] {"java"});
+		String[] sourceFilePaths = collectFilePaths(this.sourcePath, new String[] {"java"});
 		projectSize = sourceFilePaths.length;
 		ASTParser parser = getParser();
 
@@ -140,8 +147,8 @@ public class OmniController {
 	}
 
 	@SuppressWarnings("unchecked")
-	private String[] collectFilePaths(String[] filetypes) {
-		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), filetypes, true);
+	private String[] collectFilePaths(String path, String[] filetypes) {
+		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(path), filetypes, true);
 		String [] sourceFilePaths = new String[filePaths.size()];
 		int i = 0;
 		for (File f: filePaths) {
@@ -408,5 +415,10 @@ public class OmniController {
 
 	public String getCurrentFileRaw() {
 		return currentFileRaw;
+	}
+
+	public OmniController setLibPath(String libPath) {
+		this.libPath = libPath;
+		return this;
 	}
 }
