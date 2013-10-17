@@ -125,7 +125,7 @@ public class OmniController {
 		int i = 1;
 		boolean resolved = false;
 		for (String bindingKey: bindingKeys) {
-			System.out.print(String.format("(%d/%d) binding", i, bindingSize));
+			System.out.print(String.format("(%d/%d) resolve cross reference", i, bindingSize));
 			i++;
 			for (Map.Entry<CompilationUnit, String> entry: compilaionUnitFileNameMap.entrySet()) {
 				CompilationUnit unit = entry.getKey();
@@ -247,9 +247,8 @@ public class OmniController {
 		final int start_line_number = unit.getLineNumber(start_pos);
 		final int start_column_number = unit.getColumnNumber(start_pos);
 
-		final int end_line_number = unit.getLineNumber(start_pos + length);
-		final int end_column_number = unit.getColumnNumber(start_pos + length);
-
+		final int end_line_number = unit.getLineNumber(start_pos + length - 1);
+		final int end_column_number = unit.getColumnNumber(start_pos + length - 1);
 
 		String cross_ref_key = "";
 		if (node instanceof Name) {
@@ -320,14 +319,12 @@ public class OmniController {
 		return parentId;
 	}
 
-	public void storeTokenInfo(CompilationUnit unit) {
-
+	public void saveTokenInfo(CompilationUnit unit) {
 
 		LookupVisitor lookup = new LookupVisitor();
-
 		for (int i = 0; i < tokens.size(); i++) {
 			String tokenStatus = String.format("%d/%d", i, totalTokens);
-			String bar = String.format("%2.2f%%", (1-(float)i/totalTokens)*100);
+			String bar = String.format("%2.2f%%", ((float)i/totalTokens)*100);
 			System.out.print(tokenStatus + " " + bar + "\r");
 
 			Token token = tokens.get(i);
@@ -339,7 +336,7 @@ public class OmniController {
 			final String string = token.getText();
 
 			final int token_start_pos = token.getStartIndex();
-			final int token_end_pos = token_start_pos + string.length() - 1;  // inclusive end pos
+			final int token_end_pos = token.getStopIndex(); // inclusive end pos
 
 			final int start_line_number = token.getLine();
 			final int start_column_number = token.getCharPositionInLine();

@@ -45,7 +45,7 @@ public class AnnotatorMain {
 			cmd = parser.parse(options, argv);
 			src_path = cmd.getOptionValue("s");
 			lib_path = cmd.getOptionValue("l");
-			project_name = cmd.getOptionValue("p", src_path);
+			project_name = cmd.getOptionValue("p");
 			jdbc_url = cmd.getOptionValue("d");
 			username = cmd.getOptionValue("U");
 			password = cmd.getOptionValue("W");
@@ -57,7 +57,7 @@ public class AnnotatorMain {
 					(new PostgreSQLStorer(jdbc_url)).resetDatabase();
 				}
 				System.out.println("reset done.");
-			} else if (src_path == null || project_name == null || jdbc_url == null) {
+			} else if (src_path == null || jdbc_url == null) {
 				throw new ParseException(argv.toString());
 			} else {
 				controller = new OmniController(src_path);
@@ -70,6 +70,10 @@ public class AnnotatorMain {
 				}
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
+
+				if (project_name == null || project_name.equals("")) {
+					project_name = Util.guessProjectName(src_path);
+				}
 				controller.setProjectName(project_name);
 				controller.clearProjectAstNodeInfo();
 				controller.run();

@@ -12,8 +12,6 @@ public class DumpAstVisitor extends ASTVisitor {
 	CompilationUnit currentUnit;
 	OmniController controller;
 
-	private int currentAstnodeId;
-
 	public DumpAstVisitor() {
 		currentUnit = null;
 		controller = null;

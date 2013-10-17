@@ -33,4 +33,9 @@ public class Util {
 		String classpath = System.getenv("CLASSPATH");
 		return (classpath == null) ? new String[0] : classpath.split(":");
 	}
+
+	public static String guessProjectName(String argv) {
+		String []args = argv.split("/");
+		return args[args.length - 1];
+	}
 }

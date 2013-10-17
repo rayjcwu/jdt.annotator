@@ -45,10 +45,6 @@ public class LookupVisitor extends ASTVisitor {
 		}
 	}
 
-	public String getNodeString() {
-		return String.format("%d:%d:%d", startPos, length, nodetype);
-	}
-
 	public int getStartPos() {
 		return startPos;
 	}

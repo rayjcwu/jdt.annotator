@@ -1,6 +1,9 @@
 package edu.cs.ucdavis.decal.test;
 
 import org.junit.Test;
+import org.junit.Assert;
+
+import edu.cs.ucdavis.decal.Util;
 
 public class UtilTest {
 
@@ -30,6 +33,14 @@ public class UtilTest {
 			System.out.println(s);
 		}
 	}
+
+	@Test
+	public void testGuessProjectName() {
+
+		Assert.assertEquals("guess project name", "de-3.mo", Util.guessProjectName("/Users/jcwu/project/annotation/fake_project/de-3.mo"));
+		Assert.assertEquals("guess project name 2", "demo", Util.guessProjectName("/Users/jcwu/project/annotation/fake_project/demo/"));
+	}
+
 
 	private String[] concat(String[] A, String[] B) {
 		int aLen = A.length;
