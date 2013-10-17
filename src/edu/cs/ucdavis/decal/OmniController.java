@@ -256,7 +256,7 @@ public class OmniController {
 			Name n = (Name)node;
 			if (n.resolveBinding() != null) {
 				IBinding binding = n.resolveBinding();
-				extractBindingInfo(binding);
+			//	extractBindingInfo(binding);
 				cross_ref_key = n.resolveBinding().getKey();
 				bindingKeys.add(cross_ref_key);
 			}
@@ -322,13 +322,15 @@ public class OmniController {
 
 	public void storeTokenInfo(CompilationUnit unit) {
 
-		String tokenStatus = String.format("%d/%d", totalTokens - this.tokens.size(), totalTokens);
-		String bar = String.format("%2.2f%%", (1-(float)this.tokens.size()/totalTokens)*100);
-		System.out.print(tokenStatus + " " + bar + "\r");
 
 		LookupVisitor lookup = new LookupVisitor();
 
-		for (Token token: tokens) {
+		for (int i = 0; i < tokens.size(); i++) {
+			String tokenStatus = String.format("%d/%d", i, totalTokens);
+			String bar = String.format("%2.2f%%", (1-(float)i/totalTokens)*100);
+			System.out.print(tokenStatus + " " + bar + "\r");
+
+			Token token = tokens.get(i);
 			lookup.reset();
 			lookup.setToken(token);
 			unit.accept(lookup);  // look up token in current source code
