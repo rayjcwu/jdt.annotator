@@ -446,8 +446,8 @@ public class PostgreSQLStorer {
 			pstmt.setInt(2, length);
 			pstmt.setInt(3, start_line_number);
 			pstmt.setInt(4, start_column_number);
-			pstmt.setInt(5, start_line_number);
-			pstmt.setInt(6, start_column_number);
+			pstmt.setInt(5, end_line_number);
+			pstmt.setInt(6, end_column_number);
 
 			pstmt.setInt(7, nodetype_id);
 			pstmt.setString(8, string);

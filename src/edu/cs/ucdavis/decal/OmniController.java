@@ -2,10 +2,10 @@ package edu.cs.ucdavis.decal;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -222,7 +222,7 @@ public class OmniController {
 		JavaLexer lexel = new JavaLexer(input);
 		CommonTokenStream tokenStream = new CommonTokenStream(lexel);
 		tokenStream.fill();
-		List <Token> trimedTokens = new ArrayList<Token>();
+		List <Token> trimedTokens = new LinkedList<Token>();
 		for (Token token: tokenStream.getTokens()) {
 			if (!(token.getType() == JavaLexer.IDENTIFIER ||     // same as SimpleName
 				  token.getType() == JavaLexer.NULL_LITERAL ||   // have corresponding literal ast nodes
@@ -239,16 +239,18 @@ public class OmniController {
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
 
-		final String string = node.toString();
+		final String string = node.toString();  // code generated from AST node, not original source code
 		final int nodetype_id = node.getNodeType();
+		// offset starts from 0
 		final int start_pos = node.getStartPosition();
 		final int length = node.getLength();
 
+		// both line/column number start from 1
 		final int start_line_number = unit.getLineNumber(start_pos);
-		final int start_column_number = unit.getColumnNumber(start_pos);
+		final int start_column_number = unit.getColumnNumber(start_pos) + 1;
 
 		final int end_line_number = unit.getLineNumber(start_pos + length - 1);
-		final int end_column_number = unit.getColumnNumber(start_pos + length - 1);
+		final int end_column_number = unit.getColumnNumber(start_pos + length - 1) + 1;
 
 		String cross_ref_key = "";
 		if (node instanceof Name) {
@@ -324,31 +326,31 @@ public class OmniController {
 		LookupVisitor lookup = new LookupVisitor();
 		for (int i = 0; i < tokens.size(); i++) {
 			String tokenStatus = String.format("%d/%d", i, totalTokens);
-			String bar = String.format("%2.2f%%", ((float)i/totalTokens)*100);
+			String bar = String.format("%2.2f%%", ((float)(i+1)/totalTokens)*100);
 			System.out.print(tokenStatus + " " + bar + "\r");
 
 			Token token = tokens.get(i);
 			lookup.reset();
 			lookup.setToken(token);
 			unit.accept(lookup);  // look up token in current source code
-			final int parentId = getAstnodeId(lookup);
 
+			final int parentId = getAstnodeId(lookup);
 			final String string = token.getText();
 
 			final int token_start_pos = token.getStartIndex();
 			final int token_end_pos = token.getStopIndex(); // inclusive end pos
 
 			final int start_line_number = token.getLine();
-			final int start_column_number = token.getCharPositionInLine();
+			final int start_column_number = token.getCharPositionInLine() + 1;
 
 			final int end_line_number = unit.getLineNumber(token_end_pos);
-			final int end_column_number = unit.getColumnNumber(token_end_pos);
+			final int end_column_number = unit.getColumnNumber(token_end_pos) + 1;
 
 			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
 
 			final int file_id = this.currentFileId;
 
-			database.saveTokenInfo(token_start_pos, string.length(),
+			database.saveTokenInfo(token_start_pos, token_end_pos - token_start_pos + 1,
 					start_line_number, start_column_number,
 					end_line_number, end_column_number,
 					nodetype_id, string, file_id, currentFileRaw, parentId);
