@@ -95,7 +95,7 @@ public class OmniController {
 	public void run() {
 		init();
 
-		String[] sourceFilePaths = collectFilePaths();
+		String[] sourceFilePaths = collectFilePaths(new String[] {"java"});
 		projectSize = sourceFilePaths.length;
 		ASTParser parser = getParser();
 
@@ -140,8 +140,8 @@ public class OmniController {
 	}
 
 	@SuppressWarnings("unchecked")
-	private String[] collectFilePaths() {
-		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), new String[] {"java"}, true);
+	private String[] collectFilePaths(String[] filetypes) {
+		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(sourcePath), filetypes, true);
 		String [] sourceFilePaths = new String[filePaths.size()];
 		int i = 0;
 		for (File f: filePaths) {
