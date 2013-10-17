@@ -21,6 +21,13 @@ import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.IAnnotationBinding;
+import org.eclipse.jdt.core.dom.IBinding;
+import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.IPackageBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Name;
 
 public class OmniController {
@@ -249,6 +256,8 @@ public class OmniController {
 		if (node instanceof Name) {
 			Name n = (Name)node;
 			if (n.resolveBinding() != null) {
+				IBinding binding = n.resolveBinding();
+				extractBindingInfo(binding);
 				cross_ref_key = n.resolveBinding().getKey();
 				bindingKeys.add(cross_ref_key);
 			}
@@ -261,6 +270,47 @@ public class OmniController {
 				start_line_number, start_column_number,
 				end_line_number, end_column_number,
 				nodetype_id, cross_ref_key, string, currentFileId, currentFileRaw, parentId);
+	}
+
+	private void extractTypeBindingInfo(ITypeBinding binding) {
+		if (binding.isAnnotation()) {
+			System.out.println("is annotation");
+		} else if (binding.isRawType()) {
+			System.out.println("is raw type");
+		} else if (binding.isAnonymous()) {
+			System.out.println("is anonymous");
+		} else if (binding.isArray()) {
+			System.out.println("is array");
+		} else if (binding.isClass()) {
+			System.out.println("is class");
+		}
+	}
+
+	private void extractBindingInfo(IBinding binding) {
+		System.out.println(binding.getKey());
+		if (binding instanceof ITypeBinding) {
+			System.out.println("type binding");
+			ITypeBinding typeBinding = (ITypeBinding)binding;
+			extractTypeBindingInfo(typeBinding);
+		} else if (binding instanceof IMethodBinding) {
+			System.out.println("method binding");
+			IMethodBinding methodBinding = (IMethodBinding)binding;
+			ITypeBinding returnType = methodBinding.getReturnType();
+			System.out.println(returnType.getBinaryName());
+
+		} else if (binding instanceof IVariableBinding) {
+			System.out.println("variable binding");
+			IVariableBinding variableBinding = (IVariableBinding)binding;
+		} else if (binding instanceof IAnnotationBinding) {
+			System.out.println("annotation binding");
+			IAnnotationBinding annotationBinding = (IAnnotationBinding)binding;
+		} else if (binding instanceof IMemberValuePairBinding) {
+			System.out.println("member value pair binding");
+			IMemberValuePairBinding memberValuePairBinding = (IMemberValuePairBinding)binding;
+		} else if (binding instanceof IPackageBinding) {
+			System.out.println("package binding");
+			IPackageBinding packageBinding = (IPackageBinding)binding;
+		}
 	}
 
 	private int findFirstInInterval(int start_pos) {
