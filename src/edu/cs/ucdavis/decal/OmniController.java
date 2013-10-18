@@ -97,7 +97,7 @@ public class OmniController extends BaseController {
 		System.out.println("Collecting ASTs...");
 		collectAst();
 
-		System.out.println("Annotating .java files...");
+		System.out.println("Annotating project "+ this.projectName + "...");
 		annotateAst();
 
 		System.out.println("Resolving cross reference...");
@@ -124,10 +124,17 @@ public class OmniController extends BaseController {
 			this.showProgress(sourceFilePath);
 			this.retriveCurrentFileNameId(sourceFilePath);
 			this.getVisitor().setCurrentCompilationUnit(ast);
-			ast.accept(this.getVisitor()); // save ast node information happend in here
+			ast.accept(this.getVisitor());
 
 			this.saveTokenInfo(ast);
 		}
+	}
+
+	private static int progressCount = 0;
+	public void showProgress(String sourceFilePath) {
+		final int projectSize = compilaionUnitFileNameMap.size();
+		OmniController.progressCount ++ ;
+		System.out.println(String.format("(%d/%d) %s", OmniController.progressCount, projectSize, sourceFilePath));
 	}
 
 	void resolveCrossReference() {
@@ -237,11 +244,5 @@ public class OmniController extends BaseController {
 		}
 	}
 
-	private static int progressCount = 0;
-	public void showProgress(String sourceFilePath) {
-		final int projectSize = compilaionUnitFileNameMap.size();
-		OmniController.progressCount ++ ;
-		System.out.println(String.format("(%d/%d) %s", OmniController.progressCount, projectSize, sourceFilePath));
-	}
 
 }
