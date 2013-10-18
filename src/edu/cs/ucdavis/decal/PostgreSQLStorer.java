@@ -27,7 +27,7 @@ public class PostgreSQLStorer {
 	private String url;
 	private Logger logger;
 
-	private OmniController controller;
+	private BaseController controller;
 	private String username;
 	private String password;
 
@@ -35,7 +35,7 @@ public class PostgreSQLStorer {
 
 	private Map <String, Integer> entity_id_cache;
 
-	public void register(OmniController controller) {
+	public void register(BaseController controller) {
 		this.controller = controller;
 		controller.setDatabase(this);
 	}

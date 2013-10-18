@@ -9,13 +9,7 @@ public class AnnotationASTRequestor extends FileASTRequestor {
 
 	@Override
 	public void acceptAST(String sourceFilePath, CompilationUnit ast) {
-		controller.showProgress(sourceFilePath);
-		controller.retriveCurrentFileNameId(sourceFilePath);
 		controller.addCompilationUnitFileName(ast, sourceFilePath);
-		controller.getVisitor().setCurrentCompilationUnit(ast);
-		ast.accept(controller.getVisitor()); // save ast node information happend in here
-
-		controller.saveTokenInfo(ast);
 	}
 
 	public void register(OmniController controller) {

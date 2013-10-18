@@ -9,70 +9,45 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.antlr.JavaLexer;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.IAnnotationBinding;
-import org.eclipse.jdt.core.dom.IBinding;
-import org.eclipse.jdt.core.dom.IMemberValuePairBinding;
-import org.eclipse.jdt.core.dom.IMethodBinding;
-import org.eclipse.jdt.core.dom.IPackageBinding;
-import org.eclipse.jdt.core.dom.ITypeBinding;
-import org.eclipse.jdt.core.dom.IVariableBinding;
 import org.eclipse.jdt.core.dom.Name;
 
-public class OmniController {
-	private DumpAstVisitor visitor;
-	private AnnotationASTRequestor requestor;
-	private PostgreSQLStorer database;
-	private Logger logger;
-
-	private String projectName;
+public class OmniController extends BaseController {
 	private int projectId;
 	private int currentFileId;
 	private String currentFileRaw;
 
-	private String sourcePath;
-	private String libPath;
-
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
-	private Collection <String> bindingKeys;
-	private int projectSize;
+	private Collection <String> crossRefKeys;
 	private List <Token> tokens;
-	private int totalTokens;
 
-	public OmniController(String sourcePath) {
-		this.visitor = null;
-		this.requestor = null;
-		this.database = null;
-		this.logger = null;
-		this.sourcePath = sourcePath;
+	public OmniController() {
+		super();
 
-		this.projectName = "";
 		this.projectId = -1;
 		this.currentFileId = -1;
-		this.currentFileRaw = "";
-		this.projectSize = -1;
+		this.currentFileRaw = null;
 
 		this.compilaionUnitFileNameMap = new HashMap<CompilationUnit, String>();
-		this.bindingKeys = new HashSet<String>();
+		this.crossRefKeys = new HashSet<String>();
+		this.tokens = null;
 	}
 
 	public OmniController addBindingKey(String bindingKey) {
-		bindingKeys.add(bindingKey);
+		crossRefKeys.add(bindingKey);
 		return this;
 	}
 
 	public Collection <String> getBindingKeys() {
-		return bindingKeys;
+		return crossRefKeys;
 	}
 
 	public OmniController addCompilationUnitFileName(CompilationUnit unit, String fileName) {
@@ -84,47 +59,42 @@ public class OmniController {
 		return compilaionUnitFileNameMap.get(unit);
 	}
 
-	private ASTParser getParser() {
-
-		ASTParser parser = ASTParser.newParser(AST.JLS4);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		String []classpath = Util.getClasspath();
-		if (this.libPath == null || this.libPath.equals("")) {
-			parser.setEnvironment(classpath, null, null, true);
-		} else {
-			String []libPath = Util.collectFilePaths(this.libPath, new String[] {"jar"});
-			String []combinePath = Util.concat(libPath, classpath);
-			parser.setEnvironment(combinePath, null, null, true);
-		}
-		parser.setUnitName("test");  // seems you should set unit name for whatever you want
-		parser.setResolveBindings(true);
-		parser.setBindingsRecovery(true);
-		return parser;
-	}
-
-	private void init() {
-		// init database
-		// init visitor
-	}
-
 	public void run() {
-		init();
-
-		String[] sourceFilePaths = Util.collectFilePaths(this.sourcePath, new String[] {"java"});
-		projectSize = sourceFilePaths.length;
-		ASTParser parser = getParser();
+		System.out.println("Collecting ASTs...");
+		collectAst();
 
 		System.out.println("Annotating .java files...");
-		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
-		System.out.println("Resolving bindings...");
-		resolveBindings();
+		annotateAst();
+
+		System.out.println("Resolving cross reference...");
+		resolveCrossReference();
 	}
 
-	private void resolveBindings() {
-		int bindingSize = bindingKeys.size();
+	void collectAst() {
+		String[] sourceFilePaths = Util.collectFilePaths(this.sourcePath, new String[] {"java"});
+		ASTParser parser = Util.getParser(this.libPath);
+		parser.createASTs(sourceFilePaths, null, new String[0], requestor, null);
+	}
+
+	void annotateAst() {
+		for (Map.Entry<CompilationUnit, String> cuEntry: this.compilaionUnitFileNameMap.entrySet()) {
+			String sourceFilePath = cuEntry.getValue();
+			CompilationUnit ast = cuEntry.getKey();
+
+			this.showProgress(sourceFilePath);
+			this.retriveCurrentFileNameId(sourceFilePath);
+			this.getVisitor().setCurrentCompilationUnit(ast);
+			ast.accept(this.getVisitor()); // save ast node information happend in here
+
+			this.saveTokenInfo(ast);
+		}
+	}
+
+	void resolveCrossReference() {
+		int bindingSize = crossRefKeys.size();
 		int i = 1;
 		boolean resolved = false;
-		for (String bindingKey: bindingKeys) {
+		for (String bindingKey: crossRefKeys) {
 			System.out.print(String.format("(%d/%d) resolve cross reference", i, bindingSize));
 			i++;
 			for (Map.Entry<CompilationUnit, String> entry: compilaionUnitFileNameMap.entrySet()) {
@@ -151,48 +121,6 @@ public class OmniController {
 		int length = node.getLength();
 		int nodetype_id = node.getNodeType();
 		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
-	}
-
-	// getter/setter
-	public DumpAstVisitor getVisitor() {
-		return visitor;
-	}
-
-	public OmniController setVisitor(DumpAstVisitor visitor) {
-		this.visitor = visitor;
-		return this;
-	}
-
-	public AnnotationASTRequestor getRequestor() {
-		return requestor;
-	}
-
-	public OmniController setRequestor(AnnotationASTRequestor requestor) {
-		this.requestor = requestor;
-		return this;
-	}
-
-	public PostgreSQLStorer getDatabase() {
-		return database;
-	}
-
-	public OmniController setDatabase(PostgreSQLStorer database) {
-		this.database = database;
-		return this;
-	}
-
-	public OmniController setLogger(Logger logger) {
-		this.logger = logger;
-		return this;
-	}
-
-	public Logger getLogger() {
-		return logger;
-	}
-
-	public void setProjectName(String projectName) {
-		this.projectName = projectName;
-		retriveProjectId(projectName, sourcePath);
 	}
 
 	public void retriveProjectId(String projectName, String sourcePath) {
@@ -234,7 +162,6 @@ public class OmniController {
 			}
 		}
 		this.tokens = trimedTokens;
-		this.totalTokens = this.tokens.size();
 	}
 
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
@@ -252,14 +179,12 @@ public class OmniController {
 		final int end_line_number = unit.getLineNumber(start_pos + length - 1);
 		final int end_column_number = unit.getColumnNumber(start_pos + length - 1) + 1;
 
-		String cross_ref_key = "";
+		String crossRefKey = "";
 		if (node instanceof Name) {
 			Name n = (Name)node;
 			if (n.resolveBinding() != null) {
-				IBinding binding = n.resolveBinding();
-			//	extractBindingInfo(binding);
-				cross_ref_key = n.resolveBinding().getKey();
-				bindingKeys.add(cross_ref_key);
+				crossRefKey = n.resolveBinding().getKey();
+				crossRefKeys.add(crossRefKey);
 			}
 		}
 		final int parentId = getAstnodeId(node.getParent());
@@ -269,48 +194,7 @@ public class OmniController {
 		database.saveAstNodeInfo(start_pos, length,
 				start_line_number, start_column_number,
 				end_line_number, end_column_number,
-				nodetype_id, cross_ref_key, string, currentFileId, currentFileRaw, parentId);
-	}
-
-	private void extractTypeBindingInfo(ITypeBinding binding) {
-		if (binding.isAnnotation()) {
-			System.out.println("is annotation");
-		} else if (binding.isRawType()) {
-			System.out.println("is raw type");
-		} else if (binding.isAnonymous()) {
-			System.out.println("is anonymous");
-		} else if (binding.isArray()) {
-			System.out.println("is array");
-		} else if (binding.isClass()) {
-			System.out.println("is class");
-		}
-	}
-
-	private void extractBindingInfo(IBinding binding) {
-		System.out.println(binding.getKey());
-		if (binding instanceof ITypeBinding) {
-			System.out.println("type binding");
-			ITypeBinding typeBinding = (ITypeBinding)binding;
-			extractTypeBindingInfo(typeBinding);
-		} else if (binding instanceof IMethodBinding) {
-			System.out.println("method binding");
-			IMethodBinding methodBinding = (IMethodBinding)binding;
-			ITypeBinding returnType = methodBinding.getReturnType();
-			System.out.println(returnType.getBinaryName());
-
-		} else if (binding instanceof IVariableBinding) {
-			System.out.println("variable binding");
-			IVariableBinding variableBinding = (IVariableBinding)binding;
-		} else if (binding instanceof IAnnotationBinding) {
-			System.out.println("annotation binding");
-			IAnnotationBinding annotationBinding = (IAnnotationBinding)binding;
-		} else if (binding instanceof IMemberValuePairBinding) {
-			System.out.println("member value pair binding");
-			IMemberValuePairBinding memberValuePairBinding = (IMemberValuePairBinding)binding;
-		} else if (binding instanceof IPackageBinding) {
-			System.out.println("package binding");
-			IPackageBinding packageBinding = (IPackageBinding)binding;
-		}
+				nodetype_id, crossRefKey, string, currentFileId, currentFileRaw, parentId);
 	}
 
 	private int getAstnodeId(LookupVisitor lookup) {
@@ -324,6 +208,7 @@ public class OmniController {
 	public void saveTokenInfo(CompilationUnit unit) {
 
 		LookupVisitor lookup = new LookupVisitor();
+		final int totalTokens = tokens.size();
 		for (int i = 0; i < tokens.size(); i++) {
 			String tokenStatus = String.format("%d/%d", i, totalTokens);
 			String bar = String.format("%2.2f%%", ((float)(i+1)/totalTokens)*100);
@@ -372,6 +257,7 @@ public class OmniController {
 
 	private static int progressCount = 0;
 	public void showProgress(String sourceFilePath) {
+		final int projectSize = compilaionUnitFileNameMap.size();
 		OmniController.progressCount ++ ;
 		System.out.println(String.format("(%d/%d) %s", OmniController.progressCount, projectSize, sourceFilePath));
 	}
@@ -384,8 +270,10 @@ public class OmniController {
 		return currentFileRaw;
 	}
 
-	public OmniController setLibPath(String libPath) {
-		this.libPath = libPath;
-		return this;
+	@Override
+	public void setProjectName(String projectName) {
+		this.projectName = projectName;
+		retriveProjectId(projectName, sourcePath);
 	}
+
 }

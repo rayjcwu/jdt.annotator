@@ -21,7 +21,7 @@ public class AnnotatorMain {
 		Logger logger = Logger.getLogger("annotator");
 
 		Options options = new Options();
-		options.addOption("s", "src", true, "absolute root path of files");
+		options.addOption("s", "src", true, "absolute root path of source code files");
 		options.addOption("l", "lib", true, "absolute root path of libraries (.jar)");
 		options.addOption("p", "project", true, "project name");
 		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database) (postgresql default port: 5432)");
@@ -33,48 +33,49 @@ public class AnnotatorMain {
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
 
-		String jdbc_url = "";
-		String project_name = "";
-		String src_path = "";
-		String lib_path = "";
+		String jdbcUrl = "";
+		String projectName = "";
+		String srcPath = "";
+		String libPath = "";
 		String username = "";
 		String password = "";
 
 		OmniController controller = null;
 		try {
 			cmd = parser.parse(options, argv);
-			src_path = cmd.getOptionValue("s");
-			lib_path = cmd.getOptionValue("l");
-			project_name = cmd.getOptionValue("p");
-			jdbc_url = cmd.getOptionValue("d");
+			srcPath = cmd.getOptionValue("s");
+			libPath = cmd.getOptionValue("l");
+			projectName = cmd.getOptionValue("p");
+			jdbcUrl = cmd.getOptionValue("d");
 			username = cmd.getOptionValue("U");
 			password = cmd.getOptionValue("W");
 
-			if (cmd.hasOption("r") && jdbc_url != null) {
+			if (cmd.hasOption("r") && jdbcUrl != null) {
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
-					(new PostgreSQLStorer(jdbc_url, username, password)).resetDatabase();
+					(new PostgreSQLStorer(jdbcUrl, username, password)).resetDatabase();
 				} else {
-					(new PostgreSQLStorer(jdbc_url)).resetDatabase();
+					(new PostgreSQLStorer(jdbcUrl)).resetDatabase();
 				}
 				System.out.println("reset done.");
-			} else if (src_path == null || jdbc_url == null) {
+			} else if (srcPath == null || jdbcUrl == null) {
 				throw new ParseException(argv.toString());
 			} else {
-				controller = new OmniController(src_path);
-				controller.setLibPath(lib_path);
+				controller = new OmniController();
+				controller.setSourcePath(srcPath);
+				controller.setLibPath(libPath);
 				controller.setLogger(logger);
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
-					(new PostgreSQLStorer(jdbc_url, username, password)).register(controller);
+					(new PostgreSQLStorer(jdbcUrl, username, password)).register(controller);
 				} else {
-					(new PostgreSQLStorer(jdbc_url)).register(controller);
+					(new PostgreSQLStorer(jdbcUrl)).register(controller);
 				}
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 
-				if (project_name == null || project_name.equals("")) {
-					project_name = Util.guessProjectName(src_path);
+				if (projectName == null || projectName.equals("")) {
+					projectName = Util.guessProjectName(srcPath);
 				}
-				controller.setProjectName(project_name);
+				controller.setProjectName(projectName);
 				controller.clearProjectAstNodeInfo();
 				controller.run();
 				System.out.println("annotating finished.");

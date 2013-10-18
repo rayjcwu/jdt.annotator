@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTParser;
 
 public class Util {
 
@@ -37,5 +39,24 @@ public class Util {
 	public static String guessProjectName(String argv) {
 		String []args = argv.split("/");
 		return args[args.length - 1];
+	}
+
+
+	public static ASTParser getParser(String libPath) {
+
+		ASTParser parser = ASTParser.newParser(AST.JLS4);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		String []classpath = Util.getClasspath();
+		if (libPath == null || libPath.equals("")) {
+			parser.setEnvironment(classpath, null, null, true);
+		} else {
+			String []libs = Util.collectFilePaths(libPath, new String[] {"jar"});
+			String []combinePath = Util.concat(libs, classpath);
+			parser.setEnvironment(combinePath, null, null, true);
+		}
+		parser.setUnitName("test");  // seems you should set unit name for whatever you want
+		parser.setResolveBindings(true);
+		parser.setBindingsRecovery(true);
+		return parser;
 	}
 }
