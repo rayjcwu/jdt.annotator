@@ -141,7 +141,6 @@ public class OmniController extends BaseController {
 	}
 
 	void batchAnnotateAstNode(CompilationUnit unit) throws SQLException {
-		final int maxBatchSize = 2048;
 		LabelAstVisitor labelVisitor = new LabelAstVisitor();
 		unit.accept(labelVisitor);
 		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
@@ -158,15 +157,16 @@ public class OmniController extends BaseController {
 		Connection conn = database.getConnection();
 		PreparedStatement pstmt = conn.prepareStatement(insertAstStmt);
 		for (ASTNode node: labelVisitor.getNodeList()) {
-			Integer tmp_parent_id = labelMapping.get(node.getParent());  // may be null
-
-			// collect info
-			final String string = node.toString();  // code generated from AST node, not original source code
-			final int nodetype_id = node.getNodeType();
 			// offset starts from 0
 			final int start_pos = node.getStartPosition();
+			if (start_pos < 0) {
+				continue;
+			}
+			Integer tmp_parent_id = labelMapping.get(node.getParent());  // may be null
+			// collect info
 			final int length = node.getLength();
-
+			final int nodetype_id = node.getNodeType();
+			final String string = node.toString();  // code generated from AST node, not original source code
 			// both line/column number start from 1
 			final int start_line_number = unit.getLineNumber(start_pos);
 			final int start_column_number = unit.getColumnNumber(start_pos) + 1;
@@ -198,12 +198,6 @@ public class OmniController extends BaseController {
 			pstmt.setLong(12, (tmp_parent_id == null)? -1 : tmp_parent_id + nextVal);
 
 			pstmt.addBatch();
-
-			if (batchCount > maxBatchSize) {
-				pstmt.executeBatch();
-				batchCount = 0;
-			}
-			batchCount++;
 		}
 		pstmt.executeBatch();
 	}
