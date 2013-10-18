@@ -20,7 +20,8 @@ public class LabelAstVisitor extends ASTVisitor {
 	}
 
 	public void reset() {
-		nodeLabel = null;
+		nodeLabel = new HashMap<ASTNode, Integer>();
+		nodeList = new LinkedList<ASTNode>();
 		label = 0;
 	}
 
