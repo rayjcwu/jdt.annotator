@@ -27,18 +27,12 @@ public class PostgreSQLStorer {
 	private String url;
 	private Logger logger;
 
-	private BaseController controller;
 	private String username;
 	private String password;
 
 	public static int tokenBase = 100;
 
 	private Map <String, Integer> entity_id_cache;
-
-	public void register(BaseController controller) {
-		this.controller = controller;
-		controller.setDatabase(this);
-	}
 
 	public PostgreSQLStorer(String url) {
 		this(url, null, null);

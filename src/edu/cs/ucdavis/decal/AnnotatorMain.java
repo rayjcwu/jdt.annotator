@@ -65,9 +65,9 @@ public class AnnotatorMain {
 				controller.setLibPath(libPath);
 				controller.setLogger(logger);
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
-					(new PostgreSQLStorer(jdbcUrl, username, password)).register(controller);
+					controller.setDatabase(new PostgreSQLStorer(jdbcUrl, username, password));
 				} else {
-					(new PostgreSQLStorer(jdbcUrl)).register(controller);
+					controller.setDatabase(new PostgreSQLStorer(jdbcUrl));
 				}
 				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
