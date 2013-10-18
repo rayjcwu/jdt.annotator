@@ -61,6 +61,8 @@ public class OmniController extends BaseController {
 
 	// main flow
 	public void run() {
+		clearProjectAstNodeInfo();
+
 		System.out.println("Collecting ASTs...");
 		collectAst();
 
@@ -69,6 +71,20 @@ public class OmniController extends BaseController {
 
 		System.out.println("Resolving cross reference...");
 		resolveCrossReference();
+	}
+
+
+	void clearProjectAstNodeInfo() {
+		retriveProjectId(this.projectName, this.sourcePath);
+		database.clearProjectAstnode(projectId);
+	}
+
+	void retriveProjectId(String projectName, String sourcePath) {
+		int id = database.retrieveProjectId(projectName, sourcePath);
+		if (id == -1) {
+			throw new IllegalStateException("retrieve project id error");
+		}
+		projectId = id;
 	}
 
 	void collectAst() {
@@ -122,14 +138,6 @@ public class OmniController extends BaseController {
 		int length = node.getLength();
 		int nodetype_id = node.getNodeType();
 		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
-	}
-
-	public void retriveProjectId(String projectName, String sourcePath) {
-		int id = database.retrieveProjectId(projectName, sourcePath);
-		if (id == -1) {
-			throw new IllegalStateException("retrieve project id error");
-		}
-		projectId = id;
 	}
 
 	public void retriveCurrentFileNameId(String sourceFilePath) {
@@ -261,10 +269,6 @@ public class OmniController extends BaseController {
 		final int projectSize = compilaionUnitFileNameMap.size();
 		OmniController.progressCount ++ ;
 		System.out.println(String.format("(%d/%d) %s", OmniController.progressCount, projectSize, sourceFilePath));
-	}
-
-	public void clearProjectAstNodeInfo() {
-		database.clearProjectAstnode(projectId);
 	}
 
 	public String getCurrentFileRaw() {
