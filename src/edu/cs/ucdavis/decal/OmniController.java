@@ -59,6 +59,41 @@ public class OmniController extends BaseController {
 		return compilaionUnitFileNameMap.get(unit);
 	}
 
+	void retriveProjectId(String projectName, String sourcePath) {
+		int id = database.retrieveProjectId(projectName, sourcePath);
+		if (id == -1) {
+			throw new IllegalStateException("retrieve project id error");
+		}
+		projectId = id;
+	}
+
+	public void retriveCurrentFileNameId(String sourceFilePath) {
+		int id = database.retrieveFileId(sourceFilePath, projectId);
+		if (id == -1) {
+			throw new IllegalStateException("retrieve file id error");
+		}
+		try {
+			currentFileRaw = FileUtils.readFileToString(new File(sourceFilePath));
+			prepareTokens();
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, "Read file content error", e);
+		}
+		currentFileId = id;
+	}
+
+	public int getAstnodeId(ASTNode node) {
+		if (node == null) { return -1; }
+
+		final int start_pos = node.getStartPosition();
+		final int length = node.getLength();
+		final int nodetype = node.getNodeType();
+		final int result = database.queryAstNodeId(start_pos, length, nodetype, currentFileId);
+		if (!(node instanceof CompilationUnit) && result == -1) {
+			throw new IllegalStateException("should not happen");
+		}
+		return result;
+	}
+
 	// main flow
 	public void run() {
 		clearProjectAstNodeInfo();
@@ -77,14 +112,6 @@ public class OmniController extends BaseController {
 	void clearProjectAstNodeInfo() {
 		retriveProjectId(this.projectName, this.sourcePath);
 		database.clearProjectAstnode(projectId);
-	}
-
-	void retriveProjectId(String projectName, String sourcePath) {
-		int id = database.retrieveProjectId(projectName, sourcePath);
-		if (id == -1) {
-			throw new IllegalStateException("retrieve project id error");
-		}
-		projectId = id;
 	}
 
 	void collectAst() {
@@ -133,25 +160,19 @@ public class OmniController extends BaseController {
 		}
 	}
 
+	private int getAstnodeId(LookupVisitor lookup) {
+		final int node_start_pos = lookup.getStartPos();
+		final int nodetype = lookup.getNodetype();
+		final int node_length = lookup.getLength();
+		final int parentId = database.queryAstNodeId(node_start_pos, node_length, nodetype, this.currentFileId);
+		return parentId;
+	}
+
 	private void saveForeignAstNode(ASTNode node, String bindingKey) {
 		int start_pos = node.getStartPosition();
 		int length = node.getLength();
 		int nodetype_id = node.getNodeType();
 		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
-	}
-
-	public void retriveCurrentFileNameId(String sourceFilePath) {
-		int id = database.retrieveFileId(sourceFilePath, projectId);
-		if (id == -1) {
-			throw new IllegalStateException("retrieve file id error");
-		}
-		try {
-			currentFileRaw = FileUtils.readFileToString(new File(sourceFilePath));
-			prepareTokens();
-		} catch (IOException e) {
-			logger.log(Level.SEVERE, "Read file content error", e);
-		}
-		currentFileId = id;
 	}
 
 	private void prepareTokens() {
@@ -206,14 +227,6 @@ public class OmniController extends BaseController {
 				nodetype_id, crossRefKey, string, currentFileId, currentFileRaw, parentId);
 	}
 
-	private int getAstnodeId(LookupVisitor lookup) {
-		final int node_start_pos = lookup.getStartPos();
-		final int nodetype = lookup.getNodetype();
-		final int node_length = lookup.getLength();
-		final int parentId = database.queryAstNodeId(node_start_pos, node_length, nodetype, this.currentFileId);
-		return parentId;
-	}
-
 	public void saveTokenInfo(CompilationUnit unit) {
 
 		LookupVisitor lookup = new LookupVisitor();
@@ -251,28 +264,11 @@ public class OmniController extends BaseController {
 		}
 	}
 
-	public int getAstnodeId(ASTNode node) {
-		if (node == null) { return -1; }
-
-		final int start_pos = node.getStartPosition();
-		final int length = node.getLength();
-		final int nodetype = node.getNodeType();
-		final int result = database.queryAstNodeId(start_pos, length, nodetype, currentFileId);
-		if (!(node instanceof CompilationUnit) && result == -1) {
-			throw new IllegalStateException("should not happen");
-		}
-		return result;
-	}
-
 	private static int progressCount = 0;
 	public void showProgress(String sourceFilePath) {
 		final int projectSize = compilaionUnitFileNameMap.size();
 		OmniController.progressCount ++ ;
 		System.out.println(String.format("(%d/%d) %s", OmniController.progressCount, projectSize, sourceFilePath));
-	}
-
-	public String getCurrentFileRaw() {
-		return currentFileRaw;
 	}
 
 }
