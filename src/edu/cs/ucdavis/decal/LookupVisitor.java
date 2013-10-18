@@ -7,16 +7,11 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 public class LookupVisitor extends ASTVisitor {
 
 	// tightest node containing current token so far
-	private int startPos;
-	private int length;
-	private int nodetype;
-
+	private ASTNode lastSeenNode;
 	private Token token;
 
 	public LookupVisitor() {
-		startPos = -1;
-		length 	  = -1;
-		nodetype  = -1;
+		lastSeenNode = null;
 		token = null;
 	}
 
@@ -25,9 +20,7 @@ public class LookupVisitor extends ASTVisitor {
 	}
 
 	public void reset() {
-		startPos = -1;
-		length = -1;
-		nodetype = -1;
+		lastSeenNode = null;
 		token = null;
 	}
 
@@ -36,26 +29,15 @@ public class LookupVisitor extends ASTVisitor {
 		final int token_start_pos = token.getStartIndex();
 
 		if (node.getStartPosition() <= token_start_pos && token_start_pos < node.getStartPosition() + node.getLength()) {
-			startPos = node.getStartPosition();
-			length = node.getLength();
-			nodetype = node.getNodeType();
+			lastSeenNode = node;
 			return true;
 		} else {
 			return false;
 		}
 	}
 
-	public int getStartPos() {
-		return startPos;
+	public ASTNode getLastSeenNode() {
+		return lastSeenNode;
 	}
-
-	public int getLength() {
-		return length;
-	}
-
-	public int getNodetype() {
-		return nodetype;
-	}
-
 
 }

@@ -121,26 +121,24 @@ public class OmniController extends BaseController {
 
 	void annotateAst() {
 		LabelAstVisitor labelVisitor = new LabelAstVisitor();
-		Map<ASTNode, Integer> labelMapping = null;
-
 		for (Map.Entry<CompilationUnit, String> cuEntry: this.compilaionUnitFileNameMap.entrySet()) {
 			String sourceFilePath = cuEntry.getValue();
 			CompilationUnit unit = cuEntry.getKey();
-
 			labelVisitor.reset();
 			unit.accept(labelVisitor);
-			labelMapping = labelVisitor.getNodeLabel();
-
 			this.showProgress(sourceFilePath);
 			this.retriveCurrentFileNameId(sourceFilePath);
 			try {
 				batchAnnotateAstNode(unit, labelVisitor);
+				batchAnnotateToken(unit, labelVisitor);
 			} catch (SQLException e) {
 				logger.log(Level.SEVERE, "annotate ast failed", unit);
 			}
-
-			//this.saveTokenInfo(ast);
 		}
+	}
+
+	void batchAnnotateToken(CompilationUnit unit, LabelAstVisitor labelVisitor) throws SQLException {
+
 	}
 
 	void batchAnnotateAstNode(CompilationUnit unit, LabelAstVisitor labelVisitor) throws SQLException {
@@ -233,9 +231,10 @@ public class OmniController extends BaseController {
 	}
 
 	private int getAstnodeId(LookupVisitor lookup) {
-		final int node_start_pos = lookup.getStartPos();
-		final int nodetype = lookup.getNodetype();
-		final int node_length = lookup.getLength();
+		ASTNode node = lookup.getLastSeenNode();
+		final int node_start_pos = node.getStartPosition();
+		final int nodetype = node.getNodeType();
+		final int node_length = node.getLength();
 		final int parentId = database.queryAstNodeId(node_start_pos, node_length, nodetype, this.currentFileId);
 		return parentId;
 	}
