@@ -1,16 +1,17 @@
 jdt.annotator
 ==============
-This project is based on [Eclipse JDT](http://help.eclipse.org/kepler/index.jsp?nav=%2F3) and [ANTLR 4](http://antlr.org/) to annotate java source files. Results are saved in database, you could get all information in massive join `astnode_all` view.
+This project is based on [Eclipse JDT](http://help.eclipse.org/kepler/index.jsp?nav=%2F3) and [ANTLR 4](http://antlr.org/) to annotate java source files. Results are saved in database, you could get all information in massive join `entity_all` view.
 
 Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt.annotator.jar)
 
 # Usage
-`java -jar annotator.jar [opts]`, `-s`, `-d`, `-p` are required options to start annotating.
+`java -jar annotator.jar [opts]`, `-s`, `-d` are required options to start annotating.
 
 ```
 -d,--jdbc <arg>       jdbc url, currently only support postgresql
                        (jdbc:postgresql://ip:port/database) (postgresql
                       default port: 5432)
+-l,--lib <arg>        absolute root path of libraries (.jar)
 -p,--project <arg>    project name
 -r,--reset            reset all annotated astnode information in database
                       [need to specify --jdbc]
@@ -19,16 +20,27 @@ Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt
 -W,--password <arg>   (optional) password, must specify username as well
 ```
 
+* If you omit `-p` option, program will use folder name as default project name.
+* If your project use ant or maven to compile, it may specify dependencies in `build.xml` or `pom.xml`. If you want to annotate type, method or other information from those library, you need to download those dependencies first and specify the library folder in `-l` option.
+  * Maven: type `mvn org.apache.maven.plugins:maven-dependency-plugin:2.7:copy-dependencies -DoutputDirectory=/your/library/folder` in project root folder. Then maven will download all dependencies .jars to that folder.
+  * Ant: To Be Completed
+  
+
+
+
+
 # Schema
 
 | Table         | Column        | Description  |
 | ------------- |--------------| --------|
-| astnode_all   | astnode_id    | serial number of node added into database, it **DOESN'T** mean the order of appearance in source code |
+| entity_all   | entity_id    | serial number of node added into database, it **DOESN'T** mean the order of appearance in source code |
 | | start_pos | starting position of this node in file |
 | | length | length of this node |
-| | end_pos | ending position of this node in file |
-| | line_number | this node is in (line number, column number) in file |
-| | column_number | |
+| | end_pos | ending position of this node in file (exclusive). If you store source code in a string, then `code.substring(start_pos, end_pos)` will give you source code snippet of this astnode or token. |
+| | start_line_number | this entity starts at (line number, column number) in file, both start from `1` to conform with vim |
+| | start_column_number | |
+| | end_line_number | this enetity ends at (line number, column number) in file. |
+| | end_column_number | |
 | | nodetype_id | For ASTNode, `nodetype_id < 100`. For Token, `nodetype_id >= 100` |
 | | nodetype | name of the type of this node |
 | | file_id | |
@@ -38,16 +50,16 @@ Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt
 | | project_path | given source code folder, `(project_name, project_path)` uniquely specify a "project"|
 | | string | *formatted* code snippet of this node |
 | | raw | code snippet of this node |
-| | binding_key | used to figure out where is this node declared. Only [Name](http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2Fdom%2FName.html) type `ASTNode` will have non-null value |
-| | parent_astnode_id | parent in parse tree, `parent_astnode_id` of root node is `-1`|
-| | declared_at_astnode_id | if this node is declared in another place **in this project**, this id could find out that node. if it's declared in another library, it won't show up.|
+| | cross_ref_key | used to figure out where is this node declared. Only [Name](http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2Fdom%2FName.html) type `ASTNode` will have non-null value |
+| | parent_id | parent entity's `entity_id`, `parent_id` of root node is `-1`. |
+| | declared_id | if this node is declared in another place **in this project**, this id could find out that node. if it's declared in another library, it won't show up.|
 
 # How it works
 
-* Use `JDT` to generate ASTs for all files and binding keys for all `Name` nodes.
-* Whenever visitor visit an ASTNode, store ASTNode information in that node.
-* Whenever visitor leave an ASTNode, store Token informaiton in that node.
-* Take all binding keys generated in first step, figure out where is each `Name` node declared.
+* Use `JDT` to generate ASTs for all files and cross reference for all `Name` nodes.
+* Whenever visitor visit an ASTNode, store ASTNode information in database.
+* Collect all tokens, for each token, use visitor to check which is the deepest ASTNode containing that token.
+* Take all cross reference keys generated in first step, figure out where is each `Name` node declared.
 
 For documentation of each ASTNode, refer [jdt.core.dom](http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2Fdom%2Fpackage-summary.html).
 
