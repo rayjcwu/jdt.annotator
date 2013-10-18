@@ -210,7 +210,7 @@ public class OmniController extends BaseController {
 		LookupVisitor lookup = new LookupVisitor();
 		final int totalTokens = tokens.size();
 		for (int i = 0; i < tokens.size(); i++) {
-			String tokenStatus = String.format("%d/%d", i, totalTokens);
+			String tokenStatus = String.format("%d/%d", i+1, totalTokens);
 			String bar = String.format("%2.2f%%", ((float)(i+1)/totalTokens)*100);
 			System.out.print(tokenStatus + " " + bar + "\r");
 
