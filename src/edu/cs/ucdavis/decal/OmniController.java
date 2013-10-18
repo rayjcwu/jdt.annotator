@@ -41,12 +41,12 @@ public class OmniController extends BaseController {
 		this.tokens = null;
 	}
 
-	public OmniController addBindingKey(String bindingKey) {
-		crossRefKeys.add(bindingKey);
+	public OmniController addCrossRefKey(String crossRefKey) {
+		crossRefKeys.add(crossRefKey);
 		return this;
 	}
 
-	public Collection <String> getBindingKeys() {
+	public Collection <String> getCrossRefKeys() {
 		return crossRefKeys;
 	}
 
