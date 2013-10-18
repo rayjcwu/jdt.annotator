@@ -371,7 +371,7 @@ public class PostgreSQLStorer {
 			if(result.next()) {
 				return result.getInt("project_id");
 			} else {
-				PreparedStatement ins_stmt = conn.prepareStatement("INSERT INTO project (project_name, project_path) VALUES (?, ?);");
+				PreparedStatement ins_stmt = conn.prepareStatement("INSERT INTO project (project_name, project_type, project_path) VALUES (?, 'java', ?);");
 				ins_stmt.setString(1, projectName);
 				ins_stmt.setString(2, sourcePath);
 				ins_stmt.executeUpdate();
