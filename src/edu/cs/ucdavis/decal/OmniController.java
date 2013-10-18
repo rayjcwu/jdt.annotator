@@ -128,6 +128,7 @@ public class OmniController extends BaseController {
 			unit.accept(labelVisitor);
 			this.showProgress(sourceFilePath);
 			this.retriveCurrentFileNameId(sourceFilePath);
+			this.tokens =  Util.prepareTokens(currentFileContent);
 			try {
 				batchAnnotateAstNode(unit, labelVisitor);
 				batchAnnotateToken(unit, labelVisitor);
@@ -138,11 +139,62 @@ public class OmniController extends BaseController {
 	}
 
 	void batchAnnotateToken(CompilationUnit unit, LabelAstVisitor labelVisitor) throws SQLException {
+		Long nextVal = labelVisitor.getNextVal();
+		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
+		LookupVisitor lookup = new LookupVisitor();
+
+		String insertAstStmt = "INSERT INTO entity ("
+				+ "start_pos, length, "
+				+ "start_line_number, start_column_number, "
+				+ "end_line_number, end_column_number, "
+				+ "nodetype_id, string, file_id, raw, parent_id) "
+				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?)";
+
+		Connection conn = database.getConnection();
+		PreparedStatement pstmt = conn.prepareStatement(insertAstStmt);
+		for (Token token: tokens) {
+			lookup.reset();
+			lookup.setToken(token);
+			// offset starts from 0
+			unit.accept(lookup);
+			ASTNode parentNode = lookup.getLastSeenNode();
+			Integer tmp_parent_id = labelMapping.get(parentNode);  // may be null
+			// collect info
+			final String string = token.getText();
+
+			final int token_start_pos = token.getStartIndex();
+			final int token_end_pos = token.getStopIndex(); // inclusive end pos
+
+			final int start_line_number = token.getLine();
+			final int start_column_number = token.getCharPositionInLine() + 1;
+
+			final int end_line_number = unit.getLineNumber(token_end_pos);
+			final int end_column_number = unit.getColumnNumber(token_end_pos) + 1;
+
+			final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
+
+			pstmt.setInt(1, token_start_pos);
+			pstmt.setInt(2, token_end_pos - token_start_pos + 1);
+			pstmt.setInt(3, start_line_number);
+			pstmt.setInt(4, start_column_number);
+			pstmt.setInt(5, end_line_number);
+			pstmt.setInt(6, end_column_number);
+
+			pstmt.setInt(7, nodetype_id);
+			pstmt.setString(8, string);
+			pstmt.setInt(9, currentFileId);
+			pstmt.setString(10, currentFileContent.substring(token_start_pos, token_end_pos + 1));
+			pstmt.setLong(11, tmp_parent_id + nextVal);
+
+			pstmt.addBatch();
+		}
+		pstmt.executeBatch();
 
 	}
 
 	void batchAnnotateAstNode(CompilationUnit unit, LabelAstVisitor labelVisitor) throws SQLException {
 		Long nextVal = database.getNextSerial("entity_entity_id_seq") + 1; // nextval occupy 1 index
+		labelVisitor.setNextVal(nextVal);
 		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
 
 		String insertAstStmt = "INSERT INTO entity ("

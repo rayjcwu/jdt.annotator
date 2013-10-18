@@ -13,16 +13,28 @@ public class LabelAstVisitor extends ASTVisitor {
 	List <ASTNode> nodeList;
 	int label;
 
+	Long nextVal;
+
 	public LabelAstVisitor() {
 		nodeLabel = new HashMap<ASTNode, Integer>();
 		nodeList = new LinkedList<ASTNode>();
 		label = 0;
+		nextVal = 0L;
 	}
 
 	public void reset() {
 		nodeLabel = new HashMap<ASTNode, Integer>();
 		nodeList = new LinkedList<ASTNode>();
 		label = 0;
+		nextVal = 0L;
+	}
+
+	public void setNextVal(Long nextVal) {
+		this.nextVal = nextVal;
+	}
+
+	public Long getNextVal() {
+		return nextVal;
 	}
 
 	@Override
