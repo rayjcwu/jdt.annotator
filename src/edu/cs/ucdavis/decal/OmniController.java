@@ -131,27 +131,23 @@ public class OmniController extends BaseController {
 	}
 
 	void resolveCrossReference() {
-		int bindingSize = crossRefKeys.size();
+		final int crossRefKeysSize = crossRefKeys.size();
 		int i = 1;
 		boolean resolved = false;
-		for (String bindingKey: crossRefKeys) {
-			System.out.print(String.format("(%d/%d) resolve cross reference", i, bindingSize));
+		for (String crossRefKey: crossRefKeys) {
+			System.out.print(String.format("(%d/%d) resolve cross reference", i, crossRefKeysSize));
 			i++;
 			for (Map.Entry<CompilationUnit, String> entry: compilaionUnitFileNameMap.entrySet()) {
 				CompilationUnit unit = entry.getKey();
-				ASTNode node = unit.findDeclaringNode(bindingKey);
+				ASTNode node = unit.findDeclaringNode(crossRefKey);
 				if (node != null) {
 					retriveCurrentFileNameId(entry.getValue());  // set current file to corresponding id
-					saveForeignAstNode(node, bindingKey);
-
-					System.out.println(" o " + bindingKey);
+					saveForeignAstNode(node, crossRefKey);
 					resolved = true;
 					break;
 				}
 			}
-			if (!resolved) {
-				System.out.println(" x " + bindingKey);
-			}
+			System.out.println((resolved ? " o ": " x " ) + crossRefKey);
 			resolved = false;
 		}
 	}
