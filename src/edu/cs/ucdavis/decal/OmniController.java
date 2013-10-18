@@ -5,14 +5,10 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
-import org.antlr.JavaLexer;
-import org.antlr.v4.runtime.ANTLRInputStream;
-import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -21,9 +17,9 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Name;
 
 public class OmniController extends BaseController {
-	private int projectId;
+	private int currentProjectId;
 	private int currentFileId;
-	private String currentFileRaw;
+	private String currentFileContent;
 
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
 	private Collection <String> crossRefKeys;
@@ -32,9 +28,9 @@ public class OmniController extends BaseController {
 	public OmniController() {
 		super();
 
-		this.projectId = -1;
+		this.currentProjectId = -1;
 		this.currentFileId = -1;
-		this.currentFileRaw = null;
+		this.currentFileContent = null;
 
 		this.compilaionUnitFileNameMap = new HashMap<CompilationUnit, String>();
 		this.crossRefKeys = new HashSet<String>();
@@ -64,17 +60,17 @@ public class OmniController extends BaseController {
 		if (id == -1) {
 			throw new IllegalStateException("retrieve project id error");
 		}
-		projectId = id;
+		currentProjectId = id;
 	}
 
 	public void retriveCurrentFileNameId(String sourceFilePath) {
-		int id = database.retrieveFileId(sourceFilePath, projectId);
+		int id = database.retrieveFileId(sourceFilePath, currentProjectId);
 		if (id == -1) {
 			throw new IllegalStateException("retrieve file id error");
 		}
 		try {
-			currentFileRaw = FileUtils.readFileToString(new File(sourceFilePath));
-			prepareTokens();
+			this.currentFileContent = FileUtils.readFileToString(new File(sourceFilePath));
+			this.tokens = Util.prepareTokens(this.currentFileContent);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Read file content error", e);
 		}
@@ -111,7 +107,7 @@ public class OmniController extends BaseController {
 
 	void clearProjectAstNodeInfo() {
 		retriveProjectId(this.projectName, this.sourcePath);
-		database.clearProjectAstnode(projectId);
+		database.clearProjectAstnode(currentProjectId);
 	}
 
 	void collectAst() {
@@ -175,25 +171,6 @@ public class OmniController extends BaseController {
 		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
 	}
 
-	private void prepareTokens() {
-		ANTLRInputStream input = new ANTLRInputStream(currentFileRaw);
-		JavaLexer lexel = new JavaLexer(input);
-		CommonTokenStream tokenStream = new CommonTokenStream(lexel);
-		tokenStream.fill();
-		List <Token> trimedTokens = new LinkedList<Token>();
-		for (Token token: tokenStream.getTokens()) {
-			if (!(token.getType() == JavaLexer.IDENTIFIER ||     // same as SimpleName
-				  token.getType() == JavaLexer.NULL_LITERAL ||   // have corresponding literal ast nodes
-				  token.getType() == JavaLexer.BOOLEAN_LITERAL ||
-				  token.getType() == JavaLexer.STRING_LITERAL ||
-				  token.getType() == JavaLexer.CHARACTER_LITERAL ||
-				  token.getType() == JavaLexer.EOF)) {           // simply ignore
-				trimedTokens.add(token);
-			}
-		}
-		this.tokens = trimedTokens;
-	}
-
 	public void saveAstNodeInfo(ASTNode node, CompilationUnit unit) {
 
 		final String string = node.toString();  // code generated from AST node, not original source code
@@ -224,7 +201,7 @@ public class OmniController extends BaseController {
 		database.saveAstNodeInfo(start_pos, length,
 				start_line_number, start_column_number,
 				end_line_number, end_column_number,
-				nodetype_id, crossRefKey, string, currentFileId, currentFileRaw, parentId);
+				nodetype_id, crossRefKey, string, currentFileId, currentFileContent, parentId);
 	}
 
 	public void saveTokenInfo(CompilationUnit unit) {
@@ -260,7 +237,7 @@ public class OmniController extends BaseController {
 			database.saveTokenInfo(token_start_pos, token_end_pos - token_start_pos + 1,
 					start_line_number, start_column_number,
 					end_line_number, end_column_number,
-					nodetype_id, string, file_id, currentFileRaw, parentId);
+					nodetype_id, string, file_id, currentFileContent, parentId);
 		}
 	}
 
