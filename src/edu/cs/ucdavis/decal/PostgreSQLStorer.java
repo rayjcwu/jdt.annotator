@@ -596,4 +596,29 @@ public class PostgreSQLStorer {
 			}
 		}
 	}
+
+	public Connection getConnection() {
+		return conn;
+	}
+
+	public Long getNextSerial(String id_seq) {
+		Long serialNum = 0L;
+		Statement stmt = null;
+		// get the postgresql serial field value with this query
+		String query = String.format("SELECT nextval('%s');", id_seq);
+		try {
+			stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+			if (rs.next()) {
+				serialNum = rs.getLong(1);
+				//System.out.println("serialNum = " + serialNum);
+			}
+		} catch (SQLException e) {
+			System.err.println("Should not happen");
+			throw new IllegalStateException("query next serial error");
+		} finally {
+			closeIt(stmt);
+		}
+		return serialNum;
+	}
 }

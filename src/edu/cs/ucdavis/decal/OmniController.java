@@ -2,6 +2,9 @@ package edu.cs.ucdavis.decal;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -123,11 +126,86 @@ public class OmniController extends BaseController {
 
 			this.showProgress(sourceFilePath);
 			this.retriveCurrentFileNameId(sourceFilePath);
+			/*
 			this.getVisitor().setCurrentCompilationUnit(ast);
 			ast.accept(this.getVisitor());
+			*/
+			try {
+				batchAnnotateAstNode(ast);
+			} catch (SQLException e) {
+				logger.log(Level.SEVERE, "annotate ast failed", ast);
+			}
 
-			this.saveTokenInfo(ast);
+			//this.saveTokenInfo(ast);
 		}
+	}
+
+	void batchAnnotateAstNode(CompilationUnit unit) throws SQLException {
+		final int maxBatchSize = 2048;
+		LabelAstVisitor labelVisitor = new LabelAstVisitor();
+		unit.accept(labelVisitor);
+		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
+		Long nextVal = database.getNextSerial("entity_entity_id_seq") + 1; // nextval occupy 1 index
+
+		String insertAstStmt = "INSERT INTO entity ("
+				+ "start_pos, length, "
+				+ "start_line_number, start_column_number, "
+				+ "end_line_number, end_column_number, "
+				+ "nodetype_id, cross_ref_key, string, file_id, raw, parent_id) "
+				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?)";
+
+		int batchCount = 0;
+		Connection conn = database.getConnection();
+		PreparedStatement pstmt = conn.prepareStatement(insertAstStmt);
+		for (ASTNode node: labelVisitor.getNodeList()) {
+			Integer tmp_parent_id = labelMapping.get(node.getParent());  // may be null
+
+			// collect info
+			final String string = node.toString();  // code generated from AST node, not original source code
+			final int nodetype_id = node.getNodeType();
+			// offset starts from 0
+			final int start_pos = node.getStartPosition();
+			final int length = node.getLength();
+
+			// both line/column number start from 1
+			final int start_line_number = unit.getLineNumber(start_pos);
+			final int start_column_number = unit.getColumnNumber(start_pos) + 1;
+
+			final int end_line_number = unit.getLineNumber(start_pos + length - 1);
+			final int end_column_number = unit.getColumnNumber(start_pos + length - 1) + 1;
+
+			String crossRefKey = "";
+			if (node instanceof Name) {
+				Name n = (Name)node;
+				if (n.resolveBinding() != null) {
+					crossRefKey = n.resolveBinding().getKey();
+					crossRefKeys.add(crossRefKey);
+				}
+			}
+
+			pstmt.setInt(1, start_pos);
+			pstmt.setInt(2, length);
+			pstmt.setInt(3, start_line_number);
+			pstmt.setInt(4, start_column_number);
+			pstmt.setInt(5, end_line_number);
+			pstmt.setInt(6, end_column_number);
+
+			pstmt.setInt(7, nodetype_id);
+			pstmt.setString(8, crossRefKey);
+			pstmt.setString(9, string);
+			pstmt.setInt(10, currentFileId);
+			pstmt.setString(11, currentFileContent.substring(start_pos, start_pos+length));
+			pstmt.setLong(12, (tmp_parent_id == null)? -1 : tmp_parent_id + nextVal);
+
+			pstmt.addBatch();
+
+			if (batchCount > maxBatchSize) {
+				pstmt.executeBatch();
+				batchCount = 0;
+			}
+			batchCount++;
+		}
+		pstmt.executeBatch();
 	}
 
 	private static int progressCount = 0;
