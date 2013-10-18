@@ -76,6 +76,7 @@ public class AnnotatorMain {
 					projectName = Util.guessProjectName(srcPath);
 				}
 				controller.setProjectName(projectName);
+				controller.retriveProjectId(projectName, srcPath);
 				controller.clearProjectAstNodeInfo();
 				controller.run();
 				System.out.println("annotating finished.");

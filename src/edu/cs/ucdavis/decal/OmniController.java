@@ -59,6 +59,7 @@ public class OmniController extends BaseController {
 		return compilaionUnitFileNameMap.get(unit);
 	}
 
+	// main flow
 	public void run() {
 		System.out.println("Collecting ASTs...");
 		collectAst();
@@ -268,12 +269,6 @@ public class OmniController extends BaseController {
 
 	public String getCurrentFileRaw() {
 		return currentFileRaw;
-	}
-
-	@Override
-	public void setProjectName(String projectName) {
-		this.projectName = projectName;
-		retriveProjectId(projectName, sourcePath);
 	}
 
 }
