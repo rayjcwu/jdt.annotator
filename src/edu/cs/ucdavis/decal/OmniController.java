@@ -120,31 +120,32 @@ public class OmniController extends BaseController {
 	}
 
 	void annotateAst() {
+		LabelAstVisitor labelVisitor = new LabelAstVisitor();
+		Map<ASTNode, Integer> labelMapping = null;
+
 		for (Map.Entry<CompilationUnit, String> cuEntry: this.compilaionUnitFileNameMap.entrySet()) {
 			String sourceFilePath = cuEntry.getValue();
-			CompilationUnit ast = cuEntry.getKey();
+			CompilationUnit unit = cuEntry.getKey();
+
+			labelVisitor.reset();
+			unit.accept(labelVisitor);
+			labelMapping = labelVisitor.getNodeLabel();
 
 			this.showProgress(sourceFilePath);
 			this.retriveCurrentFileNameId(sourceFilePath);
-			/*
-			this.getVisitor().setCurrentCompilationUnit(ast);
-			ast.accept(this.getVisitor());
-			*/
 			try {
-				batchAnnotateAstNode(ast);
+				batchAnnotateAstNode(unit, labelVisitor);
 			} catch (SQLException e) {
-				logger.log(Level.SEVERE, "annotate ast failed", ast);
+				logger.log(Level.SEVERE, "annotate ast failed", unit);
 			}
 
 			//this.saveTokenInfo(ast);
 		}
 	}
 
-	void batchAnnotateAstNode(CompilationUnit unit) throws SQLException {
-		LabelAstVisitor labelVisitor = new LabelAstVisitor();
-		unit.accept(labelVisitor);
-		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
+	void batchAnnotateAstNode(CompilationUnit unit, LabelAstVisitor labelVisitor) throws SQLException {
 		Long nextVal = database.getNextSerial("entity_entity_id_seq") + 1; // nextval occupy 1 index
+		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
 
 		String insertAstStmt = "INSERT INTO entity ("
 				+ "start_pos, length, "
@@ -153,7 +154,6 @@ public class OmniController extends BaseController {
 				+ "nodetype_id, cross_ref_key, string, file_id, raw, parent_id) "
 				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?)";
 
-		int batchCount = 0;
 		Connection conn = database.getConnection();
 		PreparedStatement pstmt = conn.prepareStatement(insertAstStmt);
 		for (ASTNode node: labelVisitor.getNodeList()) {
@@ -174,6 +174,7 @@ public class OmniController extends BaseController {
 			final int end_line_number = unit.getLineNumber(start_pos + length - 1);
 			final int end_column_number = unit.getColumnNumber(start_pos + length - 1) + 1;
 
+			// TODO: move cross ref key to another table
 			String crossRefKey = "";
 			if (node instanceof Name) {
 				Name n = (Name)node;
