@@ -21,24 +21,30 @@ public class AnnotatorMain {
 		Logger logger = Logger.getLogger("annotator");
 
 		Options options = new Options();
+		options.addOption("H", "host", true, "database server host ip (default: \"localhost\")");
+		options.addOption("P", "port", true, "database server port (default: \"5432\")");
+		options.addOption("d", "dbname", true, "database name to connect to (default: \"entity\")");
+		options.addOption("U", "username", true, "(optional) username, must specify password as well");
+		options.addOption("W", "password", true, "(optional) password, must specify username as well");
+
 		options.addOption("s", "src", true, "absolute root path of source code files");
 		options.addOption("l", "lib", true, "absolute root path of libraries (.jar)");
 		options.addOption("p", "project", true, "project name");
-		options.addOption("d", "jdbc", true, "jdbc url, currently only support postgresql (jdbc:postgresql://ip:port/database) (postgresql default port: 5432)");
 		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
-		options.addOption("U", "username", true, "(optional) username, must specify password as well");
-		options.addOption("W", "password", true, "(optional) password, must specify username as well");
 
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
 
-		String jdbcUrl = "";
+		String host = "";
+		String port = "";
+		String dbname = "";
+		String username = "";
+		String password = "";
+
 		String projectName = "";
 		String srcPath = "";
 		String libPath = "";
-		String username = "";
-		String password = "";
 
 		OmniController controller = null;
 		try {
@@ -46,18 +52,22 @@ public class AnnotatorMain {
 			srcPath = cmd.getOptionValue("s");
 			libPath = cmd.getOptionValue("l");
 			projectName = cmd.getOptionValue("p");
-			jdbcUrl = cmd.getOptionValue("d");
+
+			host = cmd.getOptionValue("H", "127.0.0.1");
+			port = cmd.getOptionValue("P", "5432");
+			dbname = cmd.getOptionValue("d", "entity");
+			String jdbcUrl = String.format("jdbc:postgresql://%s:%s/%s", host, port, dbname);
 			username = cmd.getOptionValue("U");
 			password = cmd.getOptionValue("W");
 
-			if (cmd.hasOption("r") && jdbcUrl != null) {
+			if (cmd.hasOption("r")) {
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
 					(new PostgreSQLStorer(jdbcUrl, username, password)).resetDatabase();
 				} else {
 					(new PostgreSQLStorer(jdbcUrl)).resetDatabase();
 				}
 				System.out.println("reset done.");
-			} else if (srcPath == null || jdbcUrl == null) {
+			} else if (srcPath == null) {
 				throw new ParseException(argv.toString());
 			} else {
 				controller = new OmniController();
