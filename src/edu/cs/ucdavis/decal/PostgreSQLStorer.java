@@ -124,12 +124,21 @@ public class PostgreSQLStorer {
 					+ "declared_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
 					+ "reference_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE); ";
 
+			String createMethodTable = "CREATE TABLE IF NOT EXISTS method( "
+					+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+					+ "method_name text, "
+					+ "return_type text, "
+					+ "argument_type text, "
+					+ "full_signature text, "
+					+ "is_declare boolean); "
+					;
 			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
 			stmt.executeUpdate(createProjectTable);
 			stmt.executeUpdate(createFileTable);
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createEntityTable);
 			stmt.executeUpdate(createCrossReferenceTable);
+			stmt.executeUpdate(createMethodTable);
 
 			String to_create = "entity_cross_ref_key_idx";
 			if (!indexes.contains(to_create)) {
@@ -523,10 +532,11 @@ public class PostgreSQLStorer {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			stmt.execute("DROP TABLE IF EXISTS entity CASCADE;"
-					+ "DROP TABLE IF EXISTS project CASCADE;"
-					+ "DROP TABLE IF EXISTS file CASCADE;"
-					+ "DROP TABLE IF EXISTS nodetype CASCADE;");
+			stmt.execute("DROP TABLE IF EXISTS entity CASCADE; "
+					+ "DROP TABLE IF EXISTS project CASCADE; "
+					+ "DROP TABLE IF EXISTS file CASCADE; "
+					+ "DROP TABLE IF EXISTS nodetype CASCADE; "
+					+ "DROP TABLE IF EXISTS method CASCADE; ");
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear database error", e);
 		} finally {

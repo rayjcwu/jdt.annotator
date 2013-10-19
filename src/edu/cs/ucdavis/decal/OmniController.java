@@ -17,7 +17,13 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Name;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 public class OmniController extends BaseController {
 	private int currentProjectId;
@@ -206,6 +212,7 @@ public class OmniController extends BaseController {
 
 		Connection conn = database.getConnection();
 		PreparedStatement pstmt = conn.prepareStatement(insertAstStmt);
+
 		for (ASTNode node: labelVisitor.getNodeList()) {
 			// offset starts from 0
 			final int start_pos = node.getStartPosition();
@@ -251,6 +258,50 @@ public class OmniController extends BaseController {
 			pstmt.addBatch();
 		}
 		pstmt.executeBatch();
+
+		String insertMethodTable = "INSERT INTO method "
+				+ "(entity_id, method_name, return_type, argument_type, full_signature, is_declare) VALUES "
+				+ "(?,         ?,           ?,           ?,             ?,              ?); "
+				;
+		PreparedStatement methodStmt = conn.prepareStatement(insertMethodTable);
+		// update methods
+		for (ASTNode node: labelVisitor.getNodeList()) {
+			if (node instanceof MethodDeclaration) {
+				MethodDeclaration m = (MethodDeclaration)node;
+				IMethodBinding mbinding = m.resolveBinding();
+
+				methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
+				methodStmt.setString(2, m.getName().toString());  // method_name
+				methodStmt.setString(3, m.getReturnType2().resolveBinding().getKey());  // return_type
+				String args = "";
+				for (SingleVariableDeclaration var: (List <SingleVariableDeclaration>) m.parameters()) {
+					args += var.resolveBinding().getType().getKey();
+				}
+				methodStmt.setString(4, args);  // argument_type
+				methodStmt.setString(5, mbinding.getKey());  // full_signature
+				methodStmt.setBoolean(6, true);  // is_declare
+				methodStmt.addBatch();
+			} else if (node instanceof MethodInvocation) {
+				MethodInvocation m = (MethodInvocation)node;
+				IMethodBinding mbinding = m.resolveMethodBinding();
+				if (mbinding == null) { continue; }  // outside library
+
+				methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
+				methodStmt.setString(2, m.getName().toString());  // method_name
+
+				methodStmt.setString(3, mbinding.getReturnType().getKey());  // return_type
+				String args = "";
+				for (Expression exp: (List <Expression>) m.arguments()) {
+					args += exp.resolveTypeBinding().getKey();
+				}
+				methodStmt.setString(4, args);  // argument_type
+				methodStmt.setString(5, mbinding.getKey());  // full_signature
+				methodStmt.setBoolean(6, false);  // is_declare
+				methodStmt.addBatch();
+			}
+
+		}
+		methodStmt.executeBatch();
 	}
 
 	private static int progressCount = 0;
