@@ -281,7 +281,7 @@ public class OmniController extends BaseController {
 
 				methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
 				methodStmt.setString(2, m.getName().toString());  // method_name
-				methodStmt.setString(3, (m.getReturnType2() == null)? null : m.getReturnType2().resolveBinding().getKey());  // return_type
+				methodStmt.setString(3, (m.getReturnType2() == null || m.getReturnType2().resolveBinding() == null)? null : m.getReturnType2().resolveBinding().getKey());  // return_type
 				methodStmt.setString(4, args);  // argument_type
 				methodStmt.setString(5, (mbinding == null)? null : mbinding.getKey());  // full_signature
 				methodStmt.setBoolean(6, true);  // is_declare
