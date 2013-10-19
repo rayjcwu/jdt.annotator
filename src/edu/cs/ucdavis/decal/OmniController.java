@@ -270,32 +270,39 @@ public class OmniController extends BaseController {
 				MethodDeclaration m = (MethodDeclaration)node;
 				IMethodBinding mbinding = m.resolveBinding();
 
-				methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
-				methodStmt.setString(2, m.getName().toString());  // method_name
-				methodStmt.setString(3, m.getReturnType2().resolveBinding().getKey());  // return_type
 				String args = "";
 				for (SingleVariableDeclaration var: (List <SingleVariableDeclaration>) m.parameters()) {
+					if (var.resolveBinding() == null) {
+						args = "";
+						break;
+					}
 					args += var.resolveBinding().getType().getKey();
 				}
+
+				methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
+				methodStmt.setString(2, m.getName().toString());  // method_name
+				methodStmt.setString(3, (m.getReturnType2() == null)? null : m.getReturnType2().resolveBinding().getKey());  // return_type
 				methodStmt.setString(4, args);  // argument_type
-				methodStmt.setString(5, mbinding.getKey());  // full_signature
+				methodStmt.setString(5, (mbinding == null)? null : mbinding.getKey());  // full_signature
 				methodStmt.setBoolean(6, true);  // is_declare
 				methodStmt.addBatch();
 			} else if (node instanceof MethodInvocation) {
 				MethodInvocation m = (MethodInvocation)node;
 				IMethodBinding mbinding = m.resolveMethodBinding();
-				if (mbinding == null) { continue; }  // outside library
+				String args = "";
+				for (Expression exp: (List <Expression>) m.arguments()) {
+					if (exp.resolveTypeBinding() == null) {
+						args = "";
+						break;
+					}
+					args += exp.resolveTypeBinding().getKey();
+				}
 
 				methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
 				methodStmt.setString(2, m.getName().toString());  // method_name
-
-				methodStmt.setString(3, mbinding.getReturnType().getKey());  // return_type
-				String args = "";
-				for (Expression exp: (List <Expression>) m.arguments()) {
-					args += exp.resolveTypeBinding().getKey();
-				}
+				methodStmt.setString(3, (mbinding == null || mbinding.getReturnType() == null) ? null : mbinding.getReturnType().getKey());  // return_type
 				methodStmt.setString(4, args);  // argument_type
-				methodStmt.setString(5, mbinding.getKey());  // full_signature
+				methodStmt.setString(5, (mbinding == null) ? null : mbinding.getKey());  // full_signature
 				methodStmt.setBoolean(6, false);  // is_declare
 				methodStmt.addBatch();
 			}
