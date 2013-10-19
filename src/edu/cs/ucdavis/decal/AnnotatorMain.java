@@ -6,8 +6,6 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
@@ -24,35 +22,30 @@ public class AnnotatorMain {
 
 		Options options = new Options();
 
-		OptionGroup connGroup = new OptionGroup();
-		connGroup.addOption(new Option("H", "host", true, "database server host ip (default: \"localhost\")"));
-		connGroup.addOption(new Option("P", "port", true, "database server port (default: \"5432\")"));
-		connGroup.addOption(new Option("d", "dbname", true, "database name to connect to (default: \"entity\")"));
-		connGroup.addOption(new Option("U", "username", true, "(optional) username, must specify password as well"));
-		connGroup.addOption(new Option("W", "password", true, "(optional) password, must specify username as well"));
-		connGroup.addOption(new Option("r", "reset", false, "reset all annotated astnode information in database"));
+		options.addOption("H", "host", true, "database server host ip (default: \"localhost\")");
+		options.addOption("P", "port", true, "database server port (default: \"5432\")");
+		options.addOption("d", "dbname", true, "database name to connect to (default: \"entity\")");
+		options.addOption("U", "username", true, "(optional) username, must specify password as well");
+		options.addOption("W", "password", true, "(optional) password, must specify username as well");
+		options.addOption("r", "reset", false, "reset all annotated astnode information in database");
 
-		OptionGroup srcGroup = new OptionGroup();
-		srcGroup.addOption(new Option("s", "src", true, "absolute root path of source code files"));
-		srcGroup.addOption(new Option("l", "lib", true, "absolute root path of libraries (.jar)"));
-		srcGroup.addOption(new Option("p", "project", true, "project name (default: folder name containing source code)"));
-
-		options.addOptionGroup(connGroup);
-		options.addOptionGroup(srcGroup);
+		options.addOption("s", "src", true, "absolute root path of source code files");
+		options.addOption("l", "lib", true, "absolute root path of libraries (.jar)");
+		options.addOption("p", "project", true, "project name (default: folder name containing source code)");
 
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = null;
 
-		String host = "";
-		String port = "";
-		String dbname = "";
-		String username = "";
-		String password = "";
+		String host = null;
+		String port = null;
+		String dbname = null;
+		String username = null;
+		String password = null;
 
-		String projectName = "";
-		String srcPath = "";
-		String libPath = "";
+		String projectName = null;
+		String srcPath = null;
+		String libPath = null;
 
 		OmniController controller = null;
 		try {
