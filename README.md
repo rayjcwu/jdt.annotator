@@ -30,6 +30,7 @@ Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt
 
 
 # Schema
+View `entity_all` combines table `project`, `file`, `entity`, `nodetype` and `cross_ref`. Table method store information about all methods in this source code.
 
 | Table         | Column        | Description  |
 | ------------- |--------------| --------|
@@ -53,6 +54,38 @@ Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt
 | | cross_ref_key | used to figure out where is this node declared. Only [Name](http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2Fdom%2FName.html) type `ASTNode` will have non-null value |
 | | parent_id | parent entity's `entity_id`, `parent_id` of root node is `-1`. |
 | | declared_id | if this node is declared in another place **in this project**, this id could find out that node. if it's declared in another library, it won't show up.|
+| method | entity_id | |
+| | method_name | |
+| | return_type | |
+| | argument_type | |
+| | full_signature | full type descriptor for this method |
+| | is_declare | boolean value to indicate if this is a method declaration or not|
+
+
+1 minute quick guide for the type descriptor used in method table: 
+
+The rule for a method descriptor is `Class` . `method name` ( `method arguments (no comma)` ) `return type` `exceptions (each starting with |)` 
+
+Therefore the descriptor for `main` method defined in `package demo.example` throwing `IOException` and `SQLException` is `Ldemo/example/Main;.main([Ljava/lang/String;)V|Ljava/io/IOException;|Ljava/sql/SQLException;`. 
+
+| type descriptor | type | description |
+|-----------------|------| ------------|
+| B	| byte | |
+| C | char | |
+| D	| double | | 
+| F	| float | |
+| I	| int | |
+| J	| long | |
+| L *ClassName* ; | Class | java.lang.String -> Ljava/lang/String; <br /> Map <String, Integer> -> Ljava/util/Map<Ljava/lang/String;Ljava/lang/Integer;>;|
+| S	| short	| |
+| Z | boolean | |
+| [	| reference	| int [][] -> [[I, open bracket only. `...` equals to `[` |
+| V | void | |
+
+
+Check [JVM type descriptor](http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.3) for official documentation.
+
+
 
 # How it works
 
@@ -81,4 +114,3 @@ To rebuild, you need to install [Maven 3](http://maven.apache.org/). If you want
 
 * `outOfMemoryException`: Allocating more memory for JVM by `java -Xmx2048m -jar …`
 * create database in postgresql: `$> createdb database_name` in shell or `CREATE DATABASE database_name` in SQL.
-* slow: Current implementation use auto commit for every `INSERT INTO`/`UPDATE`.
