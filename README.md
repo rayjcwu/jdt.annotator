@@ -5,29 +5,25 @@ This project is based on [Eclipse JDT](http://help.eclipse.org/kepler/index.jsp?
 Binary file [jdt.annotator.jar](https://dl.dropboxusercontent.com/u/15553400/jdt.annotator.jar)
 
 # Usage
-`java -jar annotator.jar [opts]`, `-s`, `-d` are required options to start annotating.
+`java -jar annotator.jar --src <path> [options]`, `--src` is required option to start annotating.
 
 ```
--d,--jdbc <arg>       jdbc url, currently only support postgresql
-                       (jdbc:postgresql://ip:port/database) (postgresql
-                      default port: 5432)
--l,--lib <arg>        absolute root path of libraries (.jar)
--p,--project <arg>    project name
--r,--reset            reset all annotated astnode information in database
-                      [need to specify --jdbc]
--s,--src <arg>        absolute root path of files
--U,--username <arg>   (optional) username, must specify password as well
--W,--password <arg>   (optional) password, must specify username as well
+ -d,--dbname <arg>     database name to connect to (default: "entity")
+ -H,--host <arg>       database server host ip (default: "localhost")
+ -l,--lib <arg>        absolute root path of libraries (.jar)
+ -P,--port <arg>       database server port (default: "5432")
+ -p,--project <arg>    project name (default: folder name containing source code)
+ -r,--reset            reset all annotated astnode information in database
+ -s,--src <arg>        absolute root path of source code files
+ -U,--username <arg>   (optional) username, must specify password as well
+ -W,--password <arg>   (optional) password, must specify username as well
 ```
 
-* If you omit `-p` option, program will use folder name as default project name.
+* If you omit `-p` option, program will use folder name containing source code as default project name.
 * If your project use ant or maven to compile, it may specify dependencies in `build.xml` or `pom.xml`. If you want to annotate type, method or other information from those library, you need to download those dependencies first and specify the library folder in `-l` option.
   * Maven: type `mvn org.apache.maven.plugins:maven-dependency-plugin:2.7:copy-dependencies -DoutputDirectory=/your/library/folder` in project root folder. Then maven will download all dependencies .jars to that folder.
   * Ant: To Be Completed
   
-
-
-
 
 # Schema
 View `entity_all` combines table `project`, `file`, `entity`, `nodetype` and `cross_ref`. Table method store information about all methods in this source code.

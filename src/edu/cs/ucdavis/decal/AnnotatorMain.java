@@ -6,6 +6,8 @@ import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.OptionGroup;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
@@ -21,16 +23,22 @@ public class AnnotatorMain {
 		Logger logger = Logger.getLogger("annotator");
 
 		Options options = new Options();
-		options.addOption("H", "host", true, "database server host ip (default: \"localhost\")");
-		options.addOption("P", "port", true, "database server port (default: \"5432\")");
-		options.addOption("d", "dbname", true, "database name to connect to (default: \"entity\")");
-		options.addOption("U", "username", true, "(optional) username, must specify password as well");
-		options.addOption("W", "password", true, "(optional) password, must specify username as well");
 
-		options.addOption("s", "src", true, "absolute root path of source code files");
-		options.addOption("l", "lib", true, "absolute root path of libraries (.jar)");
-		options.addOption("p", "project", true, "project name");
-		options.addOption("r", "reset", false, "reset all annotated astnode information in database [need to specify --jdbc]");
+		OptionGroup connGroup = new OptionGroup();
+		connGroup.addOption(new Option("H", "host", true, "database server host ip (default: \"localhost\")"));
+		connGroup.addOption(new Option("P", "port", true, "database server port (default: \"5432\")"));
+		connGroup.addOption(new Option("d", "dbname", true, "database name to connect to (default: \"entity\")"));
+		connGroup.addOption(new Option("U", "username", true, "(optional) username, must specify password as well"));
+		connGroup.addOption(new Option("W", "password", true, "(optional) password, must specify username as well"));
+		connGroup.addOption(new Option("r", "reset", false, "reset all annotated astnode information in database"));
+
+		OptionGroup srcGroup = new OptionGroup();
+		srcGroup.addOption(new Option("s", "src", true, "absolute root path of source code files"));
+		srcGroup.addOption(new Option("l", "lib", true, "absolute root path of libraries (.jar)"));
+		srcGroup.addOption(new Option("p", "project", true, "project name (default: folder name containing source code)"));
+
+		options.addOptionGroup(connGroup);
+		options.addOptionGroup(srcGroup);
 
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
@@ -90,7 +98,7 @@ public class AnnotatorMain {
 				System.out.println("annotating finished.");
 			}
 		} catch (ParseException e) {
-			formatter.printHelp("annotator.jar", options);
+			formatter.printHelp("jdt.annotator --src <path> [options]", "= a source code annotator =", options, "");
 		} catch (Exception e) {
 			logger.log(Level.SEVERE, e.toString());
 			e.printStackTrace();
