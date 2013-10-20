@@ -2,6 +2,7 @@ package edu.cs.ucdavis.decal;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -101,6 +102,7 @@ public class OmniController extends BaseController {
 
 	// main flow
 	public void run() {
+        System.out.println("Cleaning same project if exists...");
 		clearProjectAstNodeInfo();
 
 		System.out.println("Collecting ASTs...");
@@ -202,6 +204,9 @@ public class OmniController extends BaseController {
                 }
             }
             pstmt.executeBatch();
+        } catch (BatchUpdateException e) {
+            logger.log(Level.SEVERE, "Storing token information batch exception", e.getNextException());
+            e.getNextException().printStackTrace();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Storing token information", e);
             e.printStackTrace();
@@ -274,6 +279,9 @@ public class OmniController extends BaseController {
                 pstmt.addBatch();
             }
             pstmt.executeBatch();
+        } catch (BatchUpdateException e) {
+            logger.log(Level.SEVERE, "Storing astnode information batch exception", e.getNextException());
+            e.getNextException().printStackTrace();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Storing ASTNode information exception", e);
             e.printStackTrace();
@@ -346,6 +354,9 @@ public class OmniController extends BaseController {
 
             }
             methodStmt.executeBatch();
+        } catch (BatchUpdateException e) {
+            logger.log(Level.SEVERE, "Storing method information batch exception", e.getNextException());
+            e.getNextException().printStackTrace();
         } catch (SQLException e) {
             logger.log(Level.SEVERE, "Store method node exception", e);
             e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
