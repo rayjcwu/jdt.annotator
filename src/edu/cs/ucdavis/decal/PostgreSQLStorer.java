@@ -587,7 +587,7 @@ public class PostgreSQLStorer {
 		return result;
 	}
 
-	private void closeIt(PreparedStatement stmt) {
+	public static void closeIt(PreparedStatement stmt) {
 		if (stmt != null) {
 			try {
 				stmt.close();
@@ -597,7 +597,7 @@ public class PostgreSQLStorer {
 		}
 	}
 
-	private void closeIt(Statement stmt) {
+	public static void closeIt(Statement stmt) {
 		if (stmt != null) {
 			try {
 				stmt.close();
