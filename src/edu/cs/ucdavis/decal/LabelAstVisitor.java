@@ -39,6 +39,9 @@ public class LabelAstVisitor extends ASTVisitor {
 
 	@Override
 	public boolean preVisit2(ASTNode node) {
+		if (node.getStartPosition() == -1) {
+			return false;
+		}
 		nodeLabel.put(node, label);
 		nodeList.add(node);
 		label++;
