@@ -80,7 +80,6 @@ public class AnnotatorMain {
 				} else {
 					controller.setDatabase(new PostgreSQLStorer(jdbcUrl));
 				}
-				(new DumpAstVisitor()).register(controller);
 				(new AnnotationASTRequestor()).register(controller);
 
 				if (projectName == null || projectName.equals("")) {

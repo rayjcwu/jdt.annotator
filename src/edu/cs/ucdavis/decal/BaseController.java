@@ -5,7 +5,6 @@ import java.util.logging.Logger;
 // data fields and getters/setters
 public class BaseController {
 
-	protected DumpAstVisitor visitor;
 	protected AnnotationASTRequestor requestor;
 	protected PostgreSQLStorer database;
 	protected Logger logger;
@@ -14,20 +13,11 @@ public class BaseController {
 	protected String libPath;
 
 	public BaseController() {
-		this.visitor = null;
 		this.requestor = null;
 		this.database = null;
 		this.logger = null;
 		this.sourcePath = null;
 		this.projectName = null;
-	}
-
-	public DumpAstVisitor getVisitor() {
-		return visitor;
-	}
-
-	public void setVisitor(DumpAstVisitor visitor) {
-		this.visitor = visitor;
 	}
 
 	public AnnotationASTRequestor getRequestor() {
