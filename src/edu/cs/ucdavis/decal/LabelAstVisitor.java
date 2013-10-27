@@ -8,12 +8,19 @@ import java.util.Map;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 
+/**
+ * This visitor will save each AST node with an unique index number.
+ * Index starts with 0. To map index to correct serial index in database,
+ * you need a delta value nextVal retrieved from database
+ * @author jcwu
+ *
+ */
 public class LabelAstVisitor extends ASTVisitor {
 	Map <ASTNode, Integer> nodeLabel;
-	List <ASTNode> nodeList;
+	List <ASTNode> nodeList;  // in order to visit each node in order TODO: could use LinkedHashMap instead
 	int label;
 
-	Long nextVal;
+	Long nextVal;	// to store this information in visitor and pass it around, not meant to be used in visitor itself
 
 	public LabelAstVisitor() {
 		nodeLabel = new HashMap<ASTNode, Integer>();

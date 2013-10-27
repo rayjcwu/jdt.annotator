@@ -4,6 +4,11 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 
+/**
+ * Will find the tightest AST node containing given token
+ * @author jcwu
+ *
+ */
 public class LookupVisitor extends ASTVisitor {
 
 	// tightest node containing current token so far

@@ -11,12 +11,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
 public class AnnotatorMain {
-	/**
-	 * example argv
-	   --jdbc jdbc:postgresql://127.0.0.1:5432/annotation
-	   --project demo
-	   --src /Users/jcwu/Dropbox/code/project/annotation/fake_project/
-	 */
 	public static void main(String[] argv) {
 		Logger logger = Logger.getLogger("annotator");
 

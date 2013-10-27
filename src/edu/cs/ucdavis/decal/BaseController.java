@@ -2,7 +2,11 @@ package edu.cs.ucdavis.decal;
 
 import java.util.logging.Logger;
 
-// data fields and getters/setters
+/**
+ * Define setters and getters to be used in OmniController
+ * @author jcwu
+ *
+ */
 public class BaseController {
 
 	protected AnnotationASTRequestor requestor;

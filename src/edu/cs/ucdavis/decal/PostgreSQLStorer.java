@@ -21,6 +21,11 @@ import java.util.logging.Logger;
 import org.antlr.JavaLexer;
 import org.eclipse.jdt.core.dom.ASTNode;
 
+/**
+ * Database logic
+ * @author jcwu
+ *
+ */
 public class PostgreSQLStorer {
 	private boolean ready;
 	private Connection conn;
@@ -30,7 +35,7 @@ public class PostgreSQLStorer {
 	private String username;
 	private String password;
 
-	public static int tokenBase = 100;
+	public static int tokenBase = 100;   // token index starts from 100
 
 	private Map <String, Integer> entity_id_cache;
 
@@ -199,6 +204,10 @@ public class PostgreSQLStorer {
 		}
 	}
 
+	/**
+	 * Collect defined view names
+	 * @return
+	 */
 	private Collection<String> collectViewNames() {
 		List <String> views = new ArrayList<String>();
 		try {
@@ -214,19 +223,23 @@ public class PostgreSQLStorer {
 		return views;
 	}
 
+	/**
+	 * Collect defined index names
+	 * @return
+	 */
 	private Collection<String> collectIndexNames() {
-		List <String> views = new ArrayList<String>();
+		List <String> indexNames = new ArrayList<String>();
 		try {
 			DatabaseMetaData meta = conn.getMetaData();
 			ResultSet res = meta.getTables(null, null, null, new String[] {"INDEX"});
 			while (res.next()) {
-				views.add(res.getString("TABLE_NAME"));
-			  }
+				indexNames.add(res.getString("TABLE_NAME"));
+			}
 		} catch (SQLException e) {
 			Logger logger = Logger.getLogger("annotation");
 			logger.log(Level.SEVERE, "Collect index names exception", e);
 		}
-		return views;
+		return indexNames;
 	}
 
 	public void createViewIfNotExist() {
@@ -342,7 +355,12 @@ public class PostgreSQLStorer {
 		}
 	}
 
-
+	/**
+	 * Use fileName and projectId to uniquely identify a file.
+	 * @param fileName
+	 * @param projectId
+	 * @return Will return -1 if file doesn't exist
+	 */
 	public int retrieveFileId(String fileName, int projectId) {
 		this.entity_id_cache.clear();
 		Statement stmt = null;
@@ -367,7 +385,12 @@ public class PostgreSQLStorer {
 		return -1; // should not happen
 	}
 
-
+	/**
+	 * Query project id in database. Use projectName and sourcePath to uniquely identify a project.
+	 * @param projectName
+	 * @param sourcePath
+	 * @return Will return -1 if project doesn't exist
+	 */
 	public int retrieveProjectId(String projectName, String sourcePath) {
 		PreparedStatement stmt = null;
 		ResultSet result = null;
@@ -395,76 +418,6 @@ public class PostgreSQLStorer {
 			closeIt(stmt);
 		}
 		return -1; // should not happen
-	}
-
-
-	public void saveAstNodeInfo(int start_pos, int length,
-			int start_line_number, int start_column_number,
-			int end_line_number, int end_column_number,
-			int nodetype_id, String cross_ref_key, String string, int file_id, String currentFileRaw, int parent_id) {
-		PreparedStatement pstmt = null;
-		try {
-			pstmt = conn.prepareStatement("INSERT INTO entity ("
-					+ "start_pos, length, "
-					+ "start_line_number, start_column_number, "
-					+ "end_line_number, end_column_number, "
-					+ "nodetype_id, cross_ref_key, string, file_id, raw, parent_id) "
-					+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?)");
-			pstmt.setInt(1, start_pos);
-			pstmt.setInt(2, length);
-			pstmt.setInt(3, start_line_number);
-			pstmt.setInt(4, start_column_number);
-			pstmt.setInt(5, end_line_number);
-			pstmt.setInt(6, end_column_number);
-
-			pstmt.setInt(7, nodetype_id);
-			pstmt.setString(8, cross_ref_key);
-			pstmt.setString(9, string);
-			pstmt.setInt(10, file_id);
-			pstmt.setString(11, currentFileRaw.substring(start_pos, start_pos+length));
-			pstmt.setInt(12, parent_id);
-			pstmt.executeUpdate();
-		} catch (SQLException e) {
-			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, String.format("Save ASTNode=%s", string), e);
-		} finally {
-			closeIt(pstmt);
-		}
-	}
-
-	public void saveTokenInfo(int start_pos, int length,
-			int start_line_number, int start_column_number,
-			int end_line_number, int end_column_number,
-			int nodetype_id, String string, int file_id, String currentFileRaw, int parent_id) {
-		PreparedStatement pstmt = null;
-		try {
-			pstmt = conn.prepareStatement("INSERT INTO entity ( "
-					+ "start_pos, length, "
-					+ "start_line_number, start_column_number, "
-					+ "end_line_number, end_column_number, "
-					+ "nodetype_id, string, file_id, raw, parent_id) "
-					+ "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-			pstmt.setInt(1, start_pos);
-			pstmt.setInt(2, length);
-			pstmt.setInt(3, start_line_number);
-			pstmt.setInt(4, start_column_number);
-			pstmt.setInt(5, end_line_number);
-			pstmt.setInt(6, end_column_number);
-
-			pstmt.setInt(7, nodetype_id);
-			pstmt.setString(8, string);
-			pstmt.setInt(9, file_id);
-			pstmt.setString(10, currentFileRaw.substring(start_pos, start_pos+length));
-			pstmt.setInt(11, parent_id);
-			pstmt.executeUpdate();
-		} catch (SQLException e) {
-			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, String.format("Save Token=%s", string), e);
-		} finally {
-			closeIt(pstmt);
-		}
 	}
 
 	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
@@ -514,6 +467,11 @@ public class PostgreSQLStorer {
 		}
 	}
 
+	/**
+	 * Clear stored annotation information in database for given projectId.
+	 * All entity are ON DELETE CASCADE, therefore deleting file for given projectID is enough.
+	 * @param project_id
+	 */
 	public void clearProjectAstnode(int project_id) {
 		Statement stmt = null;
 		try {
@@ -525,9 +483,12 @@ public class PostgreSQLStorer {
 		} finally {
 			closeIt(stmt);
 		}
-
 	}
 
+	/**
+	 * Drop all tables in database and recreate them.
+	 * @return
+	 */
 	public PostgreSQLStorer resetDatabase() {
 		Statement stmt = null;
 		try {
@@ -551,6 +512,14 @@ public class PostgreSQLStorer {
 		return ready;
 	}
 
+	/**
+	 * Use start_pos, length, nodetype, file_id to uniquely identify an entity in entity table.
+	 * @param start_pos
+	 * @param length
+	 * @param nodetype
+	 * @param file_id
+	 * @return Will return -1 if such entity doesn't exist
+	 */
 	public int queryAstNodeId(int start_pos, int length, int nodetype, int file_id) {
 		String queryKey = String.format("%d:%d:%d:%d", start_pos, length, nodetype, file_id);
 		if (entity_id_cache.containsKey(queryKey)) {
@@ -611,6 +580,12 @@ public class PostgreSQLStorer {
 		return conn;
 	}
 
+	/**
+	 * Entity id is serial (auto increment in MySql).
+	 * This method will retrieve an entity id greater then current biggest entity id.
+	 * @param id_seq For table entity, the auto generated id_seq table name is entity_entity_id_seq
+	 * @return
+	 */
 	public Long getNextSerial(String id_seq) {
 		Long serialNum = 0L;
 		Statement stmt = null;
@@ -621,7 +596,6 @@ public class PostgreSQLStorer {
 			ResultSet rs = stmt.executeQuery(query);
 			if (rs.next()) {
 				serialNum = rs.getLong(1);
-				//System.out.println("serialNum = " + serialNum);
 			}
 		} catch (SQLException e) {
 			System.err.println("Should not happen");

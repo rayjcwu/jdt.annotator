@@ -13,10 +13,23 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
 
+/**
+ * Utility methods
+ * @author jcwu
+ *
+ */
 public class Util {
 
-	// concatenate two array
+	/**
+	 * concatenate two string arrays
+	 * @param A
+	 * @param B
+	 * @return Will return an empty array if A or B is null
+	 */
 	public static String[] concat(String[] A, String[] B) {
+		if (A == null || B == null) {
+			return new String[0];
+		}
 		int aLen = A.length;
 		int bLen = B.length;
 		String[] C = new String[aLen + bLen];
@@ -25,6 +38,12 @@ public class Util {
 		return C;
 	}
 
+	/**
+	 * Return all files with specified file types in path folder and its subfolders
+	 * @param path Absolute path of
+	 * @param filetypes Collect all java files by passing string array ["java"]
+	 * @return String array of all qualified files
+	 */
 	@SuppressWarnings("unchecked")
 	public static String[] collectFilePaths(String path, String[] filetypes) {
 		Collection <File> filePaths = (Collection <File>) FileUtils.listFiles(new File(path), filetypes, true);
@@ -37,17 +56,32 @@ public class Util {
 		return sourceFilePaths;
 	}
 
-	public static String[] getClasspath() {
+	/**
+	 * Return environment variable CLASSPATH
+	 * @return string array of CLASSPATH environment variable
+	 */
+	private static String[] getClasspath() {
 		String classpath = System.getenv("CLASSPATH");
 		return (classpath == null) ? new String[0] : classpath.split(":");
 	}
 
+	/**
+	 * Return potential project name from source path
+	 * @param argv
+	 * @return
+	 */
 	public static String guessProjectName(String argv) {
 		String []args = argv.split("/");
 		return args[args.length - 1];
 	}
 
-
+	/**
+	 * Retrieve a JDT ASTPaser. Pass libPath if you want to figure out
+	 * type/method information from libraries outside of your project.
+	 * Encoding of source files depend on system.
+	 * @param libPath null or empty string for no libPath. Default will use CLASSPATH variable.
+	 * @return
+	 */
 	public static ASTParser getParser(String libPath) {
 
 		ASTParser parser = ASTParser.newParser(AST.JLS4);
@@ -60,12 +94,19 @@ public class Util {
 			String []combinePath = Util.concat(libs, classpath);
 			parser.setEnvironment(combinePath, null, null, true);
 		}
-		parser.setUnitName("test");  // seems you should set unit name for whatever you want
+		parser.setUnitName("test");  // need to set this but never use
 		parser.setResolveBindings(true);
 		parser.setBindingsRecovery(true);
 		return parser;
 	}
 
+	/**
+	 * Use ANTLR to lex a java file. Will ignore identitifer and
+	 * null/boolean/string/character literals since JDT has identical ASTNode for them.
+	 * Skip EOF as well since we don't need it.
+	 * @param fileContent java source code
+	 * @return
+	 */
 	public static List <Token> prepareTokens(String fileContent) {
 		ANTLRInputStream input = new ANTLRInputStream(fileContent);
 		JavaLexer lexel = new JavaLexer(input);

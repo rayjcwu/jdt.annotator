@@ -55,11 +55,6 @@
   </build>
   <dependencies>
     <dependency>
-      <groupId>mysql</groupId>
-      <artifactId>mysql-connector-java</artifactId>
-      <version>5.1.25</version>
-    </dependency>
-    <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
       <version>9.2-1003-jdbc4</version>
@@ -93,11 +88,6 @@
       <groupId>org.eclipse.birt.runtime</groupId>
       <artifactId>org.eclipse.equinox.preferences</artifactId>
       <version>3.5.100.v20130422-1538</version>
-    </dependency>
-    <dependency>
-      <groupId>com.google.guava</groupId>
-      <artifactId>guava</artifactId>
-      <version>14.0.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.commons</groupId>
