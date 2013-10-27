@@ -403,7 +403,7 @@ public class PostgreSQLStorer {
 		return -1; // should not happen
 	}
 
-	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, int file_id, String cross_ref_key) {
+	public void saveCrossRefAstNode(int start_pos, int length, int nodetype_id, int file_id, String cross_ref_key) {
 		final int declare_id = queryAstNodeId(start_pos, length, nodetype_id, file_id);  // will throw illegal state exception if can't find such entity
 		PreparedStatement stmt = null;
 		ResultSet entitiesWithSameCrossRefKey = null;

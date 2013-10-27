@@ -17,7 +17,7 @@ public class LabelAstVisitor extends ASTVisitor {
 	Map <ASTNode, Integer> nodeLabel;
 	int label;
 
-	Long nextVal;	// to store this information in visitor and pass it around, not meant to be used in visitor itself
+	long nextVal;	// to store this information in visitor and pass it around, not meant to be used in visitor itself
 
 	public LabelAstVisitor() {
 		nodeLabel = new LinkedHashMap<ASTNode, Integer>(); // use linked hashmap to preserve order of insertion
@@ -35,7 +35,7 @@ public class LabelAstVisitor extends ASTVisitor {
 		this.nextVal = nextVal;
 	}
 
-	public Long getNextVal() {
+	public long getNextVal() {
 		return nextVal;
 	}
 
