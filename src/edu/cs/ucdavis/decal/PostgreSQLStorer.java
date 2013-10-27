@@ -195,9 +195,28 @@ public class PostgreSQLStorer {
 
 		connect();
 		createTableIfNotExist();
-		createViewIfNotExist();
 		this.ready = true;
 		this.entity_id_cache = new HashMap<String, Integer>();
+	}
+
+	/**
+	 * Drop all tables in database and recreate them.
+	 * @return
+	 */
+	public PostgreSQLStorer resetDatabase() {
+		Statement stmt = null;
+		try {
+			stmt = conn.createStatement();
+			for (Entry <String, String> entry: tableToCreate.entrySet()) {
+				stmt.execute(String.format("DROP TABLE IF EXISTS %s CASCADE;", entry.getKey()));
+			}
+		} catch (SQLException e) {
+			logger.log(Level.SEVERE, "reset database error", e);
+		} finally {
+			closeIt(stmt);
+		}
+		createTableIfNotExist();
+		return this;
 	}
 
 	public void connect() {
@@ -224,18 +243,22 @@ public class PostgreSQLStorer {
 		}
 	}
 
-
+	/**
+	 * Create table/view/index
+	 */
 	public void createTableIfNotExist() {
 		Statement stmt = null;
-		Collection<String> indexes = collectMetaNames("INDEX");
 		try {
 			stmt = conn.createStatement();
 
+			// create table
 			for (Entry<String, String> entry: tableToCreate.entrySet()) {
 				String createTableSql = entry.getValue();
 				stmt.executeUpdate(createTableSql);
 			}
 
+			// create index
+			Collection<String> indexes = collectMetaNames("INDEX");
 			for (Entry <String, String> entry: indexToCreate.entrySet()) {
 				String table = entry.getKey();
 				String column = entry.getValue();
@@ -245,6 +268,17 @@ public class PostgreSQLStorer {
 				}
 			}
 
+			// create view
+			Collection <String> views = collectMetaNames("VIEW");
+			for (Entry <String, String> entry: viewToCreate.entrySet()) {
+				String viewName = entry.getKey();
+				String createViewSql = entry.getValue();
+				if (!views.contains(viewName)) {
+					stmt.executeUpdate(createViewSql);
+				}
+			}
+
+			// insert nodetype of tokens
 			for (Field field: JavaLexer.class.getDeclaredFields()) {
 				if (field.getType().equals(int.class)) {
 					int id = field.getInt(null);
@@ -257,13 +291,13 @@ public class PostgreSQLStorer {
 							id + PostgreSQLStorer.tokenBase, string, token));
 				}
 			}
+			// insert nodetype of ASTNode
 			// TODO: this will throw IllegalAccessException, don't know why, that's why I put it in the end
 			for (Field field: ASTNode.class.getDeclaredFields()) {
 				if (field.getType().equals(int.class)) {
 					stmt.executeUpdate(String.format("INSERT INTO nodetype (nodetype_id, name) VALUES (%d, '%s');", field.getInt(null), field.getName()));
 				}
 			}
-
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Create table exception", e);
 		} catch (IllegalAccessException e) {
@@ -292,27 +326,6 @@ public class PostgreSQLStorer {
 			logger.log(Level.SEVERE, String.format("Collect %s names exception", metaName), e);
 		}
 		return names;
-	}
-
-	public void createViewIfNotExist() {
-		Statement stmt = null;
-		Collection <String> views = collectMetaNames("VIEW");
-		String to_create = "";
-		try {
-			stmt = conn.createStatement();
-			/// create view
-			for (Entry <String, String> entry: viewToCreate.entrySet()) {
-				String viewName = entry.getKey();
-				String sql = entry.getValue();
-				if (!views.contains(viewName)) {
-					stmt.executeUpdate(sql);
-				}
-			}
-		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Create views "+ to_create + " exception\n" + e.toString());
-		} finally {
-			closeIt(stmt);
-		}
 	}
 
 	public void close() {
@@ -437,27 +450,6 @@ public class PostgreSQLStorer {
 		} finally {
 			closeIt(stmt);
 		}
-	}
-
-	/**
-	 * Drop all tables in database and recreate them.
-	 * @return
-	 */
-	public PostgreSQLStorer resetDatabase() {
-		Statement stmt = null;
-		try {
-			stmt = conn.createStatement();
-			for (Entry <String, String> entry: tableToCreate.entrySet()) {
-				stmt.execute(String.format("DROP TABLE IF EXISTS %s CASCADE;", entry.getKey()));
-			}
-		} catch (SQLException e) {
-			logger.log(Level.SEVERE, "Clear database error", e);
-		} finally {
-			closeIt(stmt);
-		}
-		createTableIfNotExist();
-		createViewIfNotExist();
-		return this;
 	}
 
 	public boolean isReady() {
