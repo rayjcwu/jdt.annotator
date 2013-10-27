@@ -12,8 +12,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -36,6 +38,147 @@ public class PostgreSQLStorer {
 	private String password;
 
 	public static int tokenBase = 100;   // token index starts from 100
+
+	private static Map<String /* table */, String /* column */> indexToCreate;
+	static {
+		indexToCreate = new HashMap<String, String>();  // order doesn't matter
+		indexToCreate.put("cross_ref_key", "cross_ref_key");
+		indexToCreate.put("entity", "start_pos");
+		indexToCreate.put("entity", "length");
+		indexToCreate.put("entity", "file_id");
+		indexToCreate.put("entity", "parent_id");
+	}
+
+	private static Map<String /* table name */, String /* SQL */> tableToCreate;
+	static {
+		tableToCreate = new LinkedHashMap<String, String>();  // need to preserve order of creation
+		tableToCreate.put("nodetype",
+						  "CREATE TABLE IF NOT EXISTS nodetype (nodetype_id int PRIMARY KEY, name text, token text); "
+						+ "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
+					    + "WHERE (EXISTS (SELECT nodetype.nodetype_id FROM nodetype WHERE nodetype.nodetype_id = NEW.nodetype_id)) "
+					    + "DO INSTEAD NOTHING; ");
+
+		tableToCreate.put("project",
+						  "CREATE TABLE IF NOT EXISTS project ("
+						+ "project_id serial PRIMARY KEY, "
+						+ "project_type text, "
+						+ "project_name text, "
+						+ "description text, "
+						+ "project_path text); ");
+
+		tableToCreate.put("file",
+				 		  "CREATE TABLE IF NOT EXISTS file ( "
+						+ "file_id serial PRIMARY KEY, "
+						+ "file_type text, "
+						+ "file_path text, "
+						+ "file_name text, "
+						+ "project_id int references project(project_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
+
+		tableToCreate.put("entity",
+						  "CREATE TABLE IF NOT EXISTS entity ("
+						+ "entity_id serial PRIMARY KEY, "
+						+ "start_pos int, "
+						+ "length int, "  	  // end_pos = start_pos + length
+						+ "start_line_number int, "   // #-th line in file
+						+ "start_column_number int, "
+						+ "end_line_number int, "
+						+ "end_column_number int, "
+					    + "nodetype_id int references nodetype(nodetype_id) ON DELETE CASCADE ON UPDATE CASCADE, "   // foreign key
+					    + "file_id int references file(file_id) ON DELETE CASCADE ON UPDATE CASCADE, "		  // foreign key
+					    + "string text, "	      // string representation, stripped version
+					    + "raw text, "          // raw content of ast node
+					    + "parent_id int);");
+
+		tableToCreate.put("cross_ref_key",
+						  "CREATE TABLE IF NOT EXISTS cross_ref_key( "
+						+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+						+ "cross_ref_key text); ");
+
+		tableToCreate.put("cross_ref",
+				 		  "CREATE TABLE IF NOT EXISTS cross_ref( "
+						+ "ref_id serial PRIMARY KEY, "
+						+ "declared_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+						+ "reference_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
+
+		tableToCreate.put("method",
+						  "CREATE TABLE IF NOT EXISTS method( "
+						+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+						+ "method_name text, "
+						+ "return_type text, "
+						+ "argument_type text, "
+						+ "full_signature text, "
+						+ "is_declare boolean); ");
+	}
+
+	private static Map <String /* view name */, String /* SQL */> viewToCreate;
+	static {
+		viewToCreate = new HashMap<String, String>();
+		/// create view
+		viewToCreate.put("project_file", "CREATE VIEW project_file AS "
+				+ "SELECT project.project_id AS project_id, "
+				+ "project.project_name AS project_name, "
+				+ "project.project_path as project_path, "
+				+ "file.file_id AS file_id, "
+				+ "file.file_name AS file_name "
+
+				+ "FROM project, file "
+
+				+ "WHERE file.project_id = project.project_id;");
+
+		viewToCreate.put("entity_cross_ref", "CREATE VIEW entity_cross_ref AS "
+				+ "SELECT * "
+				+ "FROM entity LEFT JOIN cross_ref "
+				+ "ON entity.entity_id = cross_ref.reference_id; ");
+
+		viewToCreate.put("entity_nodetype", "CREATE VIEW entity_nodetype AS "
+				+ "SELECT entity_cross_ref.entity_id AS entity_id, "
+				+ "start_pos, "
+				+ "length, "
+				+ "start_pos + length AS end_pos, "
+				+ "start_line_number, "
+				+ "start_column_number, "
+				+ "end_line_number, "
+				+ "end_column_number, "
+				+ "entity_cross_ref.nodetype_id AS nodetype_id, "
+				+ "nodetype.name AS nodetype, "
+
+				+ "file_id, "
+				+ "string, "
+				+ "raw, "
+				+ "parent_id, "
+				+ "declared_id "
+
+				+ "FROM entity_cross_ref, nodetype "
+				+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id;");
+
+		viewToCreate.put("entity_all", "CREATE VIEW entity_all AS "
+				+ "SELECT "
+				+ "entity_cross_ref.entity_id AS entity_id, "
+				+ "start_pos, "
+				+ "length, "
+				+ "start_pos + length AS end_pos, "
+				+ "start_line_number, "
+				+ "start_column_number, "
+				+ "end_line_number, "
+				+ "end_column_number, "
+
+				+ "entity_cross_ref.nodetype_id AS nodetype_id, "
+				+ "nodetype.name AS nodetype, "
+				+ "entity_cross_ref.file_id AS file_id, "
+				+ "file.file_name AS file_name, "
+				+ "project.project_id AS project_id, "
+				+ "project.project_name AS project_name, "
+				+ "project.project_path AS project_path, "
+				+ "string, "
+				+ "raw, "
+				+ "parent_id,"
+				+ "declared_id "
+
+				+ "FROM entity_cross_ref, nodetype, file, project "
+				+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id "
+				+ "AND entity_cross_ref.file_id = file.file_id "
+				+ "AND file.project_id = project.project_id; ");
+	}
 
 	private Map <String, Integer> entity_id_cache;
 
@@ -84,100 +227,22 @@ public class PostgreSQLStorer {
 
 	public void createTableIfNotExist() {
 		Statement stmt = null;
-		Collection<String> indexes = collectIndexNames();
+		Collection<String> indexes = collectMetaNames("INDEX");
 		try {
 			stmt = conn.createStatement();
 
-			String createNodetypeTable = "CREATE TABLE IF NOT EXISTS nodetype (nodetype_id int PRIMARY KEY, name text, token text); "
-
-					                   + "CREATE OR REPLACE RULE ignore_duplicate AS ON INSERT TO nodetype "
-					                   + "WHERE (EXISTS (SELECT nodetype.nodetype_id FROM nodetype WHERE nodetype.nodetype_id = NEW.nodetype_id)) "
-					                   + "DO INSTEAD NOTHING; ";
-
-			String createProjectTable = "CREATE TABLE IF NOT EXISTS project ("
-									  + "project_id serial PRIMARY KEY, "
-									  + "project_type text, "
-									  + "project_name text, "
-									  + "description text, "
-									  + "project_path text); ";
-
-			String createFileTable = "CREATE TABLE IF NOT EXISTS file ( "
-								   + "file_id serial PRIMARY KEY, "
-								   + "file_type text, "
-								   + "file_path text, "
-								   + "file_name text, "
-								   + "project_id int references project(project_id) ON DELETE CASCADE ON UPDATE CASCADE); ";
-
-			String createEntityTable = "CREATE TABLE IF NOT EXISTS entity ("
-									  + "entity_id serial PRIMARY KEY, "
-									  + "start_pos int, "
-									  + "length int, "  	  // end_pos = start_pos + length
-									  + "start_line_number int, "   // #-th line in file
-									  + "start_column_number int, "
-									  + "end_line_number int, "
-									  + "end_column_number int, "
-								      + "nodetype_id int references nodetype(nodetype_id) ON DELETE CASCADE ON UPDATE CASCADE, "   // foreign key
-								      + "file_id int references file(file_id) ON DELETE CASCADE ON UPDATE CASCADE, "		  // foreign key
-								      //+ "cross_ref_key text, "  // only some simple name nodes will have this
-								      + "string text, "	      // string representation, stripped version
-								      + "raw text, "          // raw content of ast node
-								      + "parent_id int);"
-								      ;
-
-			String createCrossRefKey = "CREATE TABLE IF NOT EXISTS cross_ref_key( "
-					+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
-					+ "cross_ref_key text); ";
-
-			String createCrossReferenceTable = "CREATE TABLE IF NOT EXISTS cross_ref( "
-					+ "ref_id serial PRIMARY KEY, "
-					+ "declared_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
-					+ "reference_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE); ";
-
-			String createMethodTable = "CREATE TABLE IF NOT EXISTS method( "
-					+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
-					+ "method_name text, "
-					+ "return_type text, "
-					+ "argument_type text, "
-					+ "full_signature text, "
-					+ "is_declare boolean); "
-					;
-			//start_pos, length, line_number, nodetype_id, binding_key, string, file_id
-			stmt.executeUpdate(createProjectTable);
-			stmt.executeUpdate(createFileTable);
-			stmt.executeUpdate(createNodetypeTable);
-			stmt.executeUpdate(createEntityTable);
-			stmt.executeUpdate(createCrossRefKey);
-			stmt.executeUpdate(createCrossReferenceTable);
-			stmt.executeUpdate(createMethodTable);
-
-			String to_create = "cross_ref_key_cross_ref_key_idx";
-			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON cross_ref_key(cross_ref_key);";
-				stmt.executeUpdate(createIndex);
+			for (Entry<String, String> entry: tableToCreate.entrySet()) {
+				String createTableSql = entry.getValue();
+				stmt.executeUpdate(createTableSql);
 			}
 
-			to_create = "entity_start_pos_idx";
-			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON entity(start_pos);";
-				stmt.executeUpdate(createIndex);
-			}
-
-			to_create = "entity_length_idx";
-			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON entity(length);";
-				stmt.executeUpdate(createIndex);
-			}
-
-			to_create = "entity_file_id_idx";
-			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON entity(file_id);";
-				stmt.executeUpdate(createIndex);
-			}
-
-			to_create = "entity_parent_id_idx";
-			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON entity(parent_id);";
-				stmt.executeUpdate(createIndex);
+			for (Entry <String, String> entry: indexToCreate.entrySet()) {
+				String table = entry.getKey();
+				String column = entry.getValue();
+				String table_to_create = table + "_" + column + "_idx";
+				if (!indexes.contains(table_to_create)) {
+					stmt.execute(String.format("CREATE INDEX %s ON %s(%s);", table_to_create, table, column));
+				}
 			}
 
 			for (Field field: JavaLexer.class.getDeclaredFields()) {
@@ -208,146 +273,47 @@ public class PostgreSQLStorer {
 		}
 	}
 
+
 	/**
-	 * Collect defined view names
+	 * Collect defined view/index names
+	 * @param metaName "VIEW" or "INDEX"
 	 * @return
 	 */
-	private Collection<String> collectViewNames() {
-		List <String> views = new ArrayList<String>();
+	private Collection<String> collectMetaNames(String metaName) {
+		List <String> names = new ArrayList<String>();
 		try {
 			DatabaseMetaData meta = conn.getMetaData();
-			ResultSet res = meta.getTables(null, null, null, new String[] {"VIEW"});
+			ResultSet res = meta.getTables(null, null, null, new String[] {metaName});
 			while (res.next()) {
-				views.add(res.getString("TABLE_NAME"));
+				names.add(res.getString("TABLE_NAME"));
 			  }
 		} catch (SQLException e) {
 			Logger logger = Logger.getLogger("annotation");
-			logger.log(Level.SEVERE, "Collect view names exception", e);
+			logger.log(Level.SEVERE, String.format("Collect %s names exception", metaName), e);
 		}
-		return views;
-	}
-
-	/**
-	 * Collect defined index names
-	 * @return
-	 */
-	private Collection<String> collectIndexNames() {
-		List <String> indexNames = new ArrayList<String>();
-		try {
-			DatabaseMetaData meta = conn.getMetaData();
-			ResultSet res = meta.getTables(null, null, null, new String[] {"INDEX"});
-			while (res.next()) {
-				indexNames.add(res.getString("TABLE_NAME"));
-			}
-		} catch (SQLException e) {
-			Logger logger = Logger.getLogger("annotation");
-			logger.log(Level.SEVERE, "Collect index names exception", e);
-		}
-		return indexNames;
+		return names;
 	}
 
 	public void createViewIfNotExist() {
 		Statement stmt = null;
-		Collection <String> views = collectViewNames();
+		Collection <String> views = collectMetaNames("VIEW");
 		String to_create = "";
 		try {
 			stmt = conn.createStatement();
 			/// create view
-			to_create = "project_file";
-			if (!views.contains(to_create)) {
-				String project_file = "CREATE VIEW project_file AS "
-
-					+ "SELECT project.project_id AS project_id, "
-					+ "project.project_name AS project_name, "
-					+ "project.project_path as project_path, "
-					+ "file.file_id AS file_id, "
-					+ "file.file_name AS file_name "
-
-					+ "FROM project, file "
-
-					+ "WHERE file.project_id = project.project_id;";
-				stmt.executeUpdate(project_file);
+			for (Entry <String, String> entry: viewToCreate.entrySet()) {
+				String viewName = entry.getKey();
+				String sql = entry.getValue();
+				if (!views.contains(viewName)) {
+					stmt.executeUpdate(sql);
+				}
 			}
-
-			to_create = "entity_cross_ref";
-			if (!views.contains(to_create)) {
-				String entity_cross_ref = "CREATE VIEW entity_cross_ref AS "
-						+ "SELECT * "
-						+ "FROM entity LEFT JOIN cross_ref "
-						+ "ON entity.entity_id = cross_ref.reference_id; ";
-				stmt.executeUpdate(entity_cross_ref);
-			}
-
-			to_create = "entity_nodetype";
-			if (!views.contains(to_create)) {
-				String entity_type = "CREATE VIEW entity_nodetype AS "
-					+ "SELECT "
-					+ "entity_cross_ref.entity_id AS entity_id, "
-					+ "start_pos, "
-					+ "length, "
-					+ "start_pos + length AS end_pos, "
-					+ "start_line_number, "
-					+ "start_column_number, "
-					+ "end_line_number, "
-					+ "end_column_number, "
-					+ "entity_cross_ref.nodetype_id AS nodetype_id, "
-					+ "nodetype.name AS nodetype, "
-
-					+ "file_id, "
-					+ "string, "
-					+ "raw, "
-					//+ "cross_ref_key, "
-					+ "parent_id, "
-					+ "declared_id "
-
-					+ "FROM entity_cross_ref, nodetype "
-					+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id;"
-					;
-				stmt.executeUpdate(entity_type);
-			}
-
-			to_create = "entity_all";
-			if (!views.contains(to_create)) {
-				String entity_type = "CREATE VIEW entity_all AS "
-					+ "SELECT "
-					+ "entity_cross_ref.entity_id AS entity_id, "
-					+ "start_pos, "
-					+ "length, "
-					+ "start_pos + length AS end_pos, "
-					+ "start_line_number, "
-					+ "start_column_number, "
-					+ "end_line_number, "
-					+ "end_column_number, "
-
-					+ "entity_cross_ref.nodetype_id AS nodetype_id, "
-					+ "nodetype.name AS nodetype, "
-					+ "entity_cross_ref.file_id AS file_id, "
-					+ "file.file_name AS file_name, "
-					+ "project.project_id AS project_id, "
-					+ "project.project_name AS project_name, "
-					+ "project.project_path AS project_path, "
-					+ "string, "
-					+ "raw, "
-					//+ "cross_ref_key, "
-					+ "parent_id,"
-					+ "declared_id "
-
-					+ "FROM entity_cross_ref, nodetype, file, project "
-					+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id "
-					+ "AND entity_cross_ref.file_id = file.file_id "
-					+ "AND file.project_id = project.project_id; "
-					;
-				stmt.executeUpdate(entity_type);
-			}
-
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Create views "+ to_create + " exception\n" + e.toString());
 		} finally {
 			closeIt(stmt);
 		}
-
 	}
-
 
 	public void close() {
 		try {
@@ -481,13 +447,9 @@ public class PostgreSQLStorer {
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
-			stmt.execute("DROP TABLE IF EXISTS entity CASCADE; "
-					+ "DROP TABLE IF EXISTS project CASCADE; "
-					+ "DROP TABLE IF EXISTS file CASCADE; "
-					+ "DROP TABLE IF EXISTS nodetype CASCADE; "
-					+ "DROP TABLE IF EXISTS cross_ref_key CASCADE; "
-					+ "DROP TABLE IF EXISTS cross_ref CASCADE; "
-					+ "DROP TABLE IF EXISTS method CASCADE; ");
+			for (Entry <String, String> entry: tableToCreate.entrySet()) {
+				stmt.execute(String.format("DROP TABLE IF EXISTS %s CASCADE;", entry.getKey()));
+			}
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear database error", e);
 		} finally {
