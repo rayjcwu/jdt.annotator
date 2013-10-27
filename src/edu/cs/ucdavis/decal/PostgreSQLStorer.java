@@ -118,11 +118,15 @@ public class PostgreSQLStorer {
 									  + "end_column_number int, "
 								      + "nodetype_id int references nodetype(nodetype_id) ON DELETE CASCADE ON UPDATE CASCADE, "   // foreign key
 								      + "file_id int references file(file_id) ON DELETE CASCADE ON UPDATE CASCADE, "		  // foreign key
-								      + "cross_ref_key text, "  // only some simple name nodes will have this
+								      //+ "cross_ref_key text, "  // only some simple name nodes will have this
 								      + "string text, "	      // string representation, stripped version
 								      + "raw text, "          // raw content of ast node
 								      + "parent_id int);"
 								      ;
+
+			String createCrossRefKey = "CREATE TABLE IF NOT EXISTS cross_ref_key( "
+					+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+					+ "cross_ref_key text); ";
 
 			String createCrossReferenceTable = "CREATE TABLE IF NOT EXISTS cross_ref( "
 					+ "ref_id serial PRIMARY KEY, "
@@ -142,12 +146,13 @@ public class PostgreSQLStorer {
 			stmt.executeUpdate(createFileTable);
 			stmt.executeUpdate(createNodetypeTable);
 			stmt.executeUpdate(createEntityTable);
+			stmt.executeUpdate(createCrossRefKey);
 			stmt.executeUpdate(createCrossReferenceTable);
 			stmt.executeUpdate(createMethodTable);
 
-			String to_create = "entity_cross_ref_key_idx";
+			String to_create = "cross_ref_key_cross_ref_key_idx";
 			if (!indexes.contains(to_create)) {
-				String createIndex = "CREATE INDEX "+to_create+" ON entity(cross_ref_key);";
+				String createIndex = "CREATE INDEX "+to_create+" ON cross_ref_key(cross_ref_key);";
 				stmt.executeUpdate(createIndex);
 			}
 
@@ -187,8 +192,7 @@ public class PostgreSQLStorer {
 							id + PostgreSQLStorer.tokenBase, string, token));
 				}
 			}
-			// insert nodetype value
-			// TODO: this will throw IllegalAccessException, don't know why
+			// TODO: this will throw IllegalAccessException, don't know why, that's why I put it in the end
 			for (Field field: ASTNode.class.getDeclaredFields()) {
 				if (field.getType().equals(int.class)) {
 					stmt.executeUpdate(String.format("INSERT INTO nodetype (nodetype_id, name) VALUES (%d, '%s');", field.getInt(null), field.getName()));
@@ -292,7 +296,7 @@ public class PostgreSQLStorer {
 					+ "file_id, "
 					+ "string, "
 					+ "raw, "
-					+ "cross_ref_key, "
+					//+ "cross_ref_key, "
 					+ "parent_id, "
 					+ "declared_id "
 
@@ -324,7 +328,7 @@ public class PostgreSQLStorer {
 					+ "project.project_path AS project_path, "
 					+ "string, "
 					+ "raw, "
-					+ "cross_ref_key, "
+					//+ "cross_ref_key, "
 					+ "parent_id,"
 					+ "declared_id "
 
@@ -420,38 +424,22 @@ public class PostgreSQLStorer {
 		return -1; // should not happen
 	}
 
-	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, String binding_key, int file_id) {
+	public void saveForeignAstNode(int start_pos, int length, int nodetype_id, int file_id, String cross_ref_key) {
+		final int declare_id = queryAstNodeId(start_pos, length, nodetype_id, file_id);  // will throw illegal state exception if can't find such entity
 		PreparedStatement stmt = null;
-		ResultSet rs = null;
+		ResultSet entitiesWithSameCrossRefKey = null;
 		try {
-			// find foreign entity
-			String query = "SELECT entity_id FROM entity WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?";
-			stmt = conn.prepareStatement(query);
-			stmt.setInt(1, start_pos);
-			stmt.setInt(2, length);
-			stmt.setInt(3, nodetype_id);
-			stmt.setInt(4, file_id);
-			rs = stmt.executeQuery();
-			int total = 0;
-			int declare_id = -1;
-			while (rs.next()) {
-				total ++;
-				declare_id = rs.getInt("entity_id");
-			}
-			if (total > 1) {
-				throw new IllegalStateException("resolve more than on entity");
-			}
-
-			String query_same_binding_key = String.format("SELECT entity_id FROM entity WHERE cross_ref_key=?;");
-			stmt = conn.prepareStatement(query_same_binding_key);
-			stmt.setString(1, binding_key);
-			rs = stmt.executeQuery();
+			// find all references with same cross_ref_key
+			String query_same_cross_ref_key = String.format("SELECT entity_id AS ref_id FROM cross_ref_key WHERE cross_ref_key=?;");
+			stmt = conn.prepareStatement(query_same_cross_ref_key);
+			stmt.setString(1, cross_ref_key);
+			entitiesWithSameCrossRefKey = stmt.executeQuery();
 
 			int ref_id = -1;
 			String update = "INSERT INTO cross_ref (declared_id, reference_id) VALUES (?, ?);";
 			stmt = conn.prepareStatement(update);
-			while (rs.next()) {
-				ref_id = rs.getInt("entity_id");
+			while (entitiesWithSameCrossRefKey.next()) {
+				ref_id = entitiesWithSameCrossRefKey.getInt("ref_id");
 				stmt.setInt(1, declare_id);
 				stmt.setInt(2, ref_id);
 				stmt.addBatch();
@@ -461,8 +449,8 @@ public class PostgreSQLStorer {
 			logger.log(Level.SEVERE, "batch update exception", e.getNextException());
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Resolve foreign entity exception", e);
-
 		} finally {
+			closeIt(entitiesWithSameCrossRefKey);
 			closeIt(stmt);
 		}
 	}
@@ -497,6 +485,8 @@ public class PostgreSQLStorer {
 					+ "DROP TABLE IF EXISTS project CASCADE; "
 					+ "DROP TABLE IF EXISTS file CASCADE; "
 					+ "DROP TABLE IF EXISTS nodetype CASCADE; "
+					+ "DROP TABLE IF EXISTS cross_ref_key CASCADE; "
+					+ "DROP TABLE IF EXISTS cross_ref CASCADE; "
 					+ "DROP TABLE IF EXISTS method CASCADE; ");
 		} catch (SQLException e) {
 			logger.log(Level.SEVERE, "Clear database error", e);
@@ -570,6 +560,16 @@ public class PostgreSQLStorer {
 		if (stmt != null) {
 			try {
 				stmt.close();
+			} catch (SQLException e) {
+				;
+			}
+		}
+	}
+
+	public static void closeIt(ResultSet rs) {
+		if (rs != null) {
+			try {
+				rs.close();
 			} catch (SQLException e) {
 				;
 			}

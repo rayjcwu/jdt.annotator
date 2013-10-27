@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 
 import org.antlr.v4.runtime.Token;
@@ -89,7 +90,6 @@ public class OmniController extends BaseController {
 		}
 		try {
 			this.currentFileContent = FileUtils.readFileToString(new File(sourceFilePath));
-			this.tokens = Util.prepareTokens(this.currentFileContent);
 		} catch (IOException e) {
 			logger.log(Level.SEVERE, "Read file content error", e);
 		}
@@ -130,6 +130,7 @@ public class OmniController extends BaseController {
 			unit.accept(labelVisitor);
 			this.showProgress(sourceFilePath);
 			this.retriveCurrentFileNameIdAndToken(sourceFilePath);
+			this.tokens = Util.prepareTokens(this.currentFileContent);
 
 			batchAnnotateAstNode(unit, labelVisitor);
 			batchAnnotateToken(unit, labelVisitor);
@@ -216,40 +217,46 @@ public class OmniController extends BaseController {
 				+ "start_pos, length, "
 				+ "start_line_number, start_column_number, "
 				+ "end_line_number, end_column_number, "
-				+ "nodetype_id, cross_ref_key, string, file_id, raw, parent_id) "
-				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?)";
+				+ "nodetype_id, string, file_id, raw, parent_id) "
+				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?)";
 
+		String insertCrossRefKeyStmt = "INSERT INTO cross_ref_key (entity_id, cross_ref_key) VALUES (?, ?);";
 		Connection conn = database.getConnection();
 		PreparedStatement pstmt = null;
+		PreparedStatement crossRefStmt = null;
 
         try {
             pstmt = conn.prepareStatement(insertAstStmt);
+            crossRefStmt = conn.prepareStatement(insertCrossRefKeyStmt);
 
-            for (ASTNode node: labelVisitor.getNodeList()) {
+            for (Entry<ASTNode, Integer> entry: labelMapping.entrySet()) {
+            	ASTNode node = entry.getKey();
                 // offset starts from 0
                 final int start_pos = node.getStartPosition();
                 if (start_pos < 0) {
-                    continue;
+                    throw new IllegalStateException("contain astnode doesn't have physical location in source code " + node.toString());
                 }
-                Integer tmp_parent_id = labelMapping.get(node.getParent());  // may be null
+                Integer tmp_parent_id = labelMapping.get(node.getParent());  // 0 ~ # of ASTNodes, for root node its parent will be null
                 // collect info
                 final int length = node.getLength();
                 final int nodetype_id = node.getNodeType();
                 final String string = node.toString();  // code generated from AST node, not original source code
-                // both line/column number start from 1
+                // make both line/column number start from 1, inclusive end
                 final int start_line_number = unit.getLineNumber(start_pos);
                 final int start_column_number = unit.getColumnNumber(start_pos) + 1;
 
                 final int end_line_number = unit.getLineNumber(start_pos + length - 1);
                 final int end_column_number = unit.getColumnNumber(start_pos + length - 1) + 1;
 
-                // TODO: move cross ref key to another table
                 String crossRefKey = "";
                 if (node instanceof Name) {
                     Name n = (Name)node;
                     if (n.resolveBinding() != null) {
                         crossRefKey = n.resolveBinding().getKey();
                         crossRefKeys.add(crossRefKey);
+                        crossRefStmt.setLong(1, labelMapping.get(node) + nextVal);
+                        crossRefStmt.setString(2, crossRefKey);
+                        crossRefStmt.addBatch();
                     }
                 }
 
@@ -259,17 +266,16 @@ public class OmniController extends BaseController {
                 pstmt.setInt(4, start_column_number);
                 pstmt.setInt(5, end_line_number);
                 pstmt.setInt(6, end_column_number);
-
                 pstmt.setInt(7, nodetype_id);
-                pstmt.setString(8, crossRefKey);
-                pstmt.setString(9, string);
-                pstmt.setInt(10, currentFileId);
-                pstmt.setString(11, currentFileContent.substring(start_pos, start_pos+length));
-                pstmt.setLong(12, (tmp_parent_id == null)? -1 : tmp_parent_id + nextVal);
+                pstmt.setString(8, string);
+                pstmt.setInt(9, currentFileId);
+                pstmt.setString(10, currentFileContent.substring(start_pos, start_pos+length));
+                pstmt.setLong(11, (tmp_parent_id == null)? -1 : tmp_parent_id + nextVal);
 
                 pstmt.addBatch();
             }
             pstmt.executeBatch();
+            crossRefStmt.executeBatch();
         } catch (BatchUpdateException e) {
             logger.log(Level.SEVERE, "Storing astnode information batch exception", e.getNextException());
             e.getNextException().printStackTrace();
@@ -290,7 +296,8 @@ public class OmniController extends BaseController {
         try {
             methodStmt = conn.prepareStatement(insertMethodTable);
             // update methods
-            for (ASTNode node: labelVisitor.getNodeList()) {
+            for (Entry<ASTNode, Integer> entry: labelMapping.entrySet()) {
+            	ASTNode node = entry.getKey();
                 if (node instanceof MethodDeclaration) {
                     MethodDeclaration m = (MethodDeclaration)node;
                     IMethodBinding mbinding = m.resolveBinding();
@@ -386,10 +393,10 @@ public class OmniController extends BaseController {
 		}
 	}
 
-	private void saveForeignAstNode(ASTNode node, String bindingKey) {
+	private void saveForeignAstNode(ASTNode node, String crossRefKey) {
 		int start_pos = node.getStartPosition();
 		int length = node.getLength();
 		int nodetype_id = node.getNodeType();
-		database.saveForeignAstNode(start_pos, length, nodetype_id, bindingKey, currentFileId);
+		database.saveForeignAstNode(start_pos, length, nodetype_id, currentFileId, crossRefKey);
 	}
 }
