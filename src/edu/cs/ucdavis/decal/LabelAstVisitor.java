@@ -17,26 +17,16 @@ public class LabelAstVisitor extends ASTVisitor {
 	Map <ASTNode, Integer> nodeLabel;
 	int label;
 
-	long nextVal;	// to store this information in visitor and pass it around, not meant to be used in visitor itself
+	//long nextVal;	// to store this information in visitor and pass it around, not meant to be used in visitor itself
 
 	public LabelAstVisitor() {
 		nodeLabel = new LinkedHashMap<ASTNode, Integer>(); // use linked hashmap to preserve order of insertion
 		label = 0;
-		nextVal = 0L;
 	}
 
 	public void reset() {
 		nodeLabel = new LinkedHashMap<ASTNode, Integer>();
 		label = 0;
-		nextVal = 0L;
-	}
-
-	public void setNextVal(Long nextVal) {
-		this.nextVal = nextVal;
-	}
-
-	public long getNextVal() {
-		return nextVal;
 	}
 
 	@Override

@@ -39,14 +39,30 @@ public class PostgreSQLStorer {
 
 	public static int tokenBase = 100;   // token index starts from 100
 
-	private static Map<String /* table */, String /* column */> indexToCreate;
+	private static Map<String /* index name */, String /* SQL */> indexToCreate;
 	static {
 		indexToCreate = new HashMap<String, String>();  // order doesn't matter
-		indexToCreate.put("cross_ref_key", "cross_ref_key");
-		indexToCreate.put("entity", "start_pos");
-		indexToCreate.put("entity", "length");
-		indexToCreate.put("entity", "file_id");
-		indexToCreate.put("entity", "parent_id");
+		indexToCreate.put("cross_ref_key_cross_ref_key_idx",
+						  "CREATE INDEX cross_ref_key_cross_ref_key_idx ON cross_ref_key(cross_ref_key);");
+		indexToCreate.put("cross_ref_key_entity_id_idx",
+				  		  "CREATE INDEX cross_ref_key_entity_id_idx ON cross_ref_key(entity_id, project_id);");
+
+		indexToCreate.put("entity_start_pos_idx",
+				  		  "CREATE INDEX entity_start_pos_idx ON entity(start_pos);");
+		indexToCreate.put("entity_length_idx",
+		  		  		  "CREATE INDEX entity_length_idx ON entity(length);");
+		indexToCreate.put("entity_file_id_idx",
+		  		  		  "CREATE INDEX entity_file_id_idx ON entity(file_id);");
+		indexToCreate.put("entity_parent_id_idx",
+		  		  		  "CREATE INDEX entity_parent_id_idx ON entity(parent_id, project_id);");
+
+		indexToCreate.put("method_entity_id_idx",
+		  		  		  "CREATE INDEX method_entity_id_idx ON method(entity_id, project_id);");
+
+		indexToCreate.put("cross_ref_declared_id_idx",
+		  		  		  "CREATE INDEX cross_ref_declared_id_idx ON cross_ref(declared_id, project_id);");
+		indexToCreate.put("cross_ref_reference_id_idx",
+		  		  		  "CREATE INDEX cross_ref_reference_id_idx ON cross_ref(reference_id, project_id);");
 	}
 
 	private static Map<String /* table name */, String /* SQL */> tableToCreate;
@@ -69,51 +85,63 @@ public class PostgreSQLStorer {
 		tableToCreate.put("file",
 				 		  "CREATE TABLE IF NOT EXISTS file ( "
 						+ "file_id serial PRIMARY KEY, "
+						+ "project_id int REFERENCES project(project_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL, "
 						+ "file_type text, "
-						+ "file_path text, "
 						+ "file_name text, "
-						+ "project_id int references project(project_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
+						+ "file_path text); ");
 
 		tableToCreate.put("entity",
 						  "CREATE TABLE IF NOT EXISTS entity ("
-						+ "entity_id serial PRIMARY KEY, "
-						+ "start_pos int, "
-						+ "length int, "  	  // end_pos = start_pos + length
-						+ "start_line_number int, "   // #-th line in file
-						+ "start_column_number int, "
-						+ "end_line_number int, "
-						+ "end_column_number int, "
-					    + "nodetype_id int references nodetype(nodetype_id) ON DELETE CASCADE ON UPDATE CASCADE, "   // foreign key
-					    + "file_id int references file(file_id) ON DELETE CASCADE ON UPDATE CASCADE, "		  // foreign key
+						+ "entity_id bigint NOT NULL, "
+						+ "file_id int REFERENCES file (file_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL, "		  // foreign key
+					    + "project_id int REFERENCES project (project_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL, "
+						+ "start_pos int NOT NULL, "
+						+ "length int NOT NULL, "  	  // end_pos = start_pos + length
+						+ "start_line_number int NOT NULL, "   // #-th line in file
+						+ "start_column_number int NOT NULL, "
+						+ "end_line_number int NOT NULL, "
+						+ "end_column_number int NOT NULL, "
+					    + "nodetype_id int REFERENCES nodetype (nodetype_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL, "   // foreign key
 					    + "string text, "	      // string representation, stripped version
 					    + "raw text, "          // raw content of ast node
-					    + "parent_id int);");
+					    + "parent_id bigint, "
+					    + "PRIMARY KEY (entity_id, project_id)); ");
+						// don't reference to self otherwise parent_id = -1 will be invalid
+
 
 		tableToCreate.put("cross_ref_key",
 						  "CREATE TABLE IF NOT EXISTS cross_ref_key( "
-						+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
-						+ "cross_ref_key text); ");
+						+ "entity_id bigint NOT NULL, "
+						+ "project_id int NOT NULL, "
+						+ "cross_ref_key text, "
+						+ "FOREIGN KEY (entity_id, project_id) REFERENCES entity (entity_id, project_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
 
 		tableToCreate.put("cross_ref",
 				 		  "CREATE TABLE IF NOT EXISTS cross_ref( "
-						+ "ref_id serial PRIMARY KEY, "
-						+ "declared_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
-						+ "reference_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
+						//+ "ref_id serial PRIMARY KEY, "
+						+ "declared_id bigint NOT NULL, "
+						+ "reference_id bigint NOT NULL, "
+						+ "project_id int NOT NULL, "  // will reference within same project
+						+ "FOREIGN KEY (declared_id, project_id) REFERENCES entity (entity_id, project_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+						+ "FOREIGN KEY (reference_id, project_id) REFERENCES entity (entity_id, project_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
 
 		tableToCreate.put("method",
 						  "CREATE TABLE IF NOT EXISTS method( "
-						+ "entity_id int references entity(entity_id) ON DELETE CASCADE ON UPDATE CASCADE, "
+						+ "entity_id bigint NOT NULL, "
+						+ "project_id int NOT NULL, "
 						+ "method_name text, "
 						+ "return_type text, "
 						+ "argument_type text, "
 						+ "full_signature text, "
-						+ "is_declare boolean); ");
+						+ "is_declare boolean NOT NULL, "
+						+ "FOREIGN KEY (entity_id, project_id) REFERENCES entity (entity_id, project_id) ON DELETE CASCADE ON UPDATE CASCADE); ");
 	}
 
 	private static Map <String /* view name */, String /* SQL */> viewToCreate;
 	static {
 		viewToCreate = new HashMap<String, String>();
 		/// create view
+
 		viewToCreate.put("project_file", "CREATE VIEW project_file AS "
 				+ "SELECT project.project_id AS project_id, "
 				+ "project.project_name AS project_name, "
@@ -126,9 +154,25 @@ public class PostgreSQLStorer {
 				+ "WHERE file.project_id = project.project_id;");
 
 		viewToCreate.put("entity_cross_ref", "CREATE VIEW entity_cross_ref AS "
-				+ "SELECT * "
+				+ "SELECT "
+				+ "entity_id, "
+				+ "file_id, "
+				+ "entity.project_id AS project_id, "
+				+ "start_pos, "
+				+ "length, "
+				+ "start_line_number, "
+				+ "start_column_number, "
+				+ "end_line_number, "
+				+ "end_column_number, "
+				+ "nodetype_id, "
+				+ "string, "
+				+ "raw, "
+				+ "parent_id,"
+				+ "declared_id "
+
 				+ "FROM entity LEFT JOIN cross_ref "
-				+ "ON entity.entity_id = cross_ref.reference_id; ");
+				+ "ON entity.entity_id = cross_ref.reference_id "
+				+ "AND entity.project_id = cross_ref.project_id; ");
 
 		viewToCreate.put("entity_nodetype", "CREATE VIEW entity_nodetype AS "
 				+ "SELECT entity_cross_ref.entity_id AS entity_id, "
@@ -178,9 +222,10 @@ public class PostgreSQLStorer {
 				+ "WHERE entity_cross_ref.nodetype_id = nodetype.nodetype_id "
 				+ "AND entity_cross_ref.file_id = file.file_id "
 				+ "AND file.project_id = project.project_id; ");
+
 	}
 
-	private Map <String, Integer> entity_id_cache;
+	private Map <String, Long> entity_id_cache;
 
 	public PostgreSQLStorer(String url) {
 		this(url, null, null);
@@ -196,7 +241,7 @@ public class PostgreSQLStorer {
 		connect();
 		createTableIfNotExist();
 		this.ready = true;
-		this.entity_id_cache = new HashMap<String, Integer>();
+		this.entity_id_cache = new HashMap<String, Long>();
 	}
 
 	/**
@@ -260,13 +305,13 @@ public class PostgreSQLStorer {
 			// create index
 			Collection<String> indexes = collectMetaNames("INDEX");
 			for (Entry <String, String> entry: indexToCreate.entrySet()) {
-				String table = entry.getKey();
-				String column = entry.getValue();
-				String table_to_create = table + "_" + column + "_idx";
-				if (!indexes.contains(table_to_create)) {
-					stmt.execute(String.format("CREATE INDEX %s ON %s(%s);", table_to_create, table, column));
+				String indexName = entry.getKey();
+				String createIndexSql = entry.getValue();
+				if (!indexes.contains(indexName)) {
+					stmt.execute(createIndexSql);
 				}
 			}
+
 
 			// create view
 			Collection <String> views = collectMetaNames("VIEW");
@@ -403,8 +448,8 @@ public class PostgreSQLStorer {
 		return -1; // should not happen
 	}
 
-	public void saveCrossRefAstNode(int start_pos, int length, int nodetype_id, int file_id, String cross_ref_key) {
-		final int declare_id = queryAstNodeId(start_pos, length, nodetype_id, file_id);  // will throw illegal state exception if can't find such entity
+	public void saveCrossRefAstNode(int start_pos, int length, int nodetype_id, String cross_ref_key, int file_id, int project_id) {
+		final long declare_id = queryAstNodeId(start_pos, length, nodetype_id, file_id, project_id);  // will throw illegal state exception if can't find such entity
 		PreparedStatement stmt = null;
 		ResultSet entitiesWithSameCrossRefKey = null;
 		try {
@@ -414,13 +459,14 @@ public class PostgreSQLStorer {
 			stmt.setString(1, cross_ref_key);
 			entitiesWithSameCrossRefKey = stmt.executeQuery();
 
-			int ref_id = -1;
-			String update = "INSERT INTO cross_ref (declared_id, reference_id) VALUES (?, ?);";
+			long ref_id = -1;
+			String update = "INSERT INTO cross_ref (declared_id, reference_id, project_id) VALUES (?, ?, ?);";
 			stmt = conn.prepareStatement(update);
 			while (entitiesWithSameCrossRefKey.next()) {
-				ref_id = entitiesWithSameCrossRefKey.getInt("ref_id");
-				stmt.setInt(1, declare_id);
-				stmt.setInt(2, ref_id);
+				ref_id = entitiesWithSameCrossRefKey.getLong("ref_id");
+				stmt.setLong(1, declare_id);
+				stmt.setLong(2, ref_id);
+				stmt.setInt(3, project_id);
 				stmt.addBatch();
 			}
 			stmt.executeBatch();
@@ -464,26 +510,27 @@ public class PostgreSQLStorer {
 	 * @param file_id
 	 * @return Will return -1 if such entity doesn't exist
 	 */
-	public int queryAstNodeId(int start_pos, int length, int nodetype, int file_id) {
-		String queryKey = String.format("%d:%d:%d:%d", start_pos, length, nodetype, file_id);
+	public long queryAstNodeId(int start_pos, int length, int nodetype, int file_id, int project_id) {
+		String queryKey = String.format("%d:%d:%d:%d:%d", start_pos, length, nodetype, file_id, project_id);
 		if (entity_id_cache.containsKey(queryKey)) {
 			return entity_id_cache.get(queryKey);
 		}
 
 		PreparedStatement stmt = null;
-		String query = "SELECT entity_id FROM entity WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=?;";
-		int result = -1;
+		String query = "SELECT entity_id FROM entity WHERE start_pos=? AND length=? AND nodetype_id=? AND file_id=? AND project_id=?;";
+		long result = -1;
 		try {
 			stmt = conn.prepareStatement(query);
 			stmt.setInt(1, start_pos);
 			stmt.setInt(2, length);
 			stmt.setInt(3, nodetype);
 			stmt.setInt(4, file_id);
+			stmt.setInt(5, project_id);
 			ResultSet rs = stmt.executeQuery();
 
 			int count = 0;
 			while (rs.next()) {
-				result = rs.getInt("entity_id");
+				result = rs.getLong("entity_id");
 				count ++;
 			}
 			if (count > 1)

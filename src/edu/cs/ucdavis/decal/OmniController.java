@@ -36,6 +36,8 @@ public class OmniController extends BaseController {
 	private int currentFileId;
 	private String currentFileContent;
 
+	private long entityIdBase;  // each process has its own entityId counter, query a unique project_id then each process could run at the same time
+
 	private Map <CompilationUnit, String> compilaionUnitFileNameMap;
 	private Collection <String> crossRefKeys;
 	private List <Token> tokens;
@@ -46,6 +48,8 @@ public class OmniController extends BaseController {
 		this.currentProjectId = -1;
 		this.currentFileId = -1;
 		this.currentFileContent = null;
+
+		this.entityIdBase = 0;
 
 		this.compilaionUnitFileNameMap = new HashMap<CompilationUnit, String>();
 		this.crossRefKeys = new HashSet<String>();
@@ -132,27 +136,34 @@ public class OmniController extends BaseController {
 			this.retriveCurrentFileNameId(sourceFilePath);
 			this.tokens = Util.prepareTokens(this.currentFileContent);
 
-			long nextVal = database.getNextSerial("entity_entity_id_seq") + 1; // nextval occupy 1 index
-			labelVisitor.setNextVal(nextVal);
-
 			batchAnnotateAstNode(unit, labelVisitor);
 		    batchAnnotateMethodAstNode(labelVisitor);
 			batchAnnotateToken(unit, labelVisitor);
+			this.entityIdBase += labelVisitor.getNodeLabel().size() + this.tokens.size();
 		}
 	}
 
 	void batchAnnotateAstNode(CompilationUnit unit, LabelAstVisitor labelVisitor) {
-		long nextVal = labelVisitor.getNextVal();
 		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
 		Connection conn = database.getConnection();
 
 		String insertAstStmt = "INSERT INTO entity ("
-				+ "start_pos, length, "
-				+ "start_line_number, start_column_number, "
-				+ "end_line_number, end_column_number, "
-				+ "nodetype_id, string, file_id, raw, parent_id) "
-				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?)";
-		String insertCrossRefKeyStmt = "INSERT INTO cross_ref_key (entity_id, cross_ref_key) VALUES (?, ?);";
+				+ "entity_id, " 			// 1
+				+ "file_id, "				// 2
+				+ "project_id, "			// 3
+				+ "start_pos, "				// 4
+				+ "length, "				// 5
+				+ "start_line_number, "		// 6
+				+ "start_column_number, "	// 7
+				+ "end_line_number, "		// 8
+				+ "end_column_number, "		// 9
+				+ "nodetype_id, "			// 10
+				+ "string, "				// 11
+				+ "raw, "					// 12
+				+ "parent_id) "				// 13
+				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?, ?)";
+
+		String insertCrossRefKeyStmt = "INSERT INTO cross_ref_key (entity_id, project_id, cross_ref_key) VALUES (?, ?, ?);";
 		PreparedStatement entityStmt = null;
 		PreparedStatement crossRefStmt = null;
 
@@ -179,29 +190,49 @@ public class OmniController extends BaseController {
 	            final int end_line_number = unit.getLineNumber(start_pos + length - 1);
 	            final int end_column_number = unit.getColumnNumber(start_pos + length - 1) + 1;
 
+	            // 	"INSERT INTO cross_ref_key (entity_id, project_id, cross_ref_key) VALUES (?, ?, ?);";
 	            String crossRefKey = "";
 	            if (node instanceof Name) {
 	                Name n = (Name)node;
 	                if (n.resolveBinding() != null) {
 	                    crossRefKey = n.resolveBinding().getKey();
 	                    crossRefKeys.add(crossRefKey);
-	                    crossRefStmt.setLong(1, labelMapping.get(node) + nextVal);
-	                    crossRefStmt.setString(2, crossRefKey);
+	                    crossRefStmt.setLong(1, labelMapping.get(node) + this.entityIdBase);
+	                    crossRefStmt.setInt(2, this.currentProjectId);
+	                    crossRefStmt.setString(3, crossRefKey);
 	                    crossRefStmt.addBatch();
 	                }
 	            }
+	            /*
+	        	+ "entity_id, " 			// 1
+				+ "file_id, "				// 2
+				+ "project_id, "			// 3
+				+ "start_pos, "				// 4
+				+ "length, "				// 5
+				+ "start_line_number, "		// 6
+				+ "start_column_number, "	// 7
+				+ "end_line_number, "		// 8
+				+ "end_column_number, "		// 9
+				+ "nodetype_id, "			// 10
+				+ "string, "				// 11
+				+ "raw, "					// 12
+				+ "parent_id) "				// 13
+				*/
+	            entityStmt.setLong(1, labelMapping.get(node) + this.entityIdBase);
+	            entityStmt.setInt(2, this.currentFileId);
+	            entityStmt.setInt(3, this.currentProjectId);
 
-	            entityStmt.setInt(1, start_pos);
-	            entityStmt.setInt(2, length);
-	            entityStmt.setInt(3, start_line_number);
-	            entityStmt.setInt(4, start_column_number);
-	            entityStmt.setInt(5, end_line_number);
-	            entityStmt.setInt(6, end_column_number);
-	            entityStmt.setInt(7, nodetype_id);
-	            entityStmt.setString(8, string);
-	            entityStmt.setInt(9, currentFileId);
-	            entityStmt.setString(10, currentFileContent.substring(start_pos, start_pos+length));
-	            entityStmt.setLong(11, (tmp_parent_id == null)? -1 : tmp_parent_id + nextVal);
+	            entityStmt.setInt(4, start_pos);
+	            entityStmt.setInt(5, length);
+	            entityStmt.setInt(6, start_line_number);
+	            entityStmt.setInt(7, start_column_number);
+	            entityStmt.setInt(8, end_line_number);
+	            entityStmt.setInt(9, end_column_number);
+	            entityStmt.setInt(10, nodetype_id);
+
+	            entityStmt.setString(11, string);
+	            entityStmt.setString(12, this.currentFileContent.substring(start_pos, start_pos+length));
+	            entityStmt.setLong(13, (tmp_parent_id == null)? -1 : tmp_parent_id + this.entityIdBase);
 
 	            entityStmt.addBatch();
 	        }
@@ -219,12 +250,18 @@ public class OmniController extends BaseController {
 	}
 
 	void batchAnnotateMethodAstNode(LabelAstVisitor labelVisitor) {
-		long nextVal = labelVisitor.getNextVal();
+
 		Map <ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
 		Connection conn = database.getConnection();
-	    String insertMethodTable = "INSERT INTO method "
-				+ "(entity_id, method_name, return_type, argument_type, full_signature, is_declare) VALUES "
-				+ "(?,         ?,           ?,           ?,             ?,              ?); "
+	    String insertMethodTable = "INSERT INTO method ("
+	    		+ "entity_id, "   		// 1
+				+ "project_id, "		// 2
+				+ "method_name, "		// 3
+				+ "return_type, "		// 4
+				+ "argument_type, "		// 5
+				+ "full_signature, "	// 6
+				+ "is_declare) "		// 7
+				+ "VALUES (?, ?, ?, ?, ?,   ?, ?); "
 				;
 		PreparedStatement methodStmt = null;
 
@@ -247,13 +284,23 @@ public class OmniController extends BaseController {
 	                        }
 	                        args += var.resolveBinding().getType().getKey();
 	                    }
-	                    methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
-	                    methodStmt.setString(2, m.getName().toString());  // method_name
-	                    methodStmt.setString(3, (m.getReturnType2() == null || m.getReturnType2().resolveBinding() == null)?
+	                    /*
+	                    + "(entity_id, "   		// 1
+	    				+ "project_id, "		// 2
+	    				+ "method_name, "		// 3
+	    				+ "return_type, "		// 4
+	    				+ "argument_type, "		// 5
+	    				+ "full_signature, "	// 6
+	    				+ "is_declare) "		// 7
+	    				*/
+	                    methodStmt.setLong(1, labelMapping.get(node) + this.entityIdBase);     // method_id
+	                    methodStmt.setInt(2, this.currentProjectId);
+	                    methodStmt.setString(3, m.getName().toString());  // method_name
+	                    methodStmt.setString(4, (m.getReturnType2() == null || m.getReturnType2().resolveBinding() == null)?
 	                                            null : m.getReturnType2().resolveBinding().getKey());  // return_type
-	                    methodStmt.setString(4, args);  // argument_type
-	                    methodStmt.setString(5, (mbinding == null)? null : mbinding.getKey());  // full_signature
-	                    methodStmt.setBoolean(6, true);  // is_declare
+	                    methodStmt.setString(5, args);  // argument_type
+	                    methodStmt.setString(6, (mbinding == null)? null : mbinding.getKey());  // full_signature
+	                    methodStmt.setBoolean(7, true);  // is_declare
 	                    methodStmt.addBatch();
 	                } catch (NullPointerException e) {
 	                    logger.log(Level.SEVERE, "Null pointer exception storing method declaration", e);
@@ -272,13 +319,23 @@ public class OmniController extends BaseController {
 	                        }
 	                        args += exp.resolveTypeBinding().getKey();
 	                    }
-	                    methodStmt.setLong(1, labelMapping.get(node) + nextVal);     // method_id
-	                    methodStmt.setString(2, m.getName().toString());  // method_name
-	                    methodStmt.setString(3, (mbinding == null || mbinding.getReturnType() == null) ?
+	                    /*
+	                    + "(entity_id, "   		// 1
+	    				+ "project_id, "		// 2
+	    				+ "method_name, "		// 3
+	    				+ "return_type, "		// 4
+	    				+ "argument_type, "		// 5
+	    				+ "full_signature, "	// 6
+	    				+ "is_declare) "		// 7
+	    				*/
+	                    methodStmt.setLong(1, labelMapping.get(node) + this.entityIdBase);     // method_id
+	                    methodStmt.setLong(2, this.currentProjectId);
+	                    methodStmt.setString(3, m.getName().toString());  // method_name
+	                    methodStmt.setString(4, (mbinding == null || mbinding.getReturnType() == null) ?
 	                                             null : mbinding.getReturnType().getKey());  // return_type
-	                    methodStmt.setString(4, args);  // argument_type
-	                    methodStmt.setString(5, (mbinding == null) ? null : mbinding.getKey());  // full_signature
-	                    methodStmt.setBoolean(6, false);  // is_declare
+	                    methodStmt.setString(5, args);  // argument_type
+	                    methodStmt.setString(6, (mbinding == null) ? null : mbinding.getKey());  // full_signature
+	                    methodStmt.setBoolean(7, false);  // is_declare
 	                    methodStmt.addBatch();
 	                } catch (NullPointerException e) {
 	                    logger.log(Level.SEVERE, "Null pointer exception storing method invocation", e);
@@ -300,24 +357,33 @@ public class OmniController extends BaseController {
 	}
 
 	void batchAnnotateToken(CompilationUnit unit, LabelAstVisitor labelVisitor) {
-		long nextVal = labelVisitor.getNextVal();
+
 		Map<ASTNode, Integer> labelMapping = labelVisitor.getNodeLabel();
 		Connection conn = database.getConnection();
 
 		String insertAstStmt = "INSERT INTO entity ("
-				+ "start_pos, length, "
-				+ "start_line_number, start_column_number, "
-				+ "end_line_number, end_column_number, "
-				+ "nodetype_id, string, file_id, raw, parent_id) "
-				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?)";
+				+ "entity_id, " 			// 1
+				+ "file_id, "				// 2
+				+ "project_id, "			// 3
+				+ "start_pos, "				// 4
+				+ "length, "				// 5
+				+ "start_line_number, "		// 6
+				+ "start_column_number, "	// 7
+				+ "end_line_number, "		// 8
+				+ "end_column_number, "		// 9
+				+ "nodetype_id, "			// 10
+				+ "string, "				// 11
+				+ "raw, "					// 12
+				+ "parent_id) "				// 13
+				+ "VALUES (?, ?, ?, ?, ?,  ?, ?, ?, ?, ?,  ?, ?, ?)";
 		PreparedStatement pstmt = null;
 
 		LookupVisitor lookup = new LookupVisitor();
 
 		try {
             pstmt = conn.prepareStatement(insertAstStmt);
-            for (Token token: tokens) {
-
+            for (int i = 0; i < this.tokens.size(); i++) {
+            	Token token = this.tokens.get(i);
                 try {
                     lookup.reset();
                     lookup.setToken(token);
@@ -339,18 +405,36 @@ public class OmniController extends BaseController {
 
                     final int nodetype_id = token.getType() + PostgreSQLStorer.tokenBase;
 
-                    pstmt.setInt(1, token_start_pos);
-                    pstmt.setInt(2, token_end_pos - token_start_pos + 1);
-                    pstmt.setInt(3, start_line_number);
-                    pstmt.setInt(4, start_column_number);
-                    pstmt.setInt(5, end_line_number);
-                    pstmt.setInt(6, end_column_number);
+                    /*
+                    + "entity_id, " 			// 1
+    				+ "file_id, "				// 2
+    				+ "project_id, "			// 3
+    				+ "start_pos, "				// 4
+    				+ "length, "				// 5
+    				+ "start_line_number, "		// 6
+    				+ "start_column_number, "	// 7
+    				+ "end_line_number, "		// 8
+    				+ "end_column_number, "		// 9
+    				+ "nodetype_id, "			// 10
+    				+ "string, "				// 11
+    				+ "raw, "					// 12
+    				+ "parent_id) "				// 13
+    				*/
+                    pstmt.setLong(1, i + labelMapping.size() + this.entityIdBase);
+                    pstmt.setInt(2, this.currentFileId);
+                    pstmt.setInt(3, this.currentProjectId);
 
-                    pstmt.setInt(7, nodetype_id);
-                    pstmt.setString(8, string);
-                    pstmt.setInt(9, currentFileId);
-                    pstmt.setString(10, currentFileContent.substring(token_start_pos, token_end_pos + 1));
-                    pstmt.setLong(11, tmp_parent_id + nextVal);
+                    pstmt.setInt(4, token_start_pos);
+                    pstmt.setInt(5, token_end_pos - token_start_pos + 1);
+                    pstmt.setInt(6, start_line_number);
+                    pstmt.setInt(7, start_column_number);
+                    pstmt.setInt(8, end_line_number);
+                    pstmt.setInt(9, end_column_number);
+
+                    pstmt.setInt(10, nodetype_id);
+                    pstmt.setString(11, string);
+                    pstmt.setString(12, currentFileContent.substring(token_start_pos, token_end_pos + 1));
+                    pstmt.setLong(13, tmp_parent_id + this.entityIdBase);
 
                     pstmt.addBatch();
                 } catch (NullPointerException e) {
@@ -403,7 +487,7 @@ public class OmniController extends BaseController {
 		final int start_pos = declaringNode.getStartPosition();
 		final int length = declaringNode.getLength();
 		final int nodetype_id = declaringNode.getNodeType();
-		database.saveCrossRefAstNode(start_pos, length, nodetype_id, currentFileId, crossRefKey);
+		database.saveCrossRefAstNode(start_pos, length, nodetype_id, crossRefKey, this.currentFileId, this.currentProjectId);
 	}
 
 	private static int progressCount = 0;
