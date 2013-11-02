@@ -136,10 +136,15 @@ public class OmniController extends BaseController {
 			this.retriveCurrentFileNameId(sourceFilePath);
 			this.tokens = Util.prepareTokens(this.currentFileContent);
 
-			batchAnnotateAstNode(unit, labelVisitor);
-		    batchAnnotateMethodAstNode(labelVisitor);
-			batchAnnotateToken(unit, labelVisitor);
-			this.entityIdBase += labelVisitor.getNodeLabel().size() + this.tokens.size();
+			try {
+				batchAnnotateAstNode(unit, labelVisitor);
+			    batchAnnotateMethodAstNode(labelVisitor);
+				batchAnnotateToken(unit, labelVisitor);
+				this.entityIdBase += labelVisitor.getNodeLabel().size() + this.tokens.size();
+			} catch (StringIndexOutOfBoundsException e) { // to handle non-correct source code files
+				logger.log(Level.SEVERE, "Source code parsing error", e);
+		    	e.printStackTrace();
+			}
 		}
 	}
 

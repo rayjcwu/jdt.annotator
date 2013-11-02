@@ -18,13 +18,15 @@ import edu.cs.ucdavis.decal.PostgreSQLStorer;
 public class PostgreSQLTest {
 	@Test
 	public void testCreateTable() {
-		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/entity");
+		PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+		db.setUrl("jdbc:postgresql://127.0.0.1:5432/entity");
 	}
 
 
 	@Test
 	public void testRetrieveProjectFileId() {
-		PostgreSQLStorer db = new PostgreSQLStorer("jdbc:postgresql://127.0.0.1:5432/entity");
+		PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+		db.setUrl("jdbc:postgresql://127.0.0.1:5432/entity");
 
 		String projectName = "fake_project";
 		String sourcePath = "/Users/jcwu/";

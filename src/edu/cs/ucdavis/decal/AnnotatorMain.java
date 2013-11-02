@@ -11,7 +11,18 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 
 public class AnnotatorMain {
+
 	public static void main(String[] argv) {
+
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			@Override
+			public void run() {
+				System.out.println("clean up");
+				PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+				db.close();
+			}
+		});
+
 		Logger logger = Logger.getLogger("annotator");
 
 		Options options = new Options();
@@ -57,9 +68,13 @@ public class AnnotatorMain {
 
 			if (cmd.hasOption("r")) {
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
-					(new PostgreSQLStorer(jdbcUrl, username, password)).resetDatabase();
+					PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+					db.setUrl(jdbcUrl).setUsername(username).setPassowrd(password).connect();
+					db.resetDatabase();
 				} else {
-					(new PostgreSQLStorer(jdbcUrl)).resetDatabase();
+					PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+					db.setUrl(jdbcUrl).connect();
+					db.resetDatabase();
 				}
 				System.out.println("reset done.");
 			} else if (srcPath == null) {
@@ -70,9 +85,13 @@ public class AnnotatorMain {
 				controller.setLibPath(libPath);
 				controller.setLogger(logger);
 				if (cmd.hasOption("U") && cmd.hasOption("W")) {
-					controller.setDatabase(new PostgreSQLStorer(jdbcUrl, username, password));
+					PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+					db.setUrl(jdbcUrl).setUsername(username).setPassowrd(password).connect();
+					controller.setDatabase(db);
 				} else {
-					controller.setDatabase(new PostgreSQLStorer(jdbcUrl));
+					PostgreSQLStorer db = PostgreSQLStorer.getInstance();
+					db.setUrl(jdbcUrl).connect();
+					controller.setDatabase(db);
 				}
 				(new AnnotationASTRequestor()).register(controller);
 
@@ -93,4 +112,5 @@ public class AnnotatorMain {
 				controller.getDatabase().close();
 		}
 	}
+
 }

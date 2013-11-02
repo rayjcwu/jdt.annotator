@@ -227,21 +227,37 @@ public class PostgreSQLStorer {
 
 	private Map <String, Long> entity_id_cache;
 
-	public PostgreSQLStorer(String url) {
-		this(url, null, null);
+	private static class SingletonHolder {
+		public static final PostgreSQLStorer INSTANCE = new PostgreSQLStorer();
 	}
 
-	public PostgreSQLStorer(String url, String username, String password) {
-		this.ready = false;
-		this.url = url;
-		this.username = username;
-		this.password = password;
-		this.logger = Logger.getLogger("annotation");
+	public static PostgreSQLStorer getInstance() {
+		return SingletonHolder.INSTANCE;
+	}
 
-		connect();
-		createTableIfNotExist();
-		this.ready = true;
+	private PostgreSQLStorer() {
+		this.ready = false;
+		this.url = null;
+		this.username = null;
+		this.password = null;
+		this.logger = Logger.getLogger("annotation");
 		this.entity_id_cache = new HashMap<String, Long>();
+	}
+
+	public PostgreSQLStorer setUrl(String url) {
+		this.url = url;
+		return this;
+	}
+
+	public PostgreSQLStorer setUsername(String username) {
+		this.username = username;
+		return this;
+	}
+
+	public PostgreSQLStorer setPassowrd(String password) {
+		this.password = password;
+		return this;
+
 	}
 
 	/**
@@ -249,6 +265,9 @@ public class PostgreSQLStorer {
 	 * @return
 	 */
 	public PostgreSQLStorer resetDatabase() {
+		if (this.ready == false) {
+			throw new IllegalStateException("database uninitialized");
+		}
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
@@ -265,6 +284,10 @@ public class PostgreSQLStorer {
 	}
 
 	public void connect() {
+		if (this.ready == true) {
+			return;
+		}
+
 		try {
 			Properties props = new Properties();
 			if (username != null) {
@@ -273,11 +296,13 @@ public class PostgreSQLStorer {
 			if (password != null) {
 				props.setProperty("password", password);
 			}
-
 			Class.forName("org.postgresql.Driver");
 			conn = DriverManager.getConnection(url, props);
 			if (conn == null || (conn != null && conn.isClosed())) {
 				logger.log(Level.SEVERE, "database is not connected");
+			} else {
+				this.ready = true;
+				createTableIfNotExist();
 			}
 		} catch (ClassNotFoundException e) {
 			logger.log(Level.SEVERE, e.getMessage(), e);
@@ -292,6 +317,10 @@ public class PostgreSQLStorer {
 	 * Create table/view/index
 	 */
 	public void createTableIfNotExist() {
+		if (this.ready == false) {
+			throw new IllegalStateException("database uninitialized");
+		}
+
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
@@ -486,6 +515,9 @@ public class PostgreSQLStorer {
 	 * @param project_id
 	 */
 	public void clearProjectAstnode(int project_id) {
+		if (this.ready == false) {
+			throw new IllegalStateException("database uninitialized");
+		}
 		Statement stmt = null;
 		try {
 			stmt = conn.createStatement();
