@@ -1,6 +1,6 @@
 jdt.annotator
 ==============
-This project is based on [Eclipse JDT](http://help.eclipse.org/kepler/index.jsp?nav=%2F3) and [ANTLR 4](http://antlr.org/) to annotate java source files. It will store all abstract syntax tree structures and token information of files in a Java project. Most of the time you only need to query information stored in `entity_all` view.
+This project is based on [Eclipse JDT](http://help.eclipse.org/kepler/index.jsp?nav=%2F3) and [ANTLR 4](http://antlr.org/) to annotate java source files. It will store abstract syntax tree structures and token information of files in a Java project. Most of the time you only need to query information stored in `entity_all` view.
 
 # Build
 - To build from source, you need to install [Maven 3](http://maven.apache.org/). Type `mvn clean package` in source root path then you could find `jdt.annotator-0.0.1-SNAPSHOT.jar` in `target/`.
@@ -22,30 +22,31 @@ usage: jdt.annotator --src <path> [options]
  -W,--password <arg>   (optional) password, must specify username as well
 ```
 
-* You need a running [PostgreSQL](http://www.postgresql.org) database instance. By default it will connect to `jdbc:postgresql://localhost:5432/entity`
+* You need a running [PostgreSQL](http://www.postgresql.org) database. By default it will connect to `jdbc:postgresql://localhost:5432/entity`
+* You could annotate multiple projects storing to the same database. Each entity is uniquely identify by (`entity_id`, `project_id`)
 * If you omit `-p` option, program will use folder name containing source code as default project name.
 * If the project you want to annotate use ant or maven to compile, it may specify dependencies in `build.xml` or `pom.xml`. If you want to annotate type, method or other information from those library, you need to download those dependencies first and specify the library folder in `-l` option.
-  * Maven: type `mvn org.apache.maven.plugins:maven-dependency-plugin:2.7:copy-dependencies -DoutputDirectory=/your/library/folder` in project root folder. Then maven will download dependencies `.jars` to that folder.
-  * Ant: To Be Completed
+  * Maven: type `mvn org.apache.maven.plugins:maven-dependency-plugin:2.1:copy-dependencies -DoutputDirectory=/your/library/folder` in project root folder. Then maven will download dependencies `.jar`s to that folder. 
+  * Ant: You need to write a configuration file to download dependencies, you may refer to [this](http://stackoverflow.com/questions/4568633/use-maven-just-to-fetch-some-library-jars), [this](http://stackoverflow.com/questions/5963962/download-jars-from-nexus-using-ant-build-tool-as-done-automatically-in-maven) or [this](http://stackoverflow.com/questions/7908090/downloading-all-maven-dependencies-to-a-directory-not-in-repository).
   
 
 # Schema
 
-* View `entity_all` combines table `project`, `file`, `entity`, `nodetype` and `cross_ref`. Meaning of columns in each table are the same. 
+* View `entity_all` combines table `project`, `file`, `entity`, `nodetype` and `cross_ref`. Meaning of columns in each table with the same name are the same. 
 * Table `method` store information about all methods in this source code. 
 * Table `cross_ref_key` store type descriptor for each `Name` `ASTNode`.
 
 | Table         | Column        | Description  |
 | ------------- |--------------| --------|
-| entity_all   | entity_id    | serial number of node added into database, it **DOESN'T** mean the order of appearance in source code |
+| entity_all   | entity_id    | Primary key is (`entity_id`,` project_id`). `entity_id` is unique for a given `project_id`. It **DOESN'T** mean the order of appearance in source code |
 | | start_pos | starting position of this node in file |
 | | length | length of this node |
-| | end_pos | ending position of this node in file (exclusive). If you store source code in a string, then `code.substring(start_pos, end_pos)` will give you source code snippet of this astnode or token. |
+| | end_pos | ending position of this node in file (exclusive). If you store source code in a string, then `code.substring(start_pos, end_pos)` will give you source code snippet of this entity. |
 | | start_line_number | this entity starts at (line number, column number) in file, both start from `1` to conform with vim |
 | | start_column_number | |
 | | end_line_number | this enetity ends at (line number, column number) in file. |
 | | end_column_number | |
-| | nodetype_id | For ASTNode, `nodetype_id < 100`. For Token, `nodetype_id >= 100` |
+| | nodetype_id | For ASTNode, `nodetype_id < 100`. For Token, `nodetype_id >= 100`. Identifier, null/boolean/string/character literals are ASTNodes instead of tokens. |
 | | nodetype | name of the type of this node |
 | | file_id | |
 | | file_name | absolute file name |
@@ -54,10 +55,11 @@ usage: jdt.annotator --src <path> [options]
 | | project_path | given source code folder, `(project_name, project_path)` uniquely specify a "project"|
 | | string | *formatted* code snippet of this node. This is generated from `ASTNode`, the string may not be the same with your source code. |
 | | raw | code snippet of this node |
-| | parent_id | parent entity's `entity_id`, `parent_id` of root node is `-1`. |
+| | parent_id | parent entity's `entity_id` (with the same `project_id`), `parent_id` of root node is `-1`. |
 | | declared_id | if this node is declared in another place **in this project**, this id could find out that node. if it's declared in another library, it won't show up.|
 | cross_ref_key | cross_ref_key | Only [Name](http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2Fdom%2FName.html) type `ASTNode` has value. |
 | method | entity_id | |
+| | project_id | |
 | | method_name | |
 | | return_type | |
 | | argument_type | |
@@ -92,14 +94,16 @@ Check [JVM type descriptor](http://docs.oracle.com/javase/specs/jvms/se7/html/jv
 
 # How it works
 
-* Use `JDT` to generate ASTs for all files and cross reference for all `Name` nodes.
-* Whenever visitor visit an ASTNode, store ASTNode information in database.
-* Collect all tokens, for each token, use visitor to check which is the tightest ASTNode containing that token.
-* Take all cross reference keys generated in first step, figure out where is each `Name` node declared.
+* Use `JDT` to generate ASTs for all files and cross reference for all `Name` nodes. 
+* For each `.java`
+	* Use batch operation to insert all AST nodes information at once. If current file is not compilable, it will skip to the next `.java` file without storing anything to database.
+	* Use `ANTLR` to collect all tokens, for each token, find the tightest AST node containing that token and save that AST node as the parent of current token.
+	* Take all cross reference keys generated in first step, figure out where is each `Name` node declared.
 
 For documentation of each ASTNode, refer [jdt.core.dom](http://help.eclipse.org/kepler/index.jsp?topic=%2Forg.eclipse.jdt.doc.isv%2Freference%2Fapi%2Forg%2Feclipse%2Fjdt%2Fcore%2Fdom%2Fpackage-summary.html).
 
 # Trouble shooting
 
 * `outOfMemoryException`: Allocating more memory for JVM by `java -Xmx2048m -jar …`
+* If you encounter build failure while download dependencies by maven, probabily your maven doesn't support that version of dependency plugin. Try to upgrade maven or use older version of dependency plugin.
 * create database in postgresql: `$> createdb database_name` in shell or `CREATE DATABASE database_name` in SQL.
