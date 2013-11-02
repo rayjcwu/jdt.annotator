@@ -87,8 +87,7 @@ public class PostgreSQLStorer {
 						+ "file_id serial PRIMARY KEY, "
 						+ "project_id int REFERENCES project(project_id) ON DELETE CASCADE ON UPDATE CASCADE NOT NULL, "
 						+ "file_type text, "
-						+ "file_name text, "
-						+ "file_path text); ");
+						+ "file_name text); ");
 
 		tableToCreate.put("entity",
 						  "CREATE TABLE IF NOT EXISTS entity ("
@@ -428,7 +427,7 @@ public class PostgreSQLStorer {
 			if(result.next()) {
 				return result.getInt("file_id");
 			} else {
-				stmt.executeUpdate(String.format("INSERT INTO file (file_name, project_id) VALUES ('%s', %s);", fileName, projectId));
+				stmt.executeUpdate(String.format("INSERT INTO file (file_name, file_type, project_id) VALUES ('%s', 'java', %s);", fileName, projectId));
 				ResultSet result2 = stmt.executeQuery(query);
 				if (result2.next()) {
 					return result2.getInt("file_id");
